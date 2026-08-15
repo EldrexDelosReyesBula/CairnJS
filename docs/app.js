@@ -184,19 +184,62 @@ effect(() => {
     }
 });
 
-// Fail-Safe Logo Image Component
+// Fail-Safe Logo Image Component with Multi-Level Fallback & SVG Guarantee
 const LogoImage = (sizePx = 34) => {
-    return img({
-        src: './assets/cairn-logo.png',
-        alt: 'Cairn Logo',
-        style: { width: `${sizePx}px`, height: `${sizePx}px`, objectFit: 'contain' },
-        onerror: (e) => {
-            if (!e.target.dataset.triedFallback) {
-                e.target.dataset.triedFallback = 'true';
-                e.target.src = '../assets/cairn-logo.png';
-            }
+    const container = div({
+        style: {
+            width: `${sizePx}px`,
+            height: `${sizePx}px`,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative'
         }
     });
+
+    const svgFallbackHtml = `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="cairnGrad1-${sizePx}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#818cf8" />
+            </linearGradient>
+            <linearGradient id="cairnGrad2-${sizePx}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#818cf8" />
+                <stop offset="100%" stop-color="#c084fc" />
+            </linearGradient>
+        </defs>
+        <ellipse cx="50" cy="74" rx="28" ry="10" fill="url(#cairnGrad1-${sizePx})" opacity="0.95" />
+        <ellipse cx="50" cy="54" rx="22" ry="8" fill="url(#cairnGrad2-${sizePx})" opacity="0.9" />
+        <ellipse cx="50" cy="36" rx="15" ry="6" fill="url(#cairnGrad1-${sizePx})" opacity="0.95" />
+        <circle cx="50" cy="20" r="6" fill="#38bdf8" />
+    </svg>`;
+
+    if (typeof document !== 'undefined') {
+        const imageEl = document.createElement('img');
+        imageEl.alt = 'Cairn Logo';
+        imageEl.style.width = '100%';
+        imageEl.style.height = '100%';
+        imageEl.style.objectFit = 'contain';
+
+        imageEl.onerror = () => {
+            if (!imageEl.dataset.triedRoot) {
+                imageEl.dataset.triedRoot = 'true';
+                imageEl.src = '/Cairn/assets/cairn-logo.png';
+            } else if (!imageEl.dataset.triedRelative) {
+                imageEl.dataset.triedRelative = 'true';
+                imageEl.src = '../assets/cairn-logo.png';
+            } else {
+                container.innerHTML = svgFallbackHtml;
+            }
+        };
+
+        imageEl.src = './assets/cairn-logo.png';
+        container.appendChild(imageEl);
+    } else {
+        container.innerHTML = svgFallbackHtml;
+    }
+
+    return container;
 };
 
 // VitePress Header Bar Component
