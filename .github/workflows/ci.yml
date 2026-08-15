@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x]
 
     steps:
       - name: Checkout repository
@@ -28,7 +28,7 @@ jobs:
         run: node build.js
 
       - name: Run Cairn verification test suite
-        run: node scratch/test-cairn.js
+        run: npm test
 
       - name: Upload build artifacts
         if: matrix.node-version == '20.x'

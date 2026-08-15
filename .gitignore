@@ -1,10 +1,6 @@
-# Generated bundles (old PapyrJS names — no longer used)
 papyr.js
 papyr-complete.js
 papyr-plugins.js
-
-# NOTE: dist/ is intentionally NOT ignored — Cairn bundles are committed
-# so GitHub Pages can serve them directly (no build server needed).
 
 # Scratch and temporary files
 scratch/

@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "build": "node build.js",
-    "test": "node scratch/test-cairn.js"
+    "test": "node tests/index.test.js"
   },
   "keywords": [
     "cairn",
