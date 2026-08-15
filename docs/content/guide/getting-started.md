@@ -7,7 +7,20 @@ Build reactive, framework-agnostic web components with zero dependencies.
 ## Quick Start Options
 
 ### 1. CDN (Zero Install)
-Include a single script tag in your HTML file:
+Include a single script tag in your HTML file via jsDelivr or unpkg:
+
+```html
+<!-- jsDelivr CDN (Recommended) -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairn@1.0.0/dist/cairn.min.js"></script>
+
+<!-- jsDelivr WASM Accelerated -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairn@1.0.0/dist/cairn-wasm.min.js"></script>
+
+<!-- unpkg CDN -->
+<script src="https://unpkg.com/@eldrex/cairn@1.0.0/dist/cairn.min.js"></script>
+```
+
+Complete CDN Example:
 
 ```html
 <!DOCTYPE html>
@@ -15,7 +28,7 @@ Include a single script tag in your HTML file:
 <head>
     <meta charset="UTF-8">
     <title>Cairn Quickstart</title>
-    <script src="https://cairn.js.org/cairn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@eldrex/cairn@1.0.0/dist/cairn.min.js"></script>
 </head>
 <body>
     <div id="app"></div>

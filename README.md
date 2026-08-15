@@ -31,6 +31,24 @@ mount("#app", app);
 
 ---
 
+## 📦 Installation & CDN
+
+### Package Manager (npm / pnpm / yarn)
+
+```bash
+npm install @eldrex/cairn
+```
+
+### CDN (Zero Install)
+
+```html
+<!-- jsDelivr CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairn@1.0.0/dist/cairn.min.js"></script>
+
+<!-- unpkg CDN -->
+<script src="https://unpkg.com/@eldrex/cairn@1.0.0/dist/cairn.min.js"></script>
+```
+
 ## 🔑 Key Architecture
 
 ### 1. Extensibility & Middleware System
