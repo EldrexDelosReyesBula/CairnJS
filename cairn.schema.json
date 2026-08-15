@@ -1,0 +1,58 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Cairn API & Component Schema",
+    "version": "1.0.0",
+    "description": "Complete Open Schema for Cairn Framework-Agnostic UI Builder",
+    "api": {
+        "state": {
+            "signature": "state(initialValue)",
+            "description": "Create reactive state signal",
+            "params": [
+                { "name": "initialValue", "type": "any", "required": true }
+            ],
+            "returns": {
+                "type": "State",
+                "properties": {
+                    "value": { "type": "any", "writable": true }
+                }
+            },
+            "examples": [
+                "let count = state(0)",
+                "let user = state({ name: 'Alice' })"
+            ],
+            "related": ["computed", "effect", "resource"]
+        },
+        "component": {
+            "signature": "component(config)",
+            "description": "Declare a reusable Cairn component",
+            "params": [
+                { "name": "config", "type": "function|object", "required": true }
+            ],
+            "returns": "ComponentFactory"
+        },
+        "use": {
+            "signature": "cairn.use(plugin)",
+            "description": "Register a Cairn plugin function",
+            "params": [
+                { "name": "plugin", "type": "function", "required": true }
+            ]
+        }
+    },
+    "components": {
+        "button": {
+            "signature": "button(content, props?)",
+            "description": "Create an interactive button element",
+            "props": {
+                "type": { "type": "string", "default": "button" },
+                "disabled": { "type": "boolean" },
+                "onclick": { "type": "function" },
+                "class": { "type": "string" },
+                "style": { "type": "object|function" }
+            },
+            "examples": [
+                "button('Click')",
+                "button('Save', { type: 'submit' })"
+            ]
+        }
+    }
+}

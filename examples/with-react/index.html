@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cairn — React Integration Example</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #090d16; color: #f1f5f9; padding: 2rem; }
+        .card { background: #1e293b; padding: 2rem; border-radius: 0.75rem; max-width: 450px; margin: 0 auto; }
+        button { background: #3b82f6; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import { cairn } from '../../src/index.js';
+
+        // Cairn Component Definition
+        const CairnCard = cairn.component((props) => {
+            const votes = cairn.state(props.initialVotes || 0);
+            return cairn.div({ style: { marginTop: '1rem', padding: '1rem', border: '1px solid #334155', borderRadius: '0.5rem' } },
+                cairn.h3('Mounted inside React Ref!'),
+                cairn.p(() => `Votes: ${votes.value}`),
+                cairn.button('Vote Up', { onclick: () => votes.value++ })
+            );
+        });
+
+        // Host React Component
+        function App() {
+            const containerRef = React.useRef(null);
+
+            React.useEffect(() => {
+                const unmount = cairn.mount(containerRef.current, CairnCard({ initialVotes: 42 }));
+                return unmount;
+            }, []);
+
+            return (
+                <div className="card">
+                    <h1>React + Cairn Demo</h1>
+                    <p>React handles page shell; Cairn handles zero-dependency micro-component.</p>
+                    <div ref={containerRef}></div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

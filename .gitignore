@@ -1,0 +1,42 @@
+# Generated bundles (old PapyrJS names — no longer used)
+papyr.js
+papyr-complete.js
+papyr-plugins.js
+
+# NOTE: dist/ is intentionally NOT ignored — Cairn bundles are committed
+# so GitHub Pages can serve them directly (no build server needed).
+
+# Scratch and temporary files
+scratch/
+*.tmp
+*~
+
+# Node/npm artifacts
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+package-lock.json
+.npmrc
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+.python-version
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+.devdiff
+.devdiffignore
+.devdiff.config.js
+.env

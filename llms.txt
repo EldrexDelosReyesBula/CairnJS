@@ -1,0 +1,68 @@
+# @eldrex/cairn — AI Context & Prompt Guide
+
+> Paste this entire context into ChatGPT, Claude, Gemini, or any LLM to generate 100% accurate Cairn code.
+
+## Framework Identity
+- Name: Cairn (`@eldrex/cairn`)
+- Architecture: Zero external dependencies, pure native DOM runtime, framework-agnostic.
+- Imports: `import { cairn, state, computed, effect, collection, resource, component, mount, div, span, p, h1, button, input, img, a, spring, transition, gesture, page, scroll, particles, studio, UI } from '@eldrex/cairn';`
+
+## Core Rules & Syntax
+1. Reactivity Signals:
+   - `state(initialValue)` -> signal holding `.value`.
+   - `computed(fn)` -> derived getter cached signal.
+   - `effect(fn)` -> auto-subscribing side-effect callback.
+   - `collection(array|object)` -> reactive array/object proxy with granular mutations (`.push()`, `.remove()`).
+   - `resource(asyncFn)` -> async loader with `.data`, `.loading`, `.error`, `.refetch()`.
+
+2. DOM Builders:
+   - All standard HTML tags exist as function builders: `div()`, `span()`, `p()`, `h1()`-`h6()`, `button()`, `input()`, `img()`, `a()`, `section()`, `article()`, `nav()`, `footer()`, `header()`, `main()`, `aside()`, `pre()`, `code()`, `hr()`, `br()`, `strong()`, `em()`, `label()`, `ul()`, `ol()`, `li()`, `form()`, `textarea()`, `select()`, `option()`, `text()`.
+   - Element Signature: `tag(text|child|props, ...children)`
+   - Passing an object sets attributes/styles/events: `button('Click', { class: 'btn', style: { color: 'white' }, onclick: fn })`.
+   - Dynamic Child Text: Pass getter function `div(() => \`Count is: \${count.value}\`)`.
+
+3. Motion & Animation Suite:
+   - Direct prop: `div('Animated', { animate: 'fade-in', duration: 400 })`
+   - Spring Physics: `spring({ from: 0, to: 100, stiffness: 180, damping: 12, onUpdate: val => ... })`
+   - Page Transitions: `page({ enter: 'fade-in', exit: 'fade-out' })`
+   - Gesture Animations: `gesture(element, { hover: { scale: 1.05 }, tap: { scale: 0.95 } })`
+
+4. Component System:
+   - Wrap component functions with `component()`:
+   ```javascript
+   const Counter = component(({ initial = 0 }) => {
+       const count = state(initial);
+       return div({ class: 'counter' },
+           h1(() => `Count: ${count.value}`),
+           button('Increment', { onclick: () => count.value++ })
+       );
+   });
+   mount('#app', Counter({ initial: 10 }));
+   ```
+
+5. UI Component Library (`cairn.UI.*` or `UI.*`):
+   - 50+ pre-styled components: `UI.button()`, `UI.input()`, `UI.card()`, `UI.modal()`, `UI.navbar()`, `UI.tabs()`, `UI.badge()`, `UI.avatar()`, `UI.alert()`, `UI.table()`, `UI.chart()`.
+
+6. Visual Studio & Prototyping (`cairn.studio`):
+   - `cairn.studio.enable({ target: '#app', mode: 'edit' })`
+   - `cairn.studio.canvas({ width: 1200, height: 800 })`
+   - `cairn.studio.export({ format: 'cairn'|'react'|'vue'|'svelte' })`
+
+## Example Usage Code Block
+```javascript
+import { component, state, mount, div, h1, button, UI } from '@eldrex/cairn';
+
+const App = component(() => {
+    const active = state(true);
+    return div({ style: { padding: '32px', fontFamily: 'Inter, sans-serif' } },
+        h1('Welcome to Cairn App'),
+        button('Toggle Alert', {
+            animate: 'scale-in',
+            onclick: () => active.value = !active.value
+        }),
+        () => active.value ? UI.alert({ type: 'success', title: 'System Active' }) : null
+    );
+});
+
+mount('#app', App());
+```

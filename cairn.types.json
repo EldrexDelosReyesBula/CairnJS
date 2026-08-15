@@ -1,0 +1,23 @@
+{
+    "components": {
+        "button": {
+            "signature": "button(content, props?)",
+            "params": [
+                { "name": "content", "type": "string|function|HTMLElement", "required": true },
+                { "name": "props", "type": "ButtonProps", "required": false }
+            ],
+            "returns": "HTMLElement",
+            "examples": [
+                "button('Click')",
+                "button(() => count.value, { onclick: increment })"
+            ]
+        },
+        "div": {
+            "signature": "div(...childrenOrProps)",
+            "params": [
+                { "name": "args", "type": "Array<HTMLElement|string|object>", "required": false }
+            ],
+            "returns": "HTMLElement"
+        }
+    }
+}

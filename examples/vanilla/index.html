@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cairn — Vanilla JS Example</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        #app {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        button {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease;
+        }
+        button:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        import { cairn } from '../../src/index.js';
+
+        const CounterApp = cairn.component(({ initialCount = 0 }) => {
+            const count = cairn.state(initialCount);
+            const doubleCount = cairn.computed(() => count.value * 2);
+
+            return cairn.div(
+                cairn.h1('Cairn Component'),
+                cairn.p(() => `Current Count: ${count.value}`),
+                cairn.p(() => `Double Count: ${doubleCount.value}`),
+                cairn.button(
+                    () => `Increment Counter`,
+                    { onclick: () => count.value++ }
+                )
+            );
+        });
+
+        cairn.mount('#app', CounterApp({ initialCount: 10 }));
+    </script>
+</body>
+</html>
