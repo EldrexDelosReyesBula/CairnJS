@@ -1,68 +1,155 @@
-# @eldrex/cairn — AI Context & Prompt Guide
+# Cairn (`@eldrex/cairn`) — Master AI Context & Prompt Guide
 
-> Paste this entire context into ChatGPT, Claude, Gemini, or any LLM to generate 100% accurate Cairn code.
+> **Instructions for AI Assistants (ChatGPT, Claude, Gemini, DeepSeek, Cursor)**:
+> You are an expert senior engineer specializing in **Cairn** (`@eldrex/cairn`), a zero-dependency, framework-agnostic JavaScript UI library.
+> Read this entire context document carefully to generate 100% syntactically correct, performant, production-ready Cairn code for any web application requirement.
 
-## Framework Identity
-- Name: Cairn (`@eldrex/cairn`)
-- Architecture: Zero external dependencies, pure native DOM runtime, framework-agnostic.
-- Imports: `import { cairn, state, computed, effect, collection, resource, component, mount, div, span, p, h1, button, input, img, a, spring, transition, gesture, page, scroll, particles, studio, UI } from '@eldrex/cairn';`
+---
 
-## Core Rules & Syntax
-1. Reactivity Signals:
-   - `state(initialValue)` -> signal holding `.value`.
-   - `computed(fn)` -> derived getter cached signal.
-   - `effect(fn)` -> auto-subscribing side-effect callback.
-   - `collection(array|object)` -> reactive array/object proxy with granular mutations (`.push()`, `.remove()`).
-   - `resource(asyncFn)` -> async loader with `.data`, `.loading`, `.error`, `.refetch()`.
+## 1. Core Principles & LLM Rules
 
-2. DOM Builders:
-   - All standard HTML tags exist as function builders: `div()`, `span()`, `p()`, `h1()`-`h6()`, `button()`, `input()`, `img()`, `a()`, `section()`, `article()`, `nav()`, `footer()`, `header()`, `main()`, `aside()`, `pre()`, `code()`, `hr()`, `br()`, `strong()`, `em()`, `label()`, `ul()`, `ol()`, `li()`, `form()`, `textarea()`, `select()`, `option()`, `text()`.
-   - Element Signature: `tag(text|child|props, ...children)`
-   - Passing an object sets attributes/styles/events: `button('Click', { class: 'btn', style: { color: 'white' }, onclick: fn })`.
-   - Dynamic Child Text: Pass getter function `div(() => \`Count is: \${count.value}\`)`.
-
-3. Motion & Animation Suite:
-   - Direct prop: `div('Animated', { animate: 'fade-in', duration: 400 })`
-   - Spring Physics: `spring({ from: 0, to: 100, stiffness: 180, damping: 12, onUpdate: val => ... })`
-   - Page Transitions: `page({ enter: 'fade-in', exit: 'fade-out' })`
-   - Gesture Animations: `gesture(element, { hover: { scale: 1.05 }, tap: { scale: 0.95 } })`
-
-4. Component System:
-   - Wrap component functions with `component()`:
+1. **Imports**: Import directly from `@eldrex/cairn`:
    ```javascript
-   const Counter = component(({ initial = 0 }) => {
-       const count = state(initial);
-       return div({ class: 'counter' },
-           h1(() => `Count: ${count.value}`),
-           button('Increment', { onclick: () => count.value++ })
-       );
-   });
-   mount('#app', Counter({ initial: 10 }));
+   import { cairn, state, computed, effect, collection, resource, component, mount, div, span, p, h1, button, input, img, a, spring, transition, gesture, page, UI, studio } from '@eldrex/cairn';
    ```
+2. **No JSX**: Do NOT write JSX (`<div />`). Cairn uses native JavaScript function element builders (`div()`, `button()`, `h1()`).
+3. **Element Builder Signature**:
+   `tag(text | props | child, ...children)`
+   - First parameter can be string text, props object, or child node.
+   - Passing an object sets attributes, inline style objects, and event handlers:
+     `button('Submit', { class: 'btn-primary', style: { padding: '12px 24px', borderRadius: '8px' }, onclick: (e) => handleClick(e) })`
+4. **Reactive Text & Attribute Bindings**:
+   - To make text dynamic, pass a **getter function**: `div(() => \`Count: \${count.value}\`)`.
+   - To make inline styles dynamic, pass a function returning a style object: `div({ style: () => ({ color: active.value ? 'green' : 'red' }) })`.
+5. **No Compiler**: Cairn code runs directly in any modern browser without Babel, JSX transpilers, or build steps.
 
-5. UI Component Library (`cairn.UI.*` or `UI.*`):
-   - 50+ pre-styled components: `UI.button()`, `UI.input()`, `UI.card()`, `UI.modal()`, `UI.navbar()`, `UI.tabs()`, `UI.badge()`, `UI.avatar()`, `UI.alert()`, `UI.table()`, `UI.chart()`.
+---
 
-6. Visual Studio & Prototyping (`cairn.studio`):
-   - `cairn.studio.enable({ target: '#app', mode: 'edit' })`
-   - `cairn.studio.canvas({ width: 1200, height: 800 })`
-   - `cairn.studio.export({ format: 'cairn'|'react'|'vue'|'svelte' })`
+## 2. Core Reactivity Signals System
 
-## Example Usage Code Block
+### `state(initialValue)`
+Creates a reactive signal. Access or mutate via `.value`.
 ```javascript
-import { component, state, mount, div, h1, button, UI } from '@eldrex/cairn';
+const count = state(0);
+count.value++;
+```
 
-const App = component(() => {
-    const active = state(true);
-    return div({ style: { padding: '32px', fontFamily: 'Inter, sans-serif' } },
-        h1('Welcome to Cairn App'),
-        button('Toggle Alert', {
-            animate: 'scale-in',
-            onclick: () => active.value = !active.value
-        }),
-        () => active.value ? UI.alert({ type: 'success', title: 'System Active' }) : null
+### `computed(getter)`
+Derived signal cached until dependencies update.
+```javascript
+const price = state(100);
+const tax = state(0.12);
+const total = computed(() => price.value * (1 + tax.value));
+```
+
+### `effect(fn)`
+Executes `fn` immediately and auto-subscribes to any read signals. Returns a teardown function.
+```javascript
+const stop = effect(() => {
+    console.log('Total changed:', total.value);
+});
+```
+
+### `collection(initialData)`
+Granular reactive proxy for arrays and objects. Supports array methods (`push`, `pop`, `splice`, `filter`, `map`) with targeted DOM updates.
+```javascript
+const todos = collection([
+    { id: 1, text: 'Build with Cairn', done: false }
+]);
+todos.push({ id: 2, text: 'Deploy to Vercel', done: true });
+```
+
+### `resource(fetcher)`
+Async data fetching helper with `.data`, `.loading`, `.error`, and `.refetch()`.
+```javascript
+const users = resource(() => fetch('https://api.example.com/users').then(r => r.json()));
+```
+
+---
+
+## 3. DOM Element Builders
+
+Every HTML5 element is exported as a function builder:
+`div`, `span`, `p`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `button`, `input`, `img`, `a`, `section`, `article`, `nav`, `footer`, `header`, `main`, `aside`, `pre`, `code`, `hr`, `br`, `strong`, `em`, `label`, `ul`, `ol`, `li`, `form`, `textarea`, `select`, `option`, `text`, `raw`, `element`, `canvas`.
+
+---
+
+## 4. Component Architecture & Lifecycle
+
+Component functions encapsulate state and return element trees wrapped by `component()`:
+
+```javascript
+import { component, state, onMount, onUnmount, div, h2, button } from '@eldrex/cairn';
+
+export const Timer = component(({ interval = 1000 }) => {
+    const seconds = state(0);
+    let timerId;
+
+    onMount(() => {
+        timerId = setInterval(() => seconds.value++, interval);
+    });
+
+    onUnmount(() => {
+        clearInterval(timerId);
+    });
+
+    return div({ class: 'timer-card', style: { padding: '24px', borderRadius: '12px', background: '#0f172a', color: '#fff' } },
+        h2('Timer Component'),
+        p(() => `Elapsed: ${seconds.value}s`),
+        button('Reset', { onclick: () => seconds.value = 0 })
+    );
+});
+```
+
+---
+
+## 5. Motion & Animation System
+
+### Declarative `animate` Property
+```javascript
+div('Fade in card', { animate: 'fade-in', duration: 400 });
+button('Pulse button', { animate: 'pulse', duration: 600 });
+img('photo.jpg', { animate: 'slide-up', delay: 200 });
+```
+
+Presets: `fade-in`, `fade-out`, `slide-up`, `slide-down`, `slide-left`, `slide-right`, `scale-in`, `scale-out`, `rotate-in`, `bounce`, `shake`, `pulse`, `spin`, `typing`.
+
+---
+
+## 6. Pre-Styled UI Component Library (`UI.*`)
+
+```javascript
+import { UI } from '@eldrex/cairn';
+
+UI.button('Click Me', { variant: 'primary', size: 'lg' });
+UI.input({ placeholder: 'Search...' });
+UI.card({ title: 'Card Title', content: 'Card Body' });
+UI.toast.success('Action complete!');
+```
+
+---
+
+## 7. Complete Application Example
+
+```javascript
+import { component, state, collection, mount, div, h1, button, input, UI } from '@eldrex/cairn';
+
+const DashboardApp = component(() => {
+    const search = state('');
+    const items = collection([
+        { id: 1, name: 'Analytics Service', status: 'Active' },
+        { id: 2, name: 'Payment Gateway', status: 'Active' }
+    ]);
+
+    return div({ style: { maxWidth: '800px', margin: '40px auto', padding: '32px', background: '#0f172a', color: '#fff', borderRadius: '16px' } },
+        h1('Cairn Enterprise Dashboard'),
+        div({ style: { display: 'flex', gap: '12px', marginBottom: '24px' } },
+            input({ placeholder: 'Filter services...', value: search, oninput: (e) => search.value = e.target.value }),
+            button('Add Service', { onclick: () => items.push({ id: Date.now(), name: 'New Service', status: 'Active' }) })
+        ),
+        div(() => items.map(item => div({ key: item.id, animate: 'fade-in' }, item.name)))
     );
 });
 
-mount('#app', App());
+mount('#app', DashboardApp());
 ```
