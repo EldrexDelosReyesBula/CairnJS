@@ -117,6 +117,48 @@ ctx.strokeStyle('#f43f5e').lineWidth(2).bezier(0, 300, 100, 0, 300, 600, 400, 30
 
 ---
 
+### star(x, y, points, outerRadius, innerRadius)
+
+Draws an N-pointed star centered at `(x, y)`.
+
+```js
+ctx.fillStyle('#facc15').star(200, 200, 5, 40, 20);
+```
+
+---
+
+### polygon(x, y, sides, radius)
+
+Draws a regular polygon (e.g. triangle, pentagon, hexagon) centered at `(x, y)`.
+
+```js
+ctx.fillStyle('#38bdf8').polygon(400, 200, 6, 45);
+```
+
+---
+
+### arc(x, y, radius, startAngle, endAngle, counterclockwise?)
+
+Draws an open or closed arc.
+
+```js
+ctx.strokeStyle('#ec4899').lineWidth(4).arc(100, 100, 30, 0, Math.PI * 1.5);
+```
+
+---
+
+### shadow(color, blur, offsetX?, offsetY?)
+
+Sets drop shadow styling for subsequent draw operations.
+
+```js
+ctx.shadow('rgba(56, 189, 248, 0.5)', 20, 0, 4)
+   .fillStyle('#38bdf8')
+   .circle(200, 200, 40);
+```
+
+---
+
 ### text(str, x, y, opts?)
 
 Draws text at the given position.

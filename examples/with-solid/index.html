@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CairnJS — SolidJS Signals Interop</title>
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="./assets/cairn-official-logo.svg">
+    <link rel="alternate icon" type="image/png" href="./assets/cairn-official-logo.png">
+    <link rel="apple-touch-icon" href="./assets/cairn-official-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0b0f19;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .solid-card {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .solid-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(44, 75, 126, 0.35);
+            color: #76c7ff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(118, 199, 255, 0.3);
+        }
+
+        .cairn-slot {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: #0f172a;
+            border: 1.5px dashed rgba(118, 199, 255, 0.4);
+            border-radius: 0.85rem;
+        }
+
+        .back-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-nav:hover {
+            color: #76c7ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../../docs/index.html" class="back-nav"><i class="fa-solid fa-arrow-left"></i> Back to CairnJS Docs</a>
+
+        <div class="solid-card">
+            <span class="solid-badge"><i class="fa-solid fa-bolt"></i> SolidJS Signals & Cairn Bridge</span>
+            <h1 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem;">Fine-Grained Reactive Signals</h1>
+            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.25rem;">
+                Both CairnJS and SolidJS use fine-grained signals under the hood. Cairn elements integrate directly with
+                no glue code or virtual diffing.
+            </p>
+
+            <div id="solid-cairn-host" class="cairn-slot"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { cairn, component, state, computed, div, h3, p, button, mount } from '../../src/index.js';
+
+        // Direct Signal Bridge
+        const SolidCairnSignalBridge = component(() => {
+            const energy = state(100);
+            const pulses = computed(() => energy.value * 3);
+
+            return div({ style: { display: 'flex', flexDirection: 'column', gap: '0.6rem' } },
+                h3({ style: { fontSize: '0.95rem', color: '#76c7ff' } }, '⚡ Zero Virtual DOM Signal Pipeline'),
+                div({ style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                    p(() => `Energy Units: ${energy.value} GW`, { style: { fontSize: '1.15rem', fontWeight: '800' } }),
+                    p(() => `Pulse Frequency: ${pulses.value} Hz`, { style: { fontSize: '0.85rem', color: '#818cf8', fontWeight: '700' } })
+                ),
+                div({ style: { display: 'flex', gap: '0.5rem', marginTop: '0.25rem' } },
+                    button('Overcharge Signal (+25)', {
+                        style: {
+                            background: 'linear-gradient(135deg, #2c4b7e, #4f46e5)',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '0.5rem 0.85rem',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.8rem'
+                        },
+                        onclick: () => energy.value += 25
+                    }),
+                    button('Discharge', {
+                        style: {
+                            background: '#1e293b',
+                            color: '#94a3b8',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            padding: '0.5rem 0.85rem',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem'
+                        },
+                        onclick: () => energy.value = 10
+                    })
+                )
+            );
+        });
+
+        mount(document.getElementById('solid-cairn-host'), SolidCairnSignalBridge());
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CairnJS — Complete Kitchen Sink Playground</title>
+    <style>
+        @font-face {
+            font-family: 'Cairn';
+            src: url('../cairn-font/Cairn-Regular.woff2') format('woff2'),
+                 url('../cairn-font/Cairn-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0b0f19;
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        h1, h2, h3, h4, h5, h6, .brand, .badge, button {
+            font-family: 'Cairn', system-ui, -apple-system, sans-serif;
+            letter-spacing: -0.01em;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .header-section {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, transparent 100%);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        .panel {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .panel h3 {
+            font-size: 1.15rem;
+            color: #38bdf8;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.6rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+        .btn:hover { background: #334155; }
+        .btn-accent {
+            background: linear-gradient(135deg, #0284c7, #4f46e5);
+            border: none;
+            color: white;
+        }
+        .btn-accent:hover { filter: brightness(1.1); }
+        .input-field {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            padding: 0.65rem 0.85rem;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            outline: none;
+        }
+        .input-field:focus { border-color: #38bdf8; }
+        canvas {
+            background: #0f172a;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+            width: 100%;
+            height: 160px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container"></div>
+
+    <script type="module">
+        import {
+            cairn, state, computed, effect, component, mount,
+            div, span, h1, h2, h3, p, button, input, textarea,
+            spring, gesture, createCanvas2D, UI
+        } from '../src/index.js';
+
+        // 1. Reactive Signal State Demo
+        const SignalPanel = component(() => {
+            const count = state(0);
+            const multiplier = state(2);
+            const result = computed(() => count.value * multiplier.value);
+
+            return div({ class: 'panel' },
+                h3('1. Reactive Signals Engine'),
+                p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1rem' } },
+                    'Fine-grained dependency tracking updates text nodes directly without VDOM diffing.'
+                ),
+                div({ style: { display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' } },
+                    button('-1', { class: 'btn', onclick: () => count.value-- }),
+                    span({ style: { fontSize: '1.25rem', fontWeight: '800', minWidth: '60px', textAlign: 'center', color: '#38bdf8' } },
+                        () => `Count: ${count.value}`
+                    ),
+                    button('+1', { class: 'btn btn-accent', onclick: () => count.value++ })
+                ),
+                div({ style: { background: '#1e293b', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.9rem' } },
+                    p(() => `Multiplier: x${multiplier.value}`),
+                    p(() => `Computed Result: ${result.value}`, { style: { fontWeight: '700', color: '#818cf8' } })
+                )
+            );
+        });
+
+        // 2. Motion & Physics Demo
+        const MotionPanel = component(() => {
+            const posX = state(0);
+            let isMoving = false;
+
+            const triggerSpring = () => {
+                if (isMoving) return;
+                isMoving = true;
+                const target = posX.value === 0 ? 160 : 0;
+                spring({
+                    from: posX.value,
+                    to: target,
+                    stiffness: 170,
+                    damping: 14,
+                    onUpdate: (v) => { posX.value = v; },
+                    onComplete: () => { isMoving = false; }
+                });
+            };
+
+            return div({ class: 'panel' },
+                h3('2. Kinematics & Spring Physics'),
+                p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1rem' } },
+                    '60fps / 120fps native spring equations.'
+                ),
+                div({ style: { height: '60px', position: 'relative', background: '#0f172a', borderRadius: '0.5rem', marginBottom: '1rem', overflow: 'hidden', padding: '8px' } },
+                    div({
+                        style: () => ({
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '0.5rem',
+                            background: 'linear-gradient(135deg, #38bdf8, #818cf8)',
+                            transform: `translateX(${posX.value}px)`,
+                            boxShadow: '0 4px 12px rgba(56, 189, 248, 0.4)'
+                        })
+                    })
+                ),
+                button('Animate Spring 🚀', { class: 'btn btn-accent', onclick: triggerSpring })
+            );
+        });
+
+        // 3. Dynamic Form Controls & Two-Way Binding Demo
+        const FormPanel = component(() => {
+            const name = state('');
+            const bio = state('');
+            const status = state('Ready');
+
+            return div({ class: 'panel' },
+                h3('3. Form Control Property Sync'),
+                input({
+                    class: 'input-field',
+                    placeholder: 'Enter your name...',
+                    value: name,
+                    oninput: (e) => name.value = e.target.value
+                }),
+                textarea({
+                    class: 'input-field',
+                    placeholder: 'Enter a short bio...',
+                    rows: 2,
+                    value: bio,
+                    oninput: (e) => bio.value = e.target.value
+                }),
+                div({ style: { background: '#1e293b', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.85rem' } },
+                    p(() => `Live Preview: ${name.value || 'Anonymous'} — "${bio.value || 'No bio yet'}"`)
+                )
+            );
+        });
+
+        // 4. 2D Canvas Graphics Demo
+        const CanvasPanel = component(() => {
+            let canvasEl;
+            let animId;
+
+            const initCanvas = (el) => {
+                if (!el) return;
+                canvasEl = el;
+                const ctx = el.getContext('2d');
+                let angle = 0;
+
+                const render = () => {
+                    if (!canvasEl) return;
+                    ctx.clearRect(0, 0, el.width, el.height);
+                    
+                    // Background
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(0, 0, el.width, el.height);
+
+                    // Rotating Orb
+                    const cx = el.width / 2;
+                    const cy = el.height / 2;
+                    const radius = 35;
+                    const orbX = cx + Math.cos(angle) * 50;
+                    const orbY = cy + Math.sin(angle) * 25;
+
+                    ctx.beginPath();
+                    ctx.arc(orbX, orbY, radius, 0, Math.PI * 2);
+                    const grad = ctx.createRadialGradient(orbX, orbY, 5, orbX, orbY, radius);
+                    grad.addColorStop(0, '#38bdf8');
+                    grad.addColorStop(1, '#818cf8');
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    angle += 0.04;
+                    animId = requestAnimationFrame(render);
+                };
+                render();
+            };
+
+            const canvasNode = document.createElement('canvas');
+            canvasNode.width = 300;
+            canvasNode.height = 140;
+            setTimeout(() => initCanvas(canvasNode), 10);
+
+            return div({ class: 'panel' },
+                h3('4. 2D Canvas Acceleration'),
+                p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.75rem' } }, 'Direct procedural canvas rendering.'),
+                canvasNode
+            );
+        });
+
+        // Main App Layout
+        const App = div(
+            div({ class: 'header-section' },
+                h1('🧱 Cairn Interactive Kitchen Sink', { style: { fontSize: '2rem', fontWeight: '800', marginBottom: '0.5rem' } }),
+                p({ style: { color: '#94a3b8', maxWidth: '600px', margin: '0 auto' } },
+                    'A complete test suite running Signals, Motion Kinematics, Two-Way Form Bindings, and 2D Canvas natively in your browser.'
+                )
+            ),
+            div({ class: 'grid-2' },
+                SignalPanel(),
+                MotionPanel(),
+                FormPanel(),
+                CanvasPanel()
+            )
+        );
+
+        mount('#app', App);
+    </script>
+</body>
+</html>

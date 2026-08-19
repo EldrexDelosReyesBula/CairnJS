@@ -2,44 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cairn — Vanilla JS Example</title>
     <style>
+        @font-face {
+            font-family: 'Cairn';
+            src: url('../../cairn-font/Cairn-Regular.woff2') format('woff2'),
+                 url('../../cairn-font/Cairn-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f172a;
+            background: #0b0f19;
             color: #f8fafc;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
+            padding: 1.5rem;
+        }
+        h1, h2, h3, button {
+            font-family: 'Cairn', system-ui, -apple-system, sans-serif;
         }
         #app {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
+            background: #111827;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            padding: 2.5rem 2rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
             max-width: 420px;
             width: 100%;
             text-align: center;
         }
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            color: #f8fafc;
+        }
+        .stat-badge {
+            background: #1e293b;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+        .highlight {
+            color: #38bdf8;
+            font-weight: 700;
+        }
         button {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            background: linear-gradient(135deg, #0284c7, #4f46e5);
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.85rem 1.75rem;
             font-weight: 600;
+            font-size: 1rem;
             border-radius: 0.5rem;
             cursor: pointer;
-            margin-top: 1rem;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-            transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease;
+            margin-top: 1.25rem;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+            transition: transform 0.15s ease, filter 0.15s ease;
+            width: 100%;
+        }
+        button:hover {
+            filter: brightness(1.1);
         }
         button:active {
-            transform: scale(0.96);
+            transform: scale(0.98);
         }
     </style>
 </head>
@@ -47,24 +82,24 @@
     <div id="app"></div>
 
     <script type="module">
-        import { cairn } from '../../src/index.js';
+        import { cairn, state, computed, component, mount, div, h1, p, button, span } from '../../src/index.js';
 
-        const CounterApp = cairn.component(({ initialCount = 0 }) => {
-            const count = cairn.state(initialCount);
-            const doubleCount = cairn.computed(() => count.value * 2);
+        const CounterCard = component(({ initialCount = 10 }) => {
+            const count = state(initialCount);
+            const doubleCount = computed(() => count.value * 2);
 
-            return cairn.div(
-                cairn.h1('Cairn Component'),
-                cairn.p(() => `Current Count: ${count.value}`),
-                cairn.p(() => `Double Count: ${doubleCount.value}`),
-                cairn.button(
-                    () => `Increment Counter`,
-                    { onclick: () => count.value++ }
-                )
+            return div(
+                h1('Cairn Vanilla Demo'),
+                p({ style: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem' } }, 'Zero-dependency procedural component'),
+                div({ class: 'stat-badge' }, () => ['Current Count: ', span({ class: 'highlight' }, String(count.value))]),
+                div({ class: 'stat-badge' }, () => ['Double Count: ', span({ class: 'highlight' }, String(doubleCount.value))]),
+                button('Increment Counter +', {
+                    onclick: () => count.value++
+                })
             );
         });
 
-        cairn.mount('#app', CounterApp({ initialCount: 10 }));
+        mount('#app', CounterCard({ initialCount: 10 }));
     </script>
 </body>
 </html>

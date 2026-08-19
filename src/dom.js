@@ -3,7 +3,7 @@
  * Declarative, reactive HTML element builders with zero dependencies, automatic accessibility, and helpful error warnings.
  */
 
-import { effect, state } from './state.js';
+import { effect, state, computed } from './state.js';
 import { warnInvalidCss, logDomUpdate } from './debug.js';
 import { middlewareEngine } from './extensibility.js';
 import { resolveAdapters } from './adapters/index.js';
@@ -30,6 +30,7 @@ export function h(tag, ...args) {
     const mockStyle = {};
     const el = doc ? doc.createElement(tag) : {
         tagName: tag.toUpperCase(),
+        nodeType: 1,
         attributes: mockAttrs,
         style: mockStyle,
         childNodes: mockChildren,
@@ -110,6 +111,8 @@ export function h(tag, ...args) {
                             else if (sVal && sVal._isCairnState) resolved = sVal.value;
                             el.style[sKey] = resolved;
                         });
+                    } else if (el.style && typeof computedObj === 'string') {
+                        el.style.cssText = computedObj;
                     }
                     if (startTime) logDomUpdate(tag, performance.now() - startTime);
                 });
@@ -128,23 +131,54 @@ export function h(tag, ...args) {
                         el.style[sKey] = sVal;
                     }
                 });
+            } else if (typeof val === 'string' && el.style) {
+                el.style.cssText = val;
             }
         } else if (key === 'className' || key === 'class') {
+            const formatClass = (c) => {
+                if (!c) return '';
+                if (Array.isArray(c)) return c.filter(Boolean).join(' ');
+                if (typeof c === 'object') return Object.entries(c).filter(([, v]) => Boolean(v)).map(([k]) => k).join(' ');
+                return String(c);
+            };
+
             if (typeof val === 'function') {
                 effect(() => {
-                    if (el.className !== undefined) el.className = val();
+                    const formatted = formatClass(val());
+                    if (el.className !== undefined) el.className = formatted;
+                    if (el.setAttribute) el.setAttribute('class', formatted);
                 });
             } else if (val && val._isCairnState) {
                 effect(() => {
-                    if (el.className !== undefined) el.className = val.value;
+                    const formatted = formatClass(val.value);
+                    if (el.className !== undefined) el.className = formatted;
+                    if (el.setAttribute) el.setAttribute('class', formatted);
                 });
             } else if (el.className !== undefined) {
-                el.className = val;
+                const formatted = formatClass(val);
+                el.className = formatted;
+                if (el.setAttribute) el.setAttribute('class', formatted);
             }
         } else if (key === 'animate') {
             applyAnimateProp(el, val, props.duration, props.delay, props.easing);
         } else if (key === 'gestures' && typeof val === 'object') {
             gesture(el, val);
+        } else if (key === 'value' || key === 'checked' || key === 'disabled' || key === 'selected' || key === 'readOnly') {
+            if (typeof val === 'function') {
+                effect(() => {
+                    const computedVal = val();
+                    if (key in el) el[key] = computedVal;
+                    if (el.setAttribute) el.setAttribute(key, computedVal);
+                });
+            } else if (val && val._isCairnState) {
+                effect(() => {
+                    if (key in el) el[key] = val.value;
+                    if (el.setAttribute) el.setAttribute(key, val.value);
+                });
+            } else {
+                if (key in el) el[key] = val;
+                if (el.setAttribute) el.setAttribute(key, val);
+            }
         } else if (typeof val === 'function') {
             effect(() => {
                 const computedVal = val();
@@ -231,8 +265,10 @@ export function h(tag, ...args) {
         } else if (typeof childNode === 'string' || typeof childNode === 'number') {
             if (doc) {
                 if (el.appendChild) el.appendChild(doc.createTextNode(String(childNode)));
+            } else {
+                if (el.appendChild) el.appendChild(String(childNode));
             }
-        } else if (childNode instanceof (typeof Element !== 'undefined' ? Element : Object) || childNode.nodeType) {
+        } else if (childNode instanceof (typeof Element !== 'undefined' ? Element : Object) || childNode?.nodeType) {
             if (el.appendChild) el.appendChild(childNode);
         }
     };
@@ -252,12 +288,7 @@ export const h3 = (...args) => h('h3', ...args);
 export const h4 = (...args) => h('h4', ...args);
 export const h5 = (...args) => h('h5', ...args);
 export const h6 = (...args) => h('h6', ...args);
-export const button = (content, props = {}) => {
-    if (typeof content === 'number') {
-        console.warn(`[Cairn Warning]: Button content should be a string or function. Got number (${content}).`);
-    }
-    return h('button', props, content);
-};
+export const button = (...args) => h('button', ...args);
 export const input = (props = {}) => h('input', props);
 export const img = (src, props = {}) => h('img', { src, ...props });
 export const a = (...args) => {
@@ -310,40 +341,196 @@ export const li = (...args) => h('li', ...args);
 export const form = (...args) => h('form', ...args);
 
 /**
- * Auto-generating form helper that handles state, inputs, validation, and submission.
- * @param {object} config Form configuration { fields, submit }
- * @returns {HTMLElement} Form DOM Element
+ * Built-in validation rule helpers for declarative form validation schemas.
+ */
+export const validators = {
+    required: (msg = 'This field is required') => (val) => {
+        if (val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)) {
+            return msg;
+        }
+        return null;
+    },
+    email: (msg = 'Please enter a valid email address') => (val) => {
+        if (!val) return null;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(String(val)) ? null : msg;
+    },
+    minLength: (min, msg) => (val) => {
+        if (!val) return null;
+        const err = msg || `Must be at least ${min} characters`;
+        return String(val).length >= min ? null : err;
+    },
+    maxLength: (max, msg) => (val) => {
+        if (!val) return null;
+        const err = msg || `Must be at most ${max} characters`;
+        return String(val).length <= max ? null : err;
+    },
+    pattern: (regex, msg = 'Invalid format') => (val) => {
+        if (!val) return null;
+        return regex.test(String(val)) ? null : msg;
+    },
+    matches: (fieldKey, msg = 'Fields do not match') => (val, values) => {
+        return values && values[fieldKey] === val ? null : msg;
+    },
+    custom: (fn) => fn
+};
+
+/**
+ * Auto-generating form helper that handles state, inputs, schema validation, and submission.
+ * @param {object} config Form configuration { fields, schema, onSubmit, submit }
+ * @returns {HTMLElement} Form DOM Element augmented with form controller signals
  */
 export const createForm = (config = {}) => {
-    const { fields = {}, submit = () => {} } = config;
-    const fieldStates = {};
+    const { fields = {}, schema = {}, onSubmit = config.submit || (() => {}) } = config;
+    const values = {};
+    const errors = state({});
+    const touched = state({});
+    const isSubmitting = state(false);
+    const isValid = computed(() => Object.keys(errors.value).length === 0);
+
+    const validateField = (fName, fVal, allVals) => {
+        const rules = schema[fName] || (fields[fName] && fields[fName].rules) || [];
+        for (const rule of rules) {
+            const err = rule(fVal, allVals);
+            if (err) return err;
+        }
+        if (fields[fName] && fields[fName].required && (fVal === '' || fVal === undefined || fVal === null)) {
+            return 'This field is required';
+        }
+        return null;
+    };
+
+    const validateAll = () => {
+        const currentVals = {};
+        Object.entries(values).forEach(([k, sig]) => { currentVals[k] = sig.value; });
+        const newErrors = {};
+        Object.keys({ ...fields, ...schema }).forEach((fName) => {
+            const err = validateField(fName, currentVals[fName], currentVals);
+            if (err) newErrors[fName] = err;
+        });
+        errors.value = newErrors;
+        return Object.keys(newErrors).length === 0;
+    };
+
     const fieldElements = [];
 
     Object.entries(fields).forEach(([fName, fDef]) => {
-        const fieldSignal = state(fDef.default || '');
-        fieldStates[fName] = fieldSignal;
+        const fieldSignal = state(fDef.default !== undefined ? fDef.default : '');
+        values[fName] = fieldSignal;
 
         const inputEl = input({
+            id: `field-${fName}`,
             type: fDef.type || 'text',
             value: fieldSignal,
             placeholder: fDef.label || fName,
             required: fDef.required,
-            oninput: (e) => fieldSignal.value = e.target.value
+            'aria-invalid': () => (errors.value[fName] ? 'true' : undefined),
+            oninput: (e) => {
+                fieldSignal.value = e.target.value;
+                touched.value = { ...touched.value, [fName]: true };
+                validateAll();
+            },
+            onblur: () => {
+                touched.value = { ...touched.value, [fName]: true };
+                validateAll();
+            }
         });
 
-        fieldElements.push(div({ style: { marginBottom: '0.75rem' } }, inputEl));
+        const errorMsgEl = p(() => errors.value[fName] || '', {
+            style: () => ({ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', display: errors.value[fName] ? 'block' : 'none' })
+        });
+
+        fieldElements.push(div({ style: { marginBottom: '0.75rem' } }, inputEl, errorMsgEl));
     });
 
-    fieldElements.push(button('Submit', { type: 'submit' }));
+    fieldElements.push(button('Submit', {
+        type: 'submit',
+        disabled: () => isSubmitting.value
+    }));
 
-    return form({
-        onsubmit: (e) => {
+    const formEl = form({
+        onsubmit: async (e) => {
             e.preventDefault();
-            const values = {};
-            Object.entries(fieldStates).forEach(([k, s]) => values[k] = s.value);
-            submit(values);
+            const valid = validateAll();
+            if (!valid) return;
+
+            const currentVals = {};
+            Object.entries(values).forEach(([k, sig]) => { currentVals[k] = sig.value; });
+
+            isSubmitting.value = true;
+            try {
+                await onSubmit(currentVals);
+            } finally {
+                isSubmitting.value = false;
+            }
         }
     }, ...fieldElements);
+
+    return Object.assign(formEl, {
+        values,
+        errors,
+        touched,
+        isValid,
+        isSubmitting,
+        validate: validateAll,
+        reset: () => {
+            Object.entries(fields).forEach(([k, def]) => {
+                if (values[k]) values[k].value = def.default !== undefined ? def.default : '';
+            });
+            errors.value = {};
+            touched.value = {};
+        }
+    });
+};
+
+/**
+ * Dynamic repeatable form field array manager.
+ * @param {Array<object>} initialItems Initial list of item objects
+ * @returns {object} { fields, append, prepend, remove, move, clear, count }
+ */
+export const useFieldArray = (initialItems = []) => {
+    let idCounter = 0;
+    const wrapItem = (item) => ({
+        ...item,
+        _id: (item && item._id) || `fa-${Date.now()}-${++idCounter}`
+    });
+
+    const fields = state(initialItems.map(wrapItem));
+
+    const append = (item) => {
+        fields.value = [...fields.value, wrapItem(item)];
+    };
+
+    const prepend = (item) => {
+        fields.value = [wrapItem(item), ...fields.value];
+    };
+
+    const remove = (index) => {
+        fields.value = fields.value.filter((_, i) => i !== index);
+    };
+
+    const move = (fromIndex, toIndex) => {
+        const arr = [...fields.value];
+        const [moved] = arr.splice(fromIndex, 1);
+        arr.splice(toIndex, 0, moved);
+        fields.value = arr;
+    };
+
+    const clear = () => {
+        fields.value = [];
+    };
+
+    const count = computed(() => fields.value.length);
+
+    return {
+        fields,
+        append,
+        prepend,
+        remove,
+        move,
+        clear,
+        count
+    };
 };
 
 export const textarea = (...args) => h('textarea', ...args);

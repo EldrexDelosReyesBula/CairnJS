@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CairnJS — Interactive Social Feed & Posts Demo</title>
+    <meta name="description"
+        content="Explore a full-featured reactive social post feed built entirely with CairnJS signals, spring animations, and zero dependencies.">
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="../docs/assets/cairn-official-logo.svg">
+    <link rel="alternate icon" type="image/png" href="../docs/assets/cairn-official-logo.png">
+    <link rel="apple-touch-icon" href="../docs/assets/cairn-official-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root,
+        [data-theme="dark"] {
+            --bg: #0b0f19;
+            --surface: #111827;
+            --surface-card: #1e293b;
+            --surface-hover: #273549;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --heart: #f43f5e;
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-card: #ffffff;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --heart: #e11d48;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: var(--text);
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 1.15rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: var(--surface-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.85rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 640px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Stories / Quick Creators */
+        .stories-bar {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 0.75rem 0;
+            scrollbar-width: none;
+        }
+
+        .stories-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .story-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .story-ring {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(45deg, #38bdf8, #818cf8, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .story-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--surface);
+        }
+
+        .story-name {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            max-width: 64px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Post Card */
+        .post-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s ease;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .author-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .author-handle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .post-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Post Image */
+        .post-media-wrap {
+            position: relative;
+            width: 100%;
+            background: #020617;
+            max-height: 460px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .post-media {
+            width: 100%;
+            height: auto;
+            max-height: 460px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        /* Post Actions & Content */
+        .post-body {
+            padding: 1rem;
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+
+        .action-icon-btn:hover {
+            transform: scale(1.15);
+            color: var(--accent);
+        }
+
+        .action-icon-btn.liked {
+            color: var(--heart);
+        }
+
+        .post-likes {
+            font-size: 0.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .post-text {
+            font-size: 0.925rem;
+            line-height: 1.55;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tag-badge {
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+
+        /* Comments Accordion */
+        .comments-section {
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .comment-author {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .comment-text {
+            color: var(--text-muted);
+            flex: 1;
+        }
+
+        .comment-input-wrap {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.45rem 0.75rem;
+            color: var(--text);
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .comment-input:focus {
+            border-color: var(--accent);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #0284c7;
+            color: #ffffff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <a href="./index.html" class="brand">
+            <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS Logo"
+                style="width: 28px; height: 28px; object-fit: contain;"
+                onerror="this.src='../docs/assets/cairn-logo.png'">
+            <span>CairnJS Feed</span>
+        </a>
+        <div class="header-actions">
+            <a href="./index.html" class="btn"><i class="fa-solid fa-arrow-left"></i> Gallery</a>
+            <a href="../docs/playground.html" class="btn btn-primary"><i class="fa-solid fa-code"></i> Playground</a>
+        </div>
+    </header>
+
+    <!-- Social Feed Root -->
+    <main class="container" id="feed-app"></main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Post created successfully!</div>
+
+    <!-- Cairn Reactive Engine Module -->
+    <script type="module">
+        import { cairn, spring, state, computed, Toast } from '../src/index.js';
+        const { div, h2, p, button, input, img, span, mount } = cairn;
+
+        // Assets List
+        const ASSETS = [
+            { id: 1, src: './assets/83d40a8a2d26f9d5f3d378fcb961e6bd.jpg', title: 'Minimalist Architecture' },
+            { id: 2, src: './assets/954fef29d383752d08306b5b33714058.jpg', title: 'Urban Geometry' },
+            { id: 3, src: './assets/b1c601cd17e1ff6cb11f91fb5a6029b0.jpg', title: 'Modern Spatial Design' }
+        ];
+
+        // Reactive Feed State
+        const posts = state([
+            {
+                id: 1,
+                author: 'Eldrex Bula',
+                handle: '@eldrex_bula',
+                avatar: './assets/eldrex-bula-photo.jpg',
+                image: './assets/83d40a8a2d26f9d5f3d378fcb961e6bd.jpg',
+                text: 'Exploring parametric architecture with CairnJS zero-dependency reactive layout engine. Direct DOM updates with hardware-accelerated 60fps springs!',
+                tags: ['#Architecture', '#CairnJS', '#Design', '#WebDev'],
+                likes: state(142),
+                isLiked: state(false),
+                isBookmarked: state(false),
+                time: '2 hours ago',
+                comments: state([
+                    { user: 'Sarah J.', text: 'The fine-grained reactivity makes this feel instant!' },
+                    { user: 'Alex R.', text: 'Love the smooth spring animations on the like button.' }
+                ])
+            },
+            {
+                id: 2,
+                author: 'Elena Rostova',
+                handle: '@elena_dev',
+                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+                image: './assets/954fef29d383752d08306b5b33714058.jpg',
+                text: 'High-contrast monochrome perspective photography. Built interactive image cards in less than 20 lines of CairnJS code!',
+                tags: ['#Monochrome', '#Photography', '#ZeroDeps'],
+                likes: state(89),
+                isLiked: state(false),
+                isBookmarked: state(false),
+                time: '4 hours ago',
+                comments: state([
+                    { user: 'Michael C.', text: 'Crisp layout and typography!' }
+                ])
+            },
+            {
+                id: 3,
+                author: 'David Kim',
+                handle: '@davidk_ui',
+                avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
+                image: './assets/b1c601cd17e1ff6cb11f91fb5a6029b0.jpg',
+                text: 'Spatial form and minimal shadows. Testing nested signals with Cairn reactive collections.',
+                tags: ['#SpatialDesign', '#Signals', '#Frontend'],
+                likes: state(215),
+                isLiked: state(false),
+                isBookmarked: state(false),
+                time: 'Yesterday',
+                comments: state([
+                    { user: 'Eldrex B.', text: 'Awesome composition David!' }
+                ])
+            }
+        ]);
+
+        const showToast = (msg) => {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        };
+
+        // Like Button Handler with Spring Physics
+        const toggleLike = (post, btnEl) => {
+            post.isLiked.value = !post.isLiked.value;
+            if (post.isLiked.value) {
+                post.likes.value++;
+                spring({
+                    from: 1,
+                    to: 1.35,
+                    stiffness: 300,
+                    damping: 10,
+                    onUpdate: (scale) => { if (btnEl) btnEl.style.transform = `scale(${scale})`; },
+                    onComplete: () => {
+                        spring({
+                            from: 1.35,
+                            to: 1,
+                            stiffness: 250,
+                            damping: 12,
+                            onUpdate: (scale) => { if (btnEl) btnEl.style.transform = `scale(${scale})`; }
+                        });
+                    }
+                });
+            } else {
+                post.likes.value--;
+            }
+        };
+
+        // Post Card Component
+        const PostCard = (post) => {
+            const commentInput = state('');
+            const isCommentsOpen = state(false);
+
+            const handleAddComment = () => {
+                const val = commentInput.value.trim();
+                if (!val) return;
+                post.comments.value = [...post.comments.value, { user: 'You', text: val }];
+                commentInput.value = '';
+                showToast('Comment posted!');
+            };
+
+            return div({ class: 'post-card' },
+                // Header
+                div({ class: 'post-header' },
+                    div({ class: 'author-info' },
+                        img(post.avatar, { class: 'author-avatar', alt: post.author }),
+                        div(
+                            div({ class: 'author-name' }, post.author),
+                            div({ class: 'author-handle' }, post.handle)
+                        )
+                    ),
+                    span({ class: 'post-time' }, post.time)
+                ),
+
+                // Media
+                div({ class: 'post-media-wrap' },
+                    img(post.image, { class: 'post-media', alt: 'Post image', loading: 'lazy' })
+                ),
+
+                // Body
+                div({ class: 'post-body' },
+                    // Actions Bar
+                    div({ class: 'post-actions' },
+                        div({ class: 'action-group' },
+                            // Like
+                            button({
+                                class: () => `action-icon-btn ${post.isLiked.value ? 'liked' : ''}`,
+                                title: 'Like Post',
+                                onclick: (e) => toggleLike(post, e.currentTarget)
+                            },
+                                () => span({ class: `fa-${post.isLiked.value ? 'solid' : 'regular'} fa-heart` })
+                            ),
+                            // Comment Toggle
+                            button({
+                                class: 'action-icon-btn',
+                                title: 'Toggle Comments',
+                                onclick: () => isCommentsOpen.value = !isCommentsOpen.value
+                            },
+                                span({ class: 'fa-regular fa-comment' }),
+                                span(() => ` ${post.comments.value.length}`, { style: { fontSize: '0.8rem', color: '#94a3b8' } })
+                            ),
+                            // Share
+                            button({
+                                class: 'action-icon-btn',
+                                title: 'Share Link',
+                                onclick: () => {
+                                    navigator.clipboard.writeText(window.location.href);
+                                    showToast('Post link copied to clipboard!');
+                                }
+                            },
+                                span({ class: 'fa-regular fa-paper-plane' })
+                            )
+                        ),
+                        // Bookmark
+                        button({
+                            class: 'action-icon-btn',
+                            title: 'Bookmark',
+                            onclick: () => {
+                                post.isBookmarked.value = !post.isBookmarked.value;
+                                showToast(post.isBookmarked.value ? 'Saved to bookmarks!' : 'Removed from bookmarks');
+                            }
+                        },
+                            () => span({ class: `fa-${post.isBookmarked.value ? 'solid' : 'regular'} fa-bookmark`, style: { color: post.isBookmarked.value ? '#38bdf8' : '' } })
+                        )
+                    ),
+
+                    // Likes Count
+                    div({ class: 'post-likes' }, () => `${post.likes.value} likes`),
+
+                    // Post Text & Tags
+                    p({ class: 'post-text' }, post.text),
+                    div({ class: 'post-tags' },
+                        post.tags.map(t => span({ class: 'tag-badge', onclick: () => showToast(`Filtered by ${t}`) }, t))
+                    ),
+
+                    // Comments Section
+                    () => isCommentsOpen.value ? div({ class: 'comments-section' },
+                        div({ style: { display: 'flex', flexDirection: 'column', gap: '0.35rem' } },
+                            post.comments.value.map(c => div({ class: 'comment-item' },
+                                span({ class: 'comment-author' }, c.user),
+                                span({ class: 'comment-text' }, c.text)
+                            ))
+                        ),
+                        div({ class: 'comment-input-wrap' },
+                            input({
+                                class: 'comment-input',
+                                placeholder: 'Add a comment...',
+                                value: commentInput,
+                                oninput: (e) => commentInput.value = e.target.value,
+                                onkeydown: (e) => e.key === 'Enter' && handleAddComment()
+                            }),
+                            button('Post', {
+                                class: 'btn btn-primary',
+                                style: { padding: '0.4rem 0.75rem', fontSize: '0.8rem' },
+                                onclick: handleAddComment
+                            })
+                        )
+                    ) : null
+                )
+            );
+        };
+
+        // Stories Header Component
+        const StoriesHeader = () => div({ class: 'stories-bar' },
+            posts.value.map(p => div({ class: 'story-item', onclick: () => showToast(`Viewing story of ${p.author}`) },
+                div({ class: 'story-ring' },
+                    img(p.avatar, { class: 'story-avatar', alt: p.author })
+                ),
+                span({ class: 'story-name' }, p.author.split(' ')[0])
+            ))
+        );
+
+        // Main App Feed
+        const App = () => div(
+            StoriesHeader(),
+            div({ style: { display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '0.5rem' } },
+                posts.value.map(post => PostCard(post))
+            )
+        );
+
+        mount('#feed-app', App());
+    </script>
+</body>
+
+</html>

@@ -344,12 +344,135 @@ export function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Reactive copy-to-clipboard hook with auto-resetting copied status.
+ */
+export function useClipboard(options = {}) {
+    const { timeout = 2000 } = options;
+    const copied = state(false);
+    const error = state(null);
+    let timer = null;
+
+    const copy = async (textVal) => {
+        if (timer) clearTimeout(timer);
+        try {
+            if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                await navigator.clipboard.writeText(String(textVal));
+            }
+            copied.value = true;
+            error.value = null;
+            timer = setTimeout(() => {
+                copied.value = false;
+            }, timeout);
+            return true;
+        } catch (err) {
+            copied.value = false;
+            error.value = err;
+            return false;
+        }
+    };
+
+    return { copy, copied, error };
+}
+
+/**
+ * Viewport Intersection Observer hook with reactive inView signal.
+ */
+export function useInView(target, options = {}) {
+    const inView = state(false);
+    const entry = state(null);
+
+    if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(([firstEntry]) => {
+            inView.value = firstEntry.isIntersecting;
+            entry.value = firstEntry;
+            if (firstEntry.isIntersecting && options.once) {
+                observer.disconnect();
+            }
+        }, options);
+
+        if (target) {
+            const el = typeof target === 'function' ? target() : (target.current || target);
+            if (el && el.nodeType) observer.observe(el);
+        }
+    }
+
+    return { inView, entry };
+}
+
+/**
+ * Reactive media query matching hook.
+ * @param {string} query CSS media query string (e.g. '(max-width: 768px)')
+ * @returns {object} Reactive boolean signal
+ */
+export function useMediaQuery(query) {
+    const matches = state(typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query).matches : false);
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+        const mql = window.matchMedia(query);
+        const handler = (e) => { matches.value = e.matches; };
+        if (mql.addEventListener) {
+            mql.addEventListener('change', handler);
+        } else if (mql.addListener) {
+            mql.addListener(handler);
+        }
+    }
+
+    return matches;
+}
+
+/**
+ * Keyboard shortcut listener for key combinations (e.g. 'ctrl+k', 'alt+s', 'escape').
+ * @param {string|string[]} combo Key combination string or array of strings
+ * @param {(e: KeyboardEvent) => void} callback Triggered when combo matches
+ * @param {object} options { target = window, preventDefault = true }
+ * @returns {() => void} Unsubscribe cleanup function
+ */
+export function useHotkeys(combo, callback, options = {}) {
+    const { target = (typeof window !== 'undefined' ? window : null), preventDefault = true } = options;
+    if (!target) return () => {};
+
+    const combos = (Array.isArray(combo) ? combo : [combo]).map(c => c.toLowerCase().split('+').map(k => k.trim()));
+
+    const handler = (e) => {
+        const key = e.key ? e.key.toLowerCase() : '';
+        const ctrl = e.ctrlKey || e.metaKey;
+        const alt = e.altKey;
+        const shift = e.shiftKey;
+
+        for (const keys of combos) {
+            const hasCtrl = keys.includes('ctrl') || keys.includes('meta') || keys.includes('cmd');
+            const hasAlt = keys.includes('alt');
+            const hasShift = keys.includes('shift');
+            const targetKey = keys.find(k => !['ctrl', 'meta', 'cmd', 'alt', 'shift'].includes(k));
+
+            const ctrlMatch = hasCtrl ? ctrl : !ctrl;
+            const altMatch = hasAlt ? alt : !alt;
+            const shiftMatch = hasShift ? shift : !shift;
+            const keyMatch = !targetKey || key === targetKey;
+
+            if (ctrlMatch && altMatch && shiftMatch && keyMatch) {
+                if (preventDefault) e.preventDefault();
+                callback(e);
+                break;
+            }
+        }
+    };
+
+    target.addEventListener('keydown', handler);
+    return () => target.removeEventListener('keydown', handler);
+}
+
 export const utils = {
     color,
     clipboard,
+    useClipboard,
     storage,
     fullscreen,
     onVisible,
+    useInView,
+    useMediaQuery,
+    useHotkeys,
     useResize,
     debounce,
     throttle,

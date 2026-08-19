@@ -1,9 +1,76 @@
 /**
  * @eldrex/cairn - Built-in Physics Engine
- * High-performance Verlet physics engine with WASM acceleration support.
+ * High-performance Verlet & kinematic particle physics engine.
  */
 
 export const physics = {
+    /**
+     * Creates a single particle with kinematic velocity, gravity, and bounce.
+     * @param {object} config Particle configuration { x, y, vx, vy, gravity, bounce, friction }
+     * @returns {object} Particle instance with `.step(dt)` and `.applyForce(fx, fy)`
+     */
+    particle(config = {}) {
+        const p = {
+            x: config.x || 0,
+            y: config.y || 0,
+            vx: config.vx || 0,
+            vy: config.vy || 0,
+            gravity: config.gravity !== undefined ? config.gravity : 9.8,
+            friction: config.friction !== undefined ? config.friction : 0.98,
+            bounce: config.bounce !== undefined ? config.bounce : 0.75,
+            mass: config.mass || 1,
+
+            applyForce(fx, fy) {
+                p.vx += fx / p.mass;
+                p.vy += fy / p.mass;
+                return p;
+            },
+
+            step(dt = 0.016, bounds = null) {
+                p.vy += p.gravity * dt;
+                p.vx *= p.friction;
+                p.vy *= p.friction;
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (bounds) {
+                    if (p.x < (bounds.minX || 0)) { p.x = bounds.minX || 0; p.vx *= -p.bounce; }
+                    if (p.x > (bounds.maxX || 800)) { p.x = bounds.maxX || 800; p.vx *= -p.bounce; }
+                    if (p.y < (bounds.minY || 0)) { p.y = bounds.minY || 0; p.vy *= -p.bounce; }
+                    if (p.y > (bounds.maxY || 600)) { p.y = bounds.maxY || 600; p.vy *= -p.bounce; }
+                }
+
+                return p;
+            }
+        };
+        return p;
+    },
+
+    /**
+     * Creates a gravitational/magnetic attractor point.
+     * @param {object} config Attractor configuration { x, y, strength, radius }
+     * @returns {object} Attractor instance with `.attract(particle)`
+     */
+    attractor(config = {}) {
+        return {
+            x: config.x || 0,
+            y: config.y || 0,
+            strength: config.strength !== undefined ? config.strength : 100,
+            radius: config.radius || 300,
+
+            attract(p) {
+                const dx = this.x - p.x;
+                const dy = this.y - p.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 5 && dist < this.radius) {
+                    const force = (this.strength / (dist * dist)) * 50;
+                    p.vx += (dx / dist) * force;
+                    p.vy += (dy / dist) * force;
+                }
+            }
+        };
+    },
+
     /**
      * Creates a high-density particle physics grid.
      * 

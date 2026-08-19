@@ -36,3 +36,4 @@ coverage/
 .devdiffignore
 .devdiff.config.js
 .env
+docs/hello.html

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CairnJS — Interactive Examples &amp; Sandbox Gallery</title>
+    <meta name="description" content="Explore live, interactive CairnJS examples showcasing signals, 60fps spring physics, custom elements, and framework integrations with React, Vue, Svelte, and SolidJS.">
+    <meta name="keywords" content="cairnjs examples, reactive javascript examples, svelte action, react bridge, solidjs signals, web components gallery">
+    <meta name="author" content="Eldrex Delos Reyes Bula">
+    <link rel="canonical" href="https://cairnjs.vercel.app/examples/index.html">
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="../docs/assets/cairn-official-logo.svg">
+    <link rel="alternate icon" type="image/png" href="../docs/assets/cairn-official-logo.png">
+    <link rel="apple-touch-icon" href="../docs/assets/cairn-official-logo.png">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cairnjs.vercel.app/examples/index.html">
+    <meta property="og:title" content="CairnJS — Interactive Examples & Sandbox Gallery">
+    <meta property="og:description" content="Explore live, interactive CairnJS examples showcasing signals, 60fps spring physics, and framework integrations.">
+    <meta property="og:image" content="https://cairnjs.vercel.app/docs/assets/cairn-official-logo.png">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CairnJS — Interactive Examples Gallery">
+    <meta name="twitter:description" content="Live CairnJS code examples: React, Vue, Svelte, SolidJS, and Web Components.">
+    <meta name="twitter:image" content="https://cairnjs.vercel.app/docs/assets/cairn-official-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --surface: #111827;
+            --surface-card: #1e293b;
+            --surface-hover: #273549;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text);
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: var(--surface-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            color: #fff;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 3.5rem 1.5rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .filter-bar {
+            max-width: 1100px;
+            margin: 1rem auto 2rem;
+            padding: 0 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .filter-btn {
+            padding: 0.4rem 0.9rem;
+            border-radius: 9999px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--surface-card);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .grid {
+            max-width: 1200px;
+            margin: 0 auto 4rem;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.75rem;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.85rem;
+            width: fit-content;
+        }
+        .tag-core { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .tag-framework { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .tag-app { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+            flex: 1;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .card-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../docs/index.html" class="brand">
+            <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.src='../docs/assets/cairn-logo.png'">
+            <span>CairnJS Examples</span>
+        </a>
+        <div class="nav-links">
+            <a href="../docs/playground.html" class="btn btn-primary"><i class="fa-solid fa-code"></i> Live Playground</a>
+            <a href="../docs/index.html" class="btn"><i class="fa-solid fa-book-open"></i> Docs</a>
+            <a href="https://github.com/EldrexDelosReyesBula/CairnJS" target="_blank" class="btn"><i class="fa-brands fa-github"></i> GitHub</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Ready-to-Run CairnJS Examples</h1>
+            <p>Explore production examples, reactive patterns, and framework integrations with React, Vue, Svelte, SolidJS, and Web Components.</p>
+        </section>
+
+        <section class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All Examples (12)</button>
+            <button class="filter-btn" data-filter="core">Fundamentals & Reactivity</button>
+            <button class="filter-btn" data-filter="framework">Framework Integrations</button>
+            <button class="filter-btn" data-filter="app">Full Demos & Apps</button>
+        </section>
+
+        <section class="grid" id="examples-grid">
+            <!-- 0. Social Feed & Post Cards -->
+            <article class="card" data-cat="app">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-camera"></i> Social Media</span>
+                    <h3>Interactive Social Feed &amp; Posts</h3>
+                    <p>Rich image cards, 60fps spring bounce like buttons, expandable comments, bookmarking, and tag filtering.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./posts.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=posts" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 0.1 E-Commerce Cart -->
+            <article class="card" data-cat="app">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-cart-shopping"></i> E-Commerce</span>
+                    <h3>Reactive Store &amp; Cart Drawer</h3>
+                    <p>Dynamic product catalog, computed discounts/taxes, quantity controls, and slide-over cart drawer.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./ecommerce-cart.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=store" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+            <!-- 1. Counter -->
+            <article class="card" data-cat="core">
+                <div>
+                    <span class="card-tag tag-core"><i class="fa-solid fa-bolt"></i> Fundamentals</span>
+                    <h3>Reactive Counter</h3>
+                    <p>Fine-grained signals, computed state multiplier, and direct DOM update bindings with zero virtual diffing.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./counter.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 2. Todos -->
+            <article class="card" data-cat="core">
+                <div>
+                    <span class="card-tag tag-core"><i class="fa-solid fa-list-check"></i> Collections</span>
+                    <h3>Filterable Todo Application</h3>
+                    <p>Dynamic reactive list arrays, filtering (All, Active, Completed), item toggling, and local deletions.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./todos.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=todos" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 3. Kitchen Sink -->
+            <article class="card" data-cat="app">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-kitchen-set"></i> Showcase</span>
+                    <h3>Kitchen Sink Master Playground</h3>
+                    <p>Comprehensive showcase featuring signals, forms, animated accordions, tabs, canvas particles, and overlays.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./kitchen-sink.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=overlays" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 4. Studio Demo -->
+            <article class="card" data-cat="app">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-wand-magic-sparkles"></i> Visual Tool</span>
+                    <h3>Cairn Studio Visual Builder</h3>
+                    <p>Interactive drag-and-drop live component designer with DOM tree inspector and code export.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./studio-demo.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/index.html#/examples/studio-designer" class="btn"><i class="fa-solid fa-book"></i> Guide</a>
+                </div>
+            </article>
+
+            <!-- 5. Custom Elements -->
+            <article class="card" data-cat="framework">
+                <div>
+                    <span class="card-tag tag-framework"><i class="fa-solid fa-cube"></i> W3C Standards</span>
+                    <h3>Custom Elements & Web Components</h3>
+                    <p>Standard custom elements (`<cairn-counter>`) powered by `defineCustomElement` with observed attributes.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./custom-elements.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 6. React 18/19 -->
+            <article class="card" data-cat="framework">
+                <div>
+                    <span class="card-tag tag-framework"><i class="fa-brands fa-react"></i> React Bridge</span>
+                    <h3>React 18 / 19 Integration</h3>
+                    <p>Bi-directional reactive bridge connecting React parent states and Cairn high-frequency signals seamlessly.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./with-react/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 7. Vue 3 -->
+            <article class="card" data-cat="framework">
+                <div>
+                    <span class="card-tag tag-framework"><i class="fa-brands fa-vuejs"></i> Vue Bridge</span>
+                    <h3>Vue 3 Template Ref Integration</h3>
+                    <p>Mounting Cairn widgets inside Vue 3 composition API template refs with automatic unmount lifecycle handling.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./with-vue/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=tabs" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 8. Svelte -->
+            <article class="card" data-cat="framework">
+                <div>
+                    <span class="card-tag tag-framework"><i class="fa-solid fa-fire"></i> Svelte Bridge</span>
+                    <h3>Svelte Island Action (`use:cairn`)</h3>
+                    <p>Svelte custom action pattern mounting micro-reactive Cairn widgets with reactive prop updates.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./with-svelte/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=motion" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 9. SolidJS -->
+            <article class="card" data-cat="framework">
+                <div>
+                    <span class="card-tag tag-framework"><i class="fa-solid fa-bolt"></i> SolidJS Bridge</span>
+                    <h3>SolidJS Signals Pipeline</h3>
+                    <p>Fine-grained signal interoperability between Cairn and SolidJS without Virtual DOM overhead.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./with-solid/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+
+            <!-- 10. Vanilla Sandbox -->
+            <article class="card" data-cat="core">
+                <div>
+                    <span class="card-tag tag-core"><i class="fa-brands fa-js"></i> Vanilla JS</span>
+                    <h3>Vanilla JS Minimal Sandbox</h3>
+                    <p>Bare-metal zero-config vanilla JavaScript template demonstrating atomic mounting and teardown.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="./vanilla/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
+                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.card').forEach(card => {
+                    if (filter === 'all' || card.dataset.cat === filter) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -30,7 +30,10 @@ import { state, effect } from './state.js';
 export function suspense(config = {}) {
     const { children, loading, error, resources = [] } = config;
 
-    if (typeof document === 'undefined') return null;
+    if (typeof document === 'undefined') {
+        const output = typeof children === 'function' ? children() : children;
+        return output || { tagName: 'DIV', nodeType: 1, childNodes: [], setAttribute() {}, appendChild() {} };
+    }
 
     const container = document.createElement('div');
     container.setAttribute('data-cairn-suspense', '');

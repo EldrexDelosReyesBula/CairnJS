@@ -13,14 +13,21 @@ import { middlewareEngine, hooksBus } from './extensibility.js';
 function resolveTarget(target) {
     if (typeof target === 'string') {
         if (typeof document !== 'undefined') {
-            return document.querySelector(target);
+            try {
+                const el = document.querySelector(target);
+                if (el) return el;
+            } catch (e) {
+                // Invalid selector syntax, try direct ID lookup
+            }
+            const cleanId = target.startsWith('#') ? target.slice(1) : target;
+            return document.getElementById(cleanId);
         }
         return null;
     }
     if (target && typeof target === 'object') {
-        if (target.current) return target.current; // React Ref
-        if (target.value) return target.value;     // Vue Ref / Signal
-        if (target.nodeType) return target;        // Direct DOM Element
+        if (target.current && target.current.nodeType) return target.current; // React Ref
+        if (target.value && target.value.nodeType) return target.value;       // Vue Ref
+        if (target.nodeType) return target;                                  // Direct DOM Element
     }
     return null;
 }

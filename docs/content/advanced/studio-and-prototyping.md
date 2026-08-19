@@ -1,6 +1,6 @@
 # Cairn Studio — Visual Component Builder & Prototyping Environment
 
-Cairn Studio (`cairn.studio`) provides a visual editing, component layout, interaction prototyping, and multi-framework code generation environment built directly on top of the native Cairn engine.
+Cairn Studio (`studio` / `cairn.studio`) provides a visual editing, component inspection, interactive screen routing, and 7-framework code generation environment built directly on top of the native Cairn engine.
 
 ---
 
@@ -9,179 +9,76 @@ Cairn Studio (`cairn.studio`) provides a visual editing, component layout, inter
 Enable Cairn Studio mode inside any existing HTML page or application mount target:
 
 ```javascript
-import { cairn } from '@eldrex/cairn';
+import { studio } from '@eldrex/cairn';
 
 // Activate embedded visual studio workspace
-cairn.studio.enable({
+studio.enable({
     target: '#app',          // Target mounting selector
-    mode: 'edit',            // 'edit' | 'prototype' | 'preview'
-    features: ['builder', 'styles', 'code', 'preview']
+    mode: 'edit'             // 'edit' | 'prototype' | 'preview'
 });
 ```
 
 ---
 
-## 2. Workspace Canvas Configuration
+## 2. Real-time Element Inspection (`studio.inspect`)
 
-Configure canvas layout dimensions, grid snap settings, zoom levels, and device viewport emulation:
+Inspect live DOM nodes and highlight their boundary boxes and computed styling properties:
 
 ```javascript
-cairn.studio.canvas({
-    width: 1200,
-    height: 800,
-    background: '#ffffff',
-    grid: {
-        show: true,
-        size: 8,
-        snap: true
-    },
-    rulers: {
-        show: true,
-        unit: 'px'
-    },
-    zoom: {
-        min: 10,
-        max: 400,
-        current: 100
-    },
-    device: {
-        type: 'responsive',  // 'responsive' | 'desktop' | 'tablet' | 'mobile'
-        width: 1200,
-        height: 800
-    }
-});
+const targetCard = document.querySelector('.service-card');
+
+// Highlight and select element in studio inspector
+studio.inspect(targetCard);
 ```
 
 ---
 
-## 3. Reusable Component Builder
+## 3. Screen Flows & Interaction Prototyping
 
-Group element trees into reusable component definitions with auto-detected property schemas:
+Manage multi-screen prototype applications and test routing live:
 
 ```javascript
-// Register a new visual component definition
-const cardComponent = cairn.studio.createComponent('PricingCard', [
-    cairn.h3('Pro Plan'),
-    cairn.p('$29/mo'),
-    cairn.button('Get Started')
-], {
-    title: { type: 'string', default: 'Pro Plan' },
-    price: { type: 'string', default: '$29/mo' }
-});
+// Register prototype screens
+const homeScreen = studio.addScreen('Home Overview', '/');
+const profileScreen = studio.addScreen('User Profile', '/profile');
+const settingsScreen = studio.addScreen('Telemetry Settings', '/settings');
+
+// Switch active screen in preview canvas
+studio.switchScreen(profileScreen.id);
 ```
 
 ---
 
-## 4. Visual Style Customization
+## 4. Multi-Framework Code Exporters (`studio.export`)
 
-Apply reactive CSS style modifications to target elements dynamically:
+Export visual component designs into clean, production-ready code with 100% native idioms for 7 targets:
 
 ```javascript
-const targetElement = document.querySelector('.card-header');
+// 1. Native Cairn ESM Component
+const cairnCode = studio.export({ format: 'cairn', componentName: 'PricingCard' });
 
-cairn.studio.style(targetElement, {
-    background: 'linear-gradient(135deg, #0f172a, #1e293b)',
-    color: '#f8fafc',
-    padding: '24px',
-    borderRadius: '12px'
-});
+// 2. Standard W3C Custom Element (<cairn-widget>)
+const webCompCode = studio.export({ format: 'custom-element', componentName: 'PricingCard' });
+
+// 3. React 18+ (TSX with hooks and typed props)
+const reactCode = studio.export({ format: 'react', componentName: 'PricingCard' });
+
+// 4. Vue 3 (Single File Component with <script setup>)
+const vueCode = studio.export({ format: 'vue', componentName: 'PricingCard' });
+
+// 5. Svelte 5 (Typed export props and signal reactivity)
+const svelteCode = studio.export({ format: 'svelte', componentName: 'PricingCard' });
+
+// 6. Angular 17+ (Standalone component with Signals)
+const angularCode = studio.export({ format: 'angular', componentName: 'PricingCard' });
+
+// 7. Plain HTML + CSS
+const htmlCode = studio.export({ format: 'html', componentName: 'PricingCard' });
 ```
 
 ---
 
-## 5. Screen Flow & Interaction Prototyping
+## 5. Live Interactive Studio Playground Demo
 
-Link screens and define visual interaction triggers without boilerplate:
-
-```javascript
-// Register screen navigation transition trigger
-const navInteraction = cairn.studio.prototype({
-    fromScreen: 'screen-home',
-    toScreen: 'screen-checkout',
-    trigger: 'click',
-    transition: 'slide-left',
-    duration: 300
-});
-```
-
----
-
-## 6. Mock Data & API Testing
-
-Register simulated endpoints or cached remote services for prototype testing:
-
-```javascript
-// Mock API Endpoint
-cairn.studio.mock({
-    endpoint: '/api/users',
-    method: 'GET',
-    response: {
-        users: [
-            { id: 1, name: 'Alice' },
-            { id: 2, name: 'Bob' }
-        ]
-    },
-    delay: 300
-});
-
-// Remote Service API Test Configuration
-cairn.studio.api({
-    endpoint: 'https://api.example.com/users',
-    method: 'GET',
-    headers: { 'Authorization': 'Bearer token' },
-    caching: true
-});
-```
-
----
-
-## 7. Multi-Framework Code Exporters
-
-Export visual component designs into clean code for Cairn, React, Vue 3, Svelte, or plain HTML:
-
-```javascript
-// Export Cairn code
-const cairnCode = cairn.studio.export({
-    format: 'cairn',
-    componentName: 'PricingCard'
-});
-
-// Export React component
-const reactCode = cairn.studio.export({
-    format: 'react',
-    componentName: 'PricingCard'
-});
-
-// Export Vue 3 component
-const vueCode = cairn.studio.export({
-    format: 'vue',
-    componentName: 'PricingCard'
-});
-
-// Export Svelte component
-const svelteCode = cairn.studio.export({
-    format: 'svelte',
-    componentName: 'PricingCard'
-});
-```
-
----
-
-## 8. Version Control & Sharing
-
-Save design iterations, rollback versions, or generate shareable preview configurations:
-
-```javascript
-// Save design version restore point
-cairn.studio.version.save('Before Redesign', 'Save before color scheme iteration');
-
-// Restore previous version
-cairn.studio.version.restore('v1');
-
-// Generate share link configuration
-const shareConfig = cairn.studio.share({
-    mode: 'view',
-    link: true,
-    expires: 'never'
-});
-```
+Test the visual builder, themes, physics, and multi-framework exporter interactively:
+- Open [`examples/studio-demo.html`](file:///c:/Users/Eldrex/Downloads/classhost/Needs/PapyrusJS/examples/studio-demo.html) in your browser.

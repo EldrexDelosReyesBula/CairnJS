@@ -1,27 +1,76 @@
 /**
  * @eldrex/cairn - Reactive Context / Dependency Injection
- * React Context-style provide/inject for sharing values across the component tree
- * without prop drilling. Zero dependencies.
+ * React Context-style provide/inject with scoped subtree providers for sharing values across component trees.
+ * Zero external dependencies.
  */
 
 import { state } from './state.js';
+import { div } from './dom.js';
 
 const _contextMap = new Map();
+let _contextIdCounter = 0;
 
 /**
- * Creates a named context with an optional default value.
+ * Creates a named context with an optional default value and helper methods.
  *
- * @param {string} name Unique context identifier
- * @param {*} defaultValue Default value if no provider found
- * @returns {object} Context object { name, defaultValue }
+ * @param {string|*} name Unique context identifier (or defaultValue if omitted)
+ * @param {*} [defaultValue=null] Default value if no provider found
+ * @returns {object} Context object with .name, .defaultValue, .Provider, .use(), .provide()
  *
  * @example
- * const ThemeContext = createContext('theme', { color: 'dark' });
- * provideContext(ThemeContext, { color: 'light' });
- * const theme = useContext(ThemeContext);
+ * const ThemeContext = createContext('theme', 'dark');
+ * ThemeContext.provide('light');
+ * const theme = ThemeContext.use();
  */
 export function createContext(name, defaultValue = null) {
-    return { name, defaultValue, _isCairnContext: true };
+    let ctxName = name;
+    let defVal = defaultValue;
+
+    if (typeof name !== 'string') {
+        defVal = name;
+        ctxName = `cairn_ctx_${++_contextIdCounter}`;
+    }
+
+    const context = {
+        name: ctxName,
+        defaultValue: defVal,
+        _isCairnContext: true,
+
+        /**
+         * Shorthand to retrieve the reactive context value.
+         * @returns {object} State signal
+         */
+        use() {
+            return useContext(context);
+        },
+
+        /**
+         * Shorthand to provide a value globally or for the current branch.
+         * @param {*} value
+         */
+        provide(value) {
+            provideContext(context, value);
+            return context;
+        },
+
+        /**
+         * Creates a scoped DOM provider subtree that overrides this context value for its child elements.
+         * @param {*} value Value or signal to provide
+         * @param {...*} children Child elements
+         * @returns {HTMLElement} Scoped container element
+         */
+        Provider(value, ...children) {
+            const previous = _contextMap.get(context.name);
+            provideContext(context, value);
+            const container = div({ class: `cairn-provider-${context.name}`, 'data-cairn-context': context.name }, ...children);
+            if (previous !== undefined) {
+                _contextMap.set(context.name, previous);
+            }
+            return container;
+        }
+    };
+
+    return context;
 }
 
 /**
@@ -63,6 +112,15 @@ export function useContext(context) {
 }
 
 /**
+ * Checks if a context is currently provided in the active map.
+ * @param {object} context Context object
+ * @returns {boolean} True if context is active
+ */
+export function hasContext(context) {
+    return !!(context && context._isCairnContext && _contextMap.has(context.name));
+}
+
+/**
  * Removes a provided context (useful for cleanup in unmounted trees).
  * @param {object} context Context object
  */
@@ -72,4 +130,11 @@ export function removeContext(context) {
     }
 }
 
-export default { createContext, provideContext, useContext, removeContext };
+/**
+ * Resets all active context providers (useful for test isolation and page resets).
+ */
+export function resetContexts() {
+    _contextMap.clear();
+}
+
+export default { createContext, provideContext, useContext, hasContext, removeContext, resetContexts };

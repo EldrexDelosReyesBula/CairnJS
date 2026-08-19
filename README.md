@@ -1,32 +1,42 @@
-# Cairn — Framework-Agnostic UI Component Builder
+# CairnJS — Zero-Dependency Reactive UI Framework & Component Suite
 
-Build reactive, framework-agnostic web components with zero external dependencies. Use with React, Vue, Svelte, Angular, or vanilla HTML.
+Build reactive, framework-agnostic web applications and components with zero external dependencies. Use with React, Vue, Svelte, Angular, standard Web Components, or vanilla HTML/JS.
 
-[![npm](https://img.shields.io/badge/npm-1.0.0-black)](https://www.npmjs.com/package/@eldrex/cairn)
+[![npm](https://img.shields.io/badge/npm-1.1.0-black)](https://www.npmjs.com/package/@eldrex/cairnjs)
+[![Documentation](https://img.shields.io/badge/Docs-cairnjs.vercel.app-blue)](https://cairnjs.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![LLM Prompt Context](https://img.shields.io/badge/LLM_Context-llms.txt-purple.svg)](./llms.txt)
 
-> 🤖 **Prompting AI Assistants?** Copy-paste [`llms.txt`](./llms.txt) or [`CAIRN_AI_PROMPT.md`](./CAIRN_AI_PROMPT.md) into ChatGPT, Claude, or Gemini for 100% accurate Cairn code generation.
+> 🌐 **Live Documentation & Interactive Playground**: [cairnjs.vercel.app](https://cairnjs.vercel.app)  
+> 🤖 **Prompting AI Assistants?** Copy-paste [`llms.txt`](./llms.txt) or [`CAIRN_AI_PROMPT.md`](./CAIRN_AI_PROMPT.md) into ChatGPT, Claude, Cursor, or Gemini for 100% accurate CairnJS code generation.
 
 ---
 
-## Why Cairn?
+## Why CairnJS?
 
-Cairn provides plain functions, standard HTML element builders, fine-grained reactivity, zero-traffic WASM performance, zero abstraction walls, and an extensible plugin system. No custom template syntax. No compiler locking you in.
+CairnJS combines the simplicity of standard DOM functions with the power of a complete modern UI framework:
+- **Fine-Grained Reactivity**: Signals (`state`, `computed`, `effect`) update exact text nodes and style properties with zero Virtual DOM overhead.
+- **50+ Accessible UI Primitives**: Modals, Drawers, Toast queues, Command Palettes (`Cmd+K`), Context Menus, Steppers, Accordions, and Data Tables.
+- **Declarative Form Validation**: Schema-based validation engine with `validators` and dynamic repeating rows (`useFieldArray`).
+- **Accessible Overlays**: Automatic focus trapping (`createFocusTrap`), z-index layering (`tokens.zIndex`), and escape dismissal.
+- **Complete Motion Suite**: Spring physics, gestures, timeline sequencing, and particle kinematics.
+- **Rust / WASM Zero-Traffic Acceleration**: Shared state memory buffers and direct DOM pointer mutations.
+- **Universal Cross-Framework Bridges**: Seamlessly export to React (`toReact`), Vue (`toVue`), Svelte, Angular, or W3C Custom Elements.
 
-```js
-import { state, button, div, mount } from '@eldrex/cairn';
+```javascript
+import { state, div, button, p, mount } from '@eldrex/cairnjs';
 
-let count = state(0);
+const count = state(0);
 
-let app = div(
-    button(
-        () => `Clicked ${count.value} times`,
-        { onclick: () => count.value++ }
-    )
+const app = div(
+    p(() => `Count: ${count.value}`),
+    button('+ Increment', {
+        onclick: () => count.value++,
+        style: { padding: '0.5rem 1rem', background: '#38bdf8', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }
+    })
 );
 
-mount("#app", app);
+mount('#app', app);
 ```
 
 ---
@@ -36,131 +46,173 @@ mount("#app", app);
 ### Package Manager (npm / pnpm / yarn)
 
 ```bash
-npm install @eldrex/cairn
+npm install @eldrex/cairnjs
 ```
 
 ### CDN (Zero Install)
 
 ```html
-<!-- jsDelivr CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairn@1.0.0/dist/cairn.min.js"></script>
+<!-- Automatic Latest Updates (@latest) -->
+<script type="module">
+    import { state, div, button, mount } from 'https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@latest/dist/cairn.module.js';
+</script>
 
-<!-- unpkg CDN -->
-<script src="https://unpkg.com/@eldrex/cairn@1.0.0/dist/cairn.min.js"></script>
+<!-- UMD Global (@latest) -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
+
+<!-- Pinned Immutable Release (@1.1.0) -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.1.0/dist/cairn.min.js"></script>
 ```
 
-## 🔑 Key Architecture
+---
 
-### 1. Extensibility & Middleware System
-Plugins are simple functions receiving Cairn context. Middleware allows intercepting element creation, mounting, state mutations, and style updates.
+## 🚀 Feature Highlights & Code Recipes
 
-```js
-import { cairn, tailwind } from '@eldrex/cairn';
+### 1. Declarative Form Validation & Dynamic Arrays
 
-// Use Tailwind CSS Adapter
-cairn.use(tailwind);
+```javascript
+import { createForm, validators, useFieldArray, div, button, mount } from '@eldrex/cairnjs';
 
-// Global Middleware Interceptor
-cairn.middleware.add({
-    afterStateChange(key, oldVal, newVal) {
-        console.log(`[State Change] ${oldVal} → ${newVal}`);
+const userForm = createForm({
+    fields: {
+        email: { label: 'Email', type: 'email', default: '' },
+        password: { label: 'Password', type: 'password', default: '' }
+    },
+    schema: {
+        email: [validators.required(), validators.email()],
+        password: [validators.required(), validators.minLength(8)]
+    },
+    onSubmit: async (values) => {
+        console.log('Form Submitted Successfully:', values);
     }
+});
+
+// Dynamic repeating field rows
+const tags = useFieldArray([{ label: 'Engineering' }]);
+tags.append({ label: 'Design' });
+```
+
+---
+
+### 2. Accessible Overlays, Focus Trapping & Modals
+
+```javascript
+import { Modal, ConfirmDialog, Drawer, Toast, NotificationCenter } from '@eldrex/cairnjs';
+
+// 1. Accessible Dialog Modal
+const settingsModal = Modal({
+    title: 'User Settings',
+    content: 'Configure preferences and notifications.',
+    closeOnEscape: true
+});
+
+// 2. Asynchronous Promise Confirmation
+async function deleteItem() {
+    const ok = await ConfirmDialog.confirm({
+        title: 'Delete Item?',
+        message: 'This action cannot be undone.',
+        variant: 'danger'
+    });
+    if (ok) Toast.success('Item deleted');
+}
+
+// 3. Global Notification Center
+const bellButton = NotificationCenter.Button();
+const historyDrawer = NotificationCenter.Panel();
+```
+
+---
+
+### 3. Power-User Navigation & Menus
+
+```javascript
+import { CommandPalette, ContextMenu, DataTable } from '@eldrex/cairnjs';
+
+// Global Spotlight Search (Ctrl+K / Cmd+K)
+const palette = CommandPalette({
+    hotkey: true,
+    actions: [
+        { title: 'Open Documentation', group: 'Navigation', onSelect: () => window.location.href = 'https://cairnjs.vercel.app' },
+        { title: 'New Project', group: 'Actions', onSelect: () => console.log('New project created') }
+    ]
 });
 ```
 
-### 2. Zero-Traffic WASM Engine (`wasmEngine`)
-State signals reside in shared memory (`SharedStateBuffer`), enabling WASM updates to mutate DOM nodes via direct pointers (`DomRef`) with zero boundary crossing traffic.
+---
 
-```js
-import { SharedStateBuffer, wasmEngine, DomRef } from '@eldrex/cairn';
+### 3. Interactive Data Table with Sorting, Search & Pagination
 
-const buffer = new SharedStateBuffer(1000);
-wasmEngine.batchUpdate(new Float32Array([10, 20, 30]), buffer);
-```
+```javascript
+import { DataTable, mount } from '@eldrex/cairnjs';
 
-### 3. Escape Hatches & Unlimited Access
-Access native DOM methods, parse raw HTML markup, instantiate Web Components, or configure global engines:
+const usersTable = DataTable({
+    columns: [
+        { key: 'name', title: 'User Name', sortable: true },
+        { key: 'role', title: 'Security Role', sortable: true },
+        { key: 'status', title: 'Account Status', render: (val) => `<span class="badge">${val}</span>` }
+    ],
+    data: [
+        { name: 'Eldrex Bula', role: 'Maintainer', status: 'Active' },
+        { name: 'Sarah Jenkins', role: 'Architect', status: 'Active' },
+        { name: 'Alex Rivera', role: 'Developer', status: 'Pending' }
+    ],
+    pageSize: 5,
+    searchable: true
+});
 
-```js
-import { raw, element, canvas, config } from '@eldrex/cairn';
-
-const rawNodes = raw('<div class="card">Raw HTML</div>');
-const customComp = element('my-web-component', { prop: 'value' });
-const canvasEl = canvas({ width: 800, height: 600 });
-```
-
-### 4. Framework Bridges (React, Vue, Angular, Svelte)
-Mount Cairn components anywhere or convert them directly into framework wrappers:
-
-```js
-import { cairnToReact, cairnToVue, cairnToSvelte } from '@eldrex/cairn';
-
-const ReactComponent = cairnToReact(MyCairnComponent);
-const VueComponent = cairnToVue(MyCairnComponent);
+mount('#app', usersTable);
 ```
 
 ---
 
-## ⚡ CLI Tooling (`@eldrex/cairn-cli`)
+### 4. Internationalization (i18n) & RTL Auto-Sync
 
-```bash
-# Scaffold component or library
-npx cairn create my-component
+```javascript
+import { createI18n } from '@eldrex/cairnjs';
 
-# Start HTTP dev server with SSE live reload
-npx cairn dev
+const i18n = createI18n({
+    locale: 'en',
+    messages: {
+        en: { welcome: 'Welcome, {name}!' },
+        ar: { welcome: 'مرحبا {name}!' } // Automatically toggles <html dir="rtl">
+    }
+});
 
-# Generate standalone documentation site in docs/
-npx cairn docs
-
-# Analyze production bundle file sizes
-npx cairn analyze
+console.log(i18n.t('welcome', { name: 'Eldrex' }));
 ```
 
 ---
 
-## Project Structure
+### 5. Universal Framework Bridges & Web Components
 
-```
-cairn/
-├── src/
-│   ├── state.js          // Reactive signals engine (state, computed, effect, collection, resource)
-│   ├── dom.js            // HTML tag builders & escape hatches (h, div, button, raw, element, canvas)
-│   ├── extensibility.js  // Plugin loader, middleware interceptors & deep configuration
-│   ├── framework-bridges.js // React, Vue, Angular, Svelte adapters
-│   ├── wasm.js           // WASM Engine & SharedStateBuffer zero-traffic layer
-│   ├── virtual-list.js   // 100k+ item high-performance VirtualList
-│   ├── mobile.js         // Touch gestures & BottomSheet physics
-│   ├── three.js          // WebGL 3D component layer
-│   ├── docs.js           // Documentation generator
-│   ├── iteration.js      // Hot reload & performance budget monitoring
-│   ├── adapters/         // Multi-styling adapters (Tailwind, Tokens)
-│   └── ui/               // 50+ pre-built UI primitives
-├── bin/cairn.js          // Scaffolding & Development CLI
-├── cairn-explorer.js     // Interactive Component Explorer drawer
-├── dist/                 // UMD & ESM production bundles
-├── docs/                 // Interactive documentation app & guides
-├── README.md
-└── package.json
+```javascript
+import { defineCustomElement, cairnToReact, cairnToVue } from '@eldrex/cairnjs';
+
+// W3C Standard Custom Element (<my-widget>)
+defineCustomElement('my-widget', MyComponent, ['title']);
+
+// React & Vue Wrappers
+export const ReactWidget = cairnToReact(MyComponent);
+export const VueWidget = cairnToVue(MyComponent);
 ```
 
 ---
 
-## Documentation
+## 📚 Component Catalog
 
-- [Getting Started](./docs/content/guide/getting-started.md)
-- [Overview & Philosophy](./docs/content/guide/overview.md)
-- [Extensibility & Developer Experience](./docs/content/architecture/extensibility-and-dx.md)
-- [Rust / WASM Zero-Traffic Engine](./docs/content/architecture/rust-wasm.md)
-- [Low-Level DOM Access & Framework Interoperability](./docs/content/architecture/low-level-access.md)
-- [Reactivity System](./docs/content/core/reactivity.md)
-- [DOM & Component System](./docs/content/architecture/dom-and-components.md)
-- [Styling Guide](./docs/content/architecture/styling.md)
-- [UI Component Library](./docs/content/components/component-library.md)
-- [Full API Reference](./docs/content/reference/api.md)
+| Category | Available Components & Primitives |
+| :--- | :--- |
+| **Layout** | `Box`, `Container`, `Grid`, `Stack`, `Center`, `Cluster`, `Split`, `AspectRatio`, `Show`, `Hide`, `Divider`, `Spacer` |
+| **Forms & Inputs** | `createForm`, `validators`, `useFieldArray`, `NumberInput`, `PasswordInput`, `ColorPicker`, `DropZone`, `Rating`, `SegmentedControl`, `Select`, `Textarea`, `Checkbox`, `Radio`, `Toggle`, `Slider`, `Autocomplete`, `Combobox` |
+| **Overlays & Feedback** | `Modal`, `ConfirmDialog`, `Drawer`, `Toast`, `NotificationCenter`, `createFocusTrap`, `overlayStack`, `Alert`, `Progress`, `Skeleton`, `Spinner`, `EmptyState` |
+| **Navigation** | `CommandPalette`, `ContextMenu`, `Breadcrumbs`, `Pagination`, `Stepper`, `Tabs`, `Navbar`, `Sidebar`, `Menu`, `Dropdown`, `router`, `Link` |
+| **Data Display** | `DataTable`, `DataGrid`, `Table`, `Accordion`, `Timeline`, `Tree`, `Card`, `Badge`, `Avatar`, `Tag`, `Tooltip`, `Popover`, `CodeBlock` |
+| **Hooks & Device** | `useMediaQuery`, `useHotkeys`, `useClipboard`, `useInView`, `useResize`, `fullscreen`, `a11y.audit` |
+| **Graphics & Motion** | `createCanvas2D`, `createScene3D`, `shapes`, `spring`, `physics`, `timeline`, `particles`, `gesture` |
+| **Dev Tools** | `createPlayground`, `docs`, `studio`, `ai`, `iteration` |
 
 ---
 
-## License
+## 📄 License
 
-MIT © Eldrex Bula & Cairn Contributors.
+MIT License © 2026 Eldrex Bula & CairnJS Contributors.

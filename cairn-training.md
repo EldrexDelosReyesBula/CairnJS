@@ -1,56 +1,256 @@
-# cairn-training.md
-# Complete documentation optimized for AI comprehension
+# CairnJS AI Training Dataset & Patterns
 
-## PATTERN: State Management
-```js
-// ALWAYS use .value for state access
-let count = state(0);
-count.value++;  // Correct
-count++;        // Incorrect - will not trigger updates
+Complete, verified training examples for **CairnJS** (`@eldrex/cairnjs`), optimized for LLMs (ChatGPT, Claude, Gemini, DeepSeek, Cursor, Copilot).
+Live Docs: https://cairnjs.vercel.app | GitHub: https://github.com/EldrexDelosReyesBula/CairnJS
+
+---
+
+## 1. PATTERN: State Management & Signals
+```javascript
+// ALWAYS use .value for reading and writing signals
+const count = state(0);
+count.value++;                 // ✅ Correct - triggers updates
+count.value = count.value + 1; // ✅ Correct
+
+count++;                       // ❌ WRONG - does not trigger updates
+count(5);                      // ❌ WRONG - not a function
 ```
 
-## PATTERN: Component Creation
-```js
-// ALWAYS return DOM elements from components
-const MyComponent = component(() => {
-    return div("content");  // Correct
-});
+---
 
-const MyComponent = component(() => {
-    div("content");  // Incorrect - missing return
-});
+## 2. PATTERN: Element Builders & No JSX
+```javascript
+// ALWAYS use JavaScript builder functions, NEVER JSX
+div({ class: 'card' }, h1('Hello'), p('World')); // ✅ Correct
+<div className="card"><h1>Hello</h1></div>        // ❌ WRONG - No JSX in Cairn
 ```
 
-## PATTERN: Event Handling
-```js
-// ALWAYS use lowercase event names
-button("Click", { onclick: fn });    // Correct
-button("Click", { onClick: fn });    // Incorrect - wrong case
+---
+
+## 3. PATTERN: Dynamic Reactive Text & Children
+```javascript
+// ALWAYS pass a getter function `() => ...` for reactive bindings
+p(() => `Count: ${count.value}`);           // ✅ Correct - reactive
+p(`Count: ${count.value}`);                 // ❌ WRONG - static evaluation, won't update
+
+div(() => show.value ? p('Visible') : null); // ✅ Correct - dynamic conditional
+div(show.value ? p('Visible') : null);       // ❌ WRONG - evaluated once
 ```
 
-## PATTERN: Styling
-```js
-// ALWAYS use camelCase CSS properties
-style({ fontSize: "16px" });   // Correct
-style({ 'font-size': "16px" }); // Incorrect - use camelCase
-```
+---
 
-## PATTERN: Conditional Rendering
-```js
-// ALWAYS use function for dynamic content
-div(() => show.value ? "Visible" : null);  // Correct
-div(show.value ? "Visible" : null);        // Incorrect - not reactive
-```
+## 4. PATTERN: Declarative Form Validation & Dynamic Arrays
+```javascript
+import { createForm, validators, useFieldArray, div, button, input, mount } from '@eldrex/cairn';
 
-## PATTERN: Plugins & Middleware
-```js
-cairn.use((cairn) => {
-    cairn.components.register('MyButton', MyButton);
-});
-
-cairn.middleware.add({
-    beforeCreate(element, props) {
-        return props;
+// 1. Schema-based Form Validation
+const userForm = createForm({
+    fields: {
+        email: { label: 'Email', type: 'email', default: '' },
+        password: { label: 'Password', type: 'password', default: '' }
+    },
+    schema: {
+        email: [
+            validators.required('Email is required'),
+            validators.email('Invalid email address')
+        ],
+        password: [
+            validators.required('Password is required'),
+            validators.minLength(8, 'Minimum 8 characters')
+        ]
+    },
+    onSubmit: async (values) => {
+        console.log('Submitted values:', values);
     }
 });
+
+// 2. Dynamic Repeating Field Rows
+const lineItems = useFieldArray([{ item: 'Product A', qty: 1 }]);
+lineItems.append({ item: 'Product B', qty: 2 });
+lineItems.remove(0); // Removes first row
+```
+
+---
+
+## 5. PATTERN: Overlays, Modals & Promise Confirmations
+```javascript
+import { Modal, ConfirmDialog, Drawer, Toast, NotificationCenter } from '@eldrex/cairn';
+
+// 1. Accessible Dialog Modal
+const modal = Modal({
+    title: 'Profile Settings',
+    body: 'Configure user options here.',
+    closeOnEscape: true,
+    closeOnBackdrop: true
+});
+modal.open();
+modal.close();
+
+// 2. Asynchronous Promise Confirmation (awaitable)
+async function handleDelete() {
+    const ok = await ConfirmDialog.confirm({
+        title: 'Delete Resource?',
+        message: 'This cannot be undone.',
+        variant: 'danger'
+    });
+    if (ok) {
+        Toast.success('Deleted successfully');
+    }
+}
+
+// 3. Slide-Over Drawer
+const sidebar = Drawer({ title: 'Menu', placement: 'left' });
+sidebar.open();
+```
+
+---
+
+## 6. PATTERN: Command Palette (`Cmd+K`) & Context Menus
+```javascript
+import { CommandPalette, ContextMenu, div, mount } from '@eldrex/cairn';
+
+// 1. Global Spotlight Launcher
+const palette = CommandPalette({
+    hotkey: true, // Listens to Ctrl+K / Cmd+K automatically
+    actions: [
+        { id: '1', title: 'Open Settings', group: 'Preferences', onSelect: () => ... },
+        { id: '2', title: 'Deploy Application', group: 'Actions', onSelect: () => ... }
+    ]
+});
+
+// 2. Context Menu (Right-Click popup)
+const container = div('Right-click this area');
+const menu = ContextMenu({
+    target: container,
+    items: [
+        { label: 'Copy', shortcut: 'Ctrl+C', onClick: () => ... },
+        { separator: true },
+        { label: 'Delete', danger: true, onClick: () => ... }
+    ]
+});
+```
+
+---
+
+## 7. PATTERN: Interactive DataTable / DataGrid
+```javascript
+import { DataTable, mount } from '@eldrex/cairn';
+
+const grid = DataTable({
+    columns: [
+        { key: 'id', header: 'ID', sortable: true },
+        { key: 'name', header: 'User', sortable: true },
+        { key: 'role', header: 'Role', sortable: true },
+        { key: 'status', header: 'Status', render: (val) => val === 'active' ? '🟢 Active' : '🔴 Inactive' }
+    ],
+    data: [
+        { id: 1, name: 'Alice', role: 'Admin', status: 'active' },
+        { id: 2, name: 'Bob', role: 'Editor', status: 'inactive' }
+    ],
+    searchable: true,
+    pageSize: 10
+});
+
+mount('#app', grid);
+```
+
+---
+
+## 8. PATTERN: Device & Interaction Hooks
+```javascript
+import { useMediaQuery, useHotkeys, useClipboard, useInView } from '@eldrex/cairn';
+
+// 1. Media Query Signal
+const isMobile = useMediaQuery('(max-width: 768px)');
+// isMobile.value => true | false
+
+// 2. Keyboard Shortcut Listener
+const unbind = useHotkeys('ctrl+s', (e) => {
+    e.preventDefault();
+    console.log('Saved');
+});
+
+// 3. Clipboard Helper
+const { copy, copied } = useClipboard({ timeout: 2000 });
+copy('https://example.com');
+
+// 4. Viewport Intersection Observer
+const { inView } = useInView(myElement, { once: true });
+```
+
+---
+
+## 9. PATTERN: Internationalization (i18n) & RTL Auto-Sync
+```javascript
+import { createI18n } from '@eldrex/cairn';
+
+const i18n = createI18n({
+    locale: 'en',
+    messages: {
+        en: { hello: 'Hello {name}!' },
+        ar: { hello: 'مرحبا {name}!' } // Auto toggles <html dir="rtl">
+    }
+});
+
+i18n.setLocale('ar');
+console.log(i18n.isRTL);     // true
+console.log(i18n.dir.value); // 'rtl'
+```
+
+---
+
+## 10. PATTERN: Framework Bridges & Web Components
+```javascript
+import { defineCustomElement, cairnToReact, cairnToVue, cairnToSvelte, cairnToAngular } from '@eldrex/cairn';
+
+// 1. Native W3C Web Component (<my-widget title="...">)
+defineCustomElement('my-widget', MyWidget, ['title']);
+
+// 2. React 18+ Component
+export const ReactWidget = cairnToReact(MyWidget);
+
+// 3. Vue 3 Component
+export const VueWidget = cairnToVue(MyWidget);
+
+// 4. Svelte Action Directive
+// <div use:cairnToSvelte={MyWidget} />
+
+// 5. Angular Directive
+export const AngularWidget = cairnToAngular(MyWidget);
+```
+
+---
+
+## 11. PATTERN: Springs & Kinematic Physics
+```javascript
+import { spring, physics } from '@eldrex/cairn';
+
+// Spring presets
+spring.bouncy({ from: 0.9, to: 1.0, onUpdate: (val) => el.style.transform = `scale(${val})` });
+spring.gentle({ from: 0, to: 100, onUpdate: (val) => el.style.top = `${val}px` });
+
+// Particle Kinematics
+const p = physics.particle({ x: 0, y: 0, vx: 5, vy: -10 });
+p.step(0.016, { minX: 0, maxX: 500, minY: 0, maxY: 500 });
+```
+
+---
+
+## 12. PATTERN: Component Showcase & Playground
+```javascript
+import { createPlayground, button, UI, mount } from '@eldrex/cairn';
+
+const showcase = createPlayground({
+    title: 'UI Design System',
+    components: [
+        {
+            name: 'Primary Button',
+            category: 'Buttons',
+            code: `button('Click', { class: 'btn-primary' })`,
+            render: () => button('Click', { style: { padding: '0.5rem 1rem', background: '#38bdf8', color: '#fff' } })
+        }
+    ]
+});
+
+mount('#app', showcase);
 ```

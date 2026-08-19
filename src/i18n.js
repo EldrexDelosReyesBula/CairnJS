@@ -73,11 +73,44 @@ export function createI18n(config = {}) {
         return interpolate(parts[form] || parts[0], params);
     };
 
+    const RTL_LOCALES = ['ar', 'he', 'fa', 'ur', 'dv', 'ps', 'yi'];
+    const _dir = state(RTL_LOCALES.includes(initialLocale) ? 'rtl' : 'ltr');
+
+    const updateDocumentDir = (dirVal) => {
+        if (typeof document !== 'undefined' && document.documentElement) {
+            document.documentElement.setAttribute('dir', dirVal);
+        }
+    };
+
+    updateDocumentDir(_dir.value);
+
     const i18n = {
         /**
          * Reactive locale signal — read .value or subscribe to changes.
          */
         locale: _locale,
+
+        /**
+         * Reactive direction signal ('ltr' | 'rtl').
+         */
+        dir: _dir,
+
+        /**
+         * Returns true if current locale is Right-to-Left.
+         */
+        get isRTL() {
+            return _dir.value === 'rtl';
+        },
+
+        /**
+         * Manually sets or toggles RTL mode.
+         * @param {boolean|string} isRtl boolean or 'rtl'|'ltr'
+         */
+        setRTL(isRtl) {
+            const dirVal = (typeof isRtl === 'boolean' ? (isRtl ? 'rtl' : 'ltr') : isRtl) || 'ltr';
+            _dir.value = dirVal;
+            updateDocumentDir(dirVal);
+        },
 
         /**
          * Array of available locale codes.
@@ -88,6 +121,7 @@ export function createI18n(config = {}) {
 
         /**
          * Switches the active locale reactively.
+         * Automatically sets 'dir' to 'rtl' for Arabic, Hebrew, Persian, Urdu, etc.
          * @param {string} newLocale Locale code
          */
         setLocale(newLocale) {
@@ -96,6 +130,9 @@ export function createI18n(config = {}) {
                 return;
             }
             _locale.value = newLocale;
+            const newDir = RTL_LOCALES.includes(newLocale) ? 'rtl' : 'ltr';
+            _dir.value = newDir;
+            updateDocumentDir(newDir);
         },
 
         /**
@@ -130,6 +167,49 @@ export function createI18n(config = {}) {
          */
         rt(key, params = {}) {
             return computed(() => i18n.t(key, params));
+        },
+
+        /**
+         * Formats a date using Intl.DateTimeFormat in the active locale.
+         * @param {Date|number|string} date Date object or timestamp
+         * @param {Intl.DateTimeFormatOptions} [options] Format options
+         * @returns {string} Localized date string
+         */
+        formatDate(date, options = {}) {
+            try {
+                const d = date instanceof Date ? date : new Date(date);
+                return new Intl.DateTimeFormat(_locale.value, options).format(d);
+            } catch (e) {
+                return String(date);
+            }
+        },
+
+        /**
+         * Reactive computed date formatter.
+         */
+        rFormatDate(date, options = {}) {
+            return computed(() => i18n.formatDate(date, options));
+        },
+
+        /**
+         * Formats a number using Intl.NumberFormat in the active locale.
+         * @param {number} number Number value
+         * @param {Intl.NumberFormatOptions} [options] Format options (currency, style, etc.)
+         * @returns {string} Localized number string
+         */
+        formatNumber(number, options = {}) {
+            try {
+                return new Intl.NumberFormat(_locale.value, options).format(number);
+            } catch (e) {
+                return String(number);
+            }
+        },
+
+        /**
+         * Reactive computed number formatter.
+         */
+        rFormatNumber(number, options = {}) {
+            return computed(() => i18n.formatNumber(number, options));
         }
     };
 

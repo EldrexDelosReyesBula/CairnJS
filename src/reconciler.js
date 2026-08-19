@@ -5,6 +5,8 @@
  * Dramatically improves performance for large reactive lists.
  */
 
+import { effect } from './state.js';
+
 /**
  * Reconciles a DOM parent's children against a new list of virtual nodes.
  * Uses key-based diffing to reorder, add, and remove nodes surgically.
@@ -96,7 +98,6 @@ export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item
  * const stop = createList(list, todos, (todo) => li(todo.text), (t) => t.id);
  */
 export function createList(parent, listSignal, renderItem, getKey = item => item.id ?? item) {
-    const { effect } = require('./state.js');
     let prevItems = [];
 
     return effect(() => {

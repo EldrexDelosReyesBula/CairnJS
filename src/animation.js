@@ -100,6 +100,13 @@ export function spring(options = {}) {
     };
 }
 
+// Spring physics presets for effortless zero-boilerplate motion
+spring.bouncy = (options = {}) => spring({ stiffness: 220, damping: 10, mass: 1, ...options });
+spring.gentle = (options = {}) => spring({ stiffness: 120, damping: 14, mass: 1, ...options });
+spring.stiff = (options = {}) => spring({ stiffness: 300, damping: 20, mass: 1, ...options });
+spring.wobbly = (options = {}) => spring({ stiffness: 180, damping: 8, mass: 1, ...options });
+spring.slow = (options = {}) => spring({ stiffness: 80, damping: 20, mass: 1, ...options });
+
 /**
  * Applies smooth CSS transitions (enter/exit) to a DOM node.
  */

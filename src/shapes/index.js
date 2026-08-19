@@ -11,7 +11,27 @@ import { bezier } from './bezier.js';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const svgEl = (tag, attrs = {}) => {
-    if (typeof document === 'undefined') return null;
+    if (typeof document === 'undefined') {
+        const mockAttrs = {};
+        const mockChildren = [];
+        Object.entries(attrs).forEach(([k, v]) => {
+            if (v !== undefined && v !== null) mockAttrs[k] = String(v);
+        });
+        return {
+            tagName: tag.toUpperCase(),
+            nodeType: 1,
+            attributes: mockAttrs,
+            childNodes: mockChildren,
+            setAttribute(k, v) { mockAttrs[k] = String(v); },
+            getAttribute(k) { return mockAttrs[k]; },
+            hasAttribute(k) { return Boolean(mockAttrs[k]); },
+            appendChild(c) { mockChildren.push(c); },
+            toString() {
+                const attrStr = Object.entries(mockAttrs).map(([k, v]) => ` ${k}="${v}"`).join('');
+                return `<${tag}${attrStr}>${mockChildren.map(c => (c && c.toString ? c.toString() : String(c))).join('')}</${tag}>`;
+            }
+        };
+    }
     const el = document.createElementNS(SVG_NS, tag);
     Object.entries(attrs).forEach(([k, v]) => {
         if (v !== undefined && v !== null) el.setAttribute(k, String(v));

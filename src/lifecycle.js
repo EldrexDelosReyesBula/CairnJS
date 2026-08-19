@@ -15,15 +15,17 @@ let _currentUpdateCallbacks = null;
 
 /**
  * Registers a callback to run after the component's DOM element is mounted.
+ * If the callback returns a function, it is automatically registered as a cleanup (onUnmount) handler.
  * Must be called during component setup (synchronous).
  *
- * @param {Function} fn Callback function — receives the mounted DOM element
+ * @param {Function} fn Callback function — receives the mounted DOM element, can optionally return a cleanup function
  *
  * @example
  * const Card = component(() => {
  *   onMount((el) => {
  *     console.log('Mounted:', el);
- *     el.classList.add('visible');
+ *     const timer = setInterval(tick, 1000);
+ *     return () => clearInterval(timer); // Automatic cleanup on unmount!
  *   });
  *   return div({ class: 'card' }, 'Hello');
  * });
@@ -34,7 +36,12 @@ export function onMount(fn) {
     } else {
         // Defer: attach on next RAF if called outside component scope
         if (typeof requestAnimationFrame !== 'undefined') {
-            requestAnimationFrame(() => fn(document.body));
+            requestAnimationFrame(() => {
+                const cleanup = fn(document.body);
+                if (typeof cleanup === 'function' && _currentUnmountCallbacks) {
+                    _currentUnmountCallbacks.push(cleanup);
+                }
+            });
         }
     }
 }
@@ -79,12 +86,29 @@ export function attachLifecycle(el, hooks = {}) {
 
     const { mount: mountFns = [], unmount: unmountFns = [], update: updateFns = [] } = hooks;
 
-    // Fire mount callbacks
+    // Fire mount callbacks and capture returned cleanups
     if (mountFns.length) {
         if (typeof requestAnimationFrame !== 'undefined') {
             requestAnimationFrame(() => mountFns.forEach(fn => {
-                try { fn(el); } catch (e) { console.error('[Cairn Lifecycle onMount Error]:', e); }
+                try {
+                    const cleanup = fn(el);
+                    if (typeof cleanup === 'function') {
+                        unmountFns.push(cleanup);
+                    }
+                } catch (e) {
+                    console.error('[Cairn Lifecycle onMount Error]:', e);
+                }
             }));
+        } else {
+            // Fallback for non-browser / immediate environments
+            mountFns.forEach(fn => {
+                try {
+                    const cleanup = fn(el);
+                    if (typeof cleanup === 'function') {
+                        unmountFns.push(cleanup);
+                    }
+                } catch (e) {}
+            });
         }
     }
 

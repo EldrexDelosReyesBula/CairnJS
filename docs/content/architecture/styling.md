@@ -1,12 +1,12 @@
-# Cairn Styling — CSS Power, JavaScript Simplicity
+# Cairn Styling & Theme Engine
 
-Write styles where you write components or use style tags.
+Write styles with full CSS power, fine-grained reactivity, dynamic themes, scoped classes, fluid scaling, and zero runtime dependencies.
 
 ---
 
 ## Core Philosophy
 
-Cairn styling uses standard CSS property names in camelCase. Every CSS property works exactly as expected.
+Cairn styling uses standard CSS property names in camelCase or strings. Every CSS property works exactly as expected with reactive binding support.
 
 ```js
 div("Hello", {
@@ -16,91 +16,121 @@ div("Hello", {
         borderRadius: "8px",
         background: "linear-gradient(135deg, #667eea, #764ba2)"
     }
-})
+});
 ```
 
 ---
 
-## Three Ways to Style
+## Dynamic Theming Engine (`createTheme`, `setTheme`)
 
-### 1. Inline (Scoped)
+Define and switch themes on the fly. Themes automatically inject CSS custom properties (`--cairn-*`) on `:root`:
+
 ```js
-button("Click", {
+import { createTheme, setTheme, activeTheme } from '@eldrex/cairn';
+
+// 1. Create a custom theme
+createTheme('cyberpunk', {
+    colors: {
+        primary: { 500: '#ec4899' },
+        background: '#080014'
+    }
+});
+
+// 2. Switch theme live
+setTheme('cyberpunk');
+
+// 3. Inspect active theme signal
+console.log(activeTheme.value.name); // 'cyberpunk'
+```
+
+---
+
+## Scoped CSS Class Generator (`css`)
+
+Generate scoped class names with automatic stylesheet injection:
+
+```js
+import { css } from '@eldrex/cairn';
+
+const cardClass = css({
+    padding: '24px',
+    borderRadius: '16px',
+    background: 'rgba(15, 23, 42, 0.8)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.4)'
+    }
+});
+
+const myCard = div({ class: cardClass }, 'Glassmorphism Card');
+```
+
+---
+
+## Fluid Typography & Responsive Spacing (`fluid`)
+
+Generate mathematical CSS `clamp()` expressions for seamless responsive scaling:
+
+```js
+import { fluid, div } from '@eldrex/cairn';
+
+const heroText = div('Fluid Scaling Title', {
     style: {
-        padding: "12px 24px",
-        background: "black",
-        color: "white",
-        borderRadius: "6px",
-        fontSize: "16px",
-        cursor: "pointer"
+        fontSize: fluid(24, 48), // clamp(24px, 5vw, 48px)
+        padding: fluid(12, 32)
     }
-})
-```
-
-### 2. Style Objects (Reusable)
-```js
-const buttonStyle = {
-    padding: "12px 24px",
-    background: "black",
-    color: "white",
-    borderRadius: "6px",
-    fontWeight: 600
-};
-
-button("Save", { style: buttonStyle });
-```
-
-### 3. Style Tags (Traditional)
-```html
-<style>
-    .btn {
-        padding: 12px 24px;
-        background: black;
-        color: white;
-        border-radius: 6px;
-    }
-</style>
-```
-```js
-button("Click", { class: "btn" });
+});
 ```
 
 ---
 
-## Style Functions (Reactive Styles)
-
-```js
-let active = state(false);
-
-div("Toggle me", {
-    style: () => ({
-        padding: "20px",
-        background: active.value ? "#22c55e" : "#ef4444",
-        color: "white",
-        transform: active.value ? "scale(1.05)" : "scale(1)",
-        transition: "all 0.3s ease"
-    }),
-    onclick: () => active.value = !active.value
-})
-```
-
----
-
-## Design Tokens
+## Comprehensive Design Tokens (`tokens`)
 
 ```js
 import { tokens } from '@eldrex/cairn';
 
-const styles = {
-    card: {
-        padding: tokens.spacing.lg,
-        borderRadius: tokens.radius.md,
-        background: tokens.colors.gray[800],
-        boxShadow: tokens.shadows.md,
-        fontFamily: tokens.typography.fontFamily.sans,
-        fontSize: tokens.typography.fontSize.base
-    }
-};
+// 1. Typography Hierarchy
+tokens.typography.fontFamily.display  // "'Cairn', system-ui, sans-serif"
+tokens.typography.fontFamily.brand    // "'Cairn', system-ui, sans-serif"
+tokens.typography.fontFamily.sans     // "system-ui, -apple-system, sans-serif"
+tokens.typography.fontFamily.mono     // "ui-monospace, Consolas, monospace"
+
+// 2. Glassmorphism Presets
+tokens.glass.sm   // { background: 'rgba(...)', backdropFilter: 'blur(8px)', ... }
+tokens.glass.md   // { background: 'rgba(...)', backdropFilter: 'blur(16px)', ... }
+tokens.glass.dark // { background: 'rgba(...)', backdropFilter: 'blur(20px)', ... }
+
+// 3. Gradients
+tokens.gradients.sky       // 'linear-gradient(135deg, #0ea5e9, #3b82f6)'
+tokens.gradients.sunset    // 'linear-gradient(135deg, #f43f5e, #fb923c)'
+tokens.gradients.emerald   // 'linear-gradient(135deg, #10b981, #059669)'
+tokens.gradients.aurora    // 'linear-gradient(135deg, #a855f7, #6366f1)'
+tokens.gradients.cyberpunk // 'linear-gradient(135deg, #ec4899, #8b5cf6)'
+```
+
+---
+
+## Reactive Style Functions
+
+Pass a function getter `() => ({ ... })` to bind styles reactively to state:
+
+```js
+import { state, div } from '@eldrex/cairn';
+
+const isOnline = state(true);
+
+const statusBadge = div('Status', {
+    style: () => ({
+        padding: '6px 14px',
+        borderRadius: '9999px',
+        background: isOnline.value ? '#10b98122' : '#ef444422',
+        color: isOnline.value ? '#10b981' : '#ef4444',
+        fontWeight: 700
+    }),
+    onclick: () => isOnline.value = !isOnline.value
+});
 ```
 
 ---
@@ -108,19 +138,19 @@ const styles = {
 ## Keyframes & Media Queries
 
 ```js
-import { keyframes, media } from '@eldrex/cairn';
+import { keyframes, media, div } from '@eldrex/cairn';
 
-const spin = keyframes({
-    "0%": { transform: "rotate(0deg)" },
-    "100%": { transform: "rotate(360deg)" }
+const pulse = keyframes({
+    '0%, 100%': { transform: 'scale(1)', opacity: 1 },
+    '50%': { transform: 'scale(1.05)', opacity: 0.8 }
 });
 
-let isMobile = media("(max-width: 768px)");
+const isMobile = media('(max-width: 768px)');
 
-div("Responsive Element", {
+div('Live Indicator', {
     style: () => ({
-        animation: `${spin} 2s linear infinite`,
-        padding: isMobile.value ? "16px" : "32px"
+        animation: `${pulse} 2s infinite ease-in-out`,
+        padding: isMobile.value ? '8px' : '16px'
     })
 });
 ```

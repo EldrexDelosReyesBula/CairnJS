@@ -33,10 +33,29 @@ export const iteration = {
     abTest(options = {}) {
         const variants = options.variants || [];
         const chosen = variants.length > 0 ? variants[Math.floor(Math.random() * variants.length)] : null;
+        const metrics = options.metrics || ['clicks', 'conversions'];
+        const trackingEvents = {};
+
+        metrics.forEach(m => trackingEvents[m] = 0);
+
         return {
             selectedVariant: chosen,
-            metrics: options.metrics || ['clicks', 'conversions'],
-            autoOptimize: options.autoOptimize ?? true
+            metrics,
+            autoOptimize: options.autoOptimize ?? true,
+            track(metricName) {
+                if (trackingEvents[metricName] !== undefined) {
+                    trackingEvents[metricName]++;
+                } else {
+                    trackingEvents[metricName] = 1;
+                }
+                return trackingEvents[metricName];
+            },
+            stats() {
+                return {
+                    variant: chosen,
+                    counts: { ...trackingEvents }
+                };
+            }
         };
     }
 };

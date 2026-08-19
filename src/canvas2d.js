@@ -70,16 +70,34 @@ export function createCanvas2D(target, options = {}) {
         let _currentStroke = 'transparent';
         let _currentLineWidth = 1;
 
+        let _currentShadowColor = 'transparent';
+        let _currentShadowBlur = 0;
+        let _currentShadowOffsetX = 0;
+        let _currentShadowOffsetY = 0;
+
         return {
             fillStyle(color) { _currentFill = color; return this; },
             strokeStyle(color) { _currentStroke = color; return this; },
             lineWidth(w) { _currentLineWidth = w; return this; },
+            shadow(color = 'rgba(0,0,0,0.5)', blur = 10, offsetX = 0, offsetY = 4) {
+                _currentShadowColor = color;
+                _currentShadowBlur = blur;
+                _currentShadowOffsetX = offsetX;
+                _currentShadowOffsetY = offsetY;
+                return this;
+            },
 
             rect(x, y, w, h, opts = {}) {
                 rawCtx.save();
                 rawCtx.fillStyle = _currentFill;
                 rawCtx.strokeStyle = _currentStroke;
                 rawCtx.lineWidth = _currentLineWidth;
+                if (_currentShadowBlur > 0) {
+                    rawCtx.shadowColor = _currentShadowColor;
+                    rawCtx.shadowBlur = _currentShadowBlur;
+                    rawCtx.shadowOffsetX = _currentShadowOffsetX;
+                    rawCtx.shadowOffsetY = _currentShadowOffsetY;
+                }
                 if (opts.radius) {
                     rawCtx.beginPath();
                     rawCtx.roundRect(x, y, w, h, opts.radius);
@@ -98,8 +116,79 @@ export function createCanvas2D(target, options = {}) {
                 rawCtx.fillStyle = _currentFill;
                 rawCtx.strokeStyle = _currentStroke;
                 rawCtx.lineWidth = _currentLineWidth;
+                if (_currentShadowBlur > 0) {
+                    rawCtx.shadowColor = _currentShadowColor;
+                    rawCtx.shadowBlur = _currentShadowBlur;
+                    rawCtx.shadowOffsetX = _currentShadowOffsetX;
+                    rawCtx.shadowOffsetY = _currentShadowOffsetY;
+                }
                 rawCtx.beginPath();
                 rawCtx.arc(x, y, radius, 0, Math.PI * 2);
+                rawCtx.fill();
+                if (_currentStroke !== 'transparent') rawCtx.stroke();
+                rawCtx.restore();
+                return this;
+            },
+
+            arc(x, y, radius, startAngle = 0, endAngle = Math.PI * 2, counterclockwise = false) {
+                rawCtx.save();
+                rawCtx.fillStyle = _currentFill;
+                rawCtx.strokeStyle = _currentStroke;
+                rawCtx.lineWidth = _currentLineWidth;
+                rawCtx.beginPath();
+                rawCtx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
+                rawCtx.fill();
+                if (_currentStroke !== 'transparent') rawCtx.stroke();
+                rawCtx.restore();
+                return this;
+            },
+
+            star(cx, cy, spikes = 5, outerRadius = 30, innerRadius = 15) {
+                rawCtx.save();
+                rawCtx.fillStyle = _currentFill;
+                rawCtx.strokeStyle = _currentStroke;
+                rawCtx.lineWidth = _currentLineWidth;
+                let rot = (Math.PI / 2) * 3;
+                let x = cx;
+                let y = cy;
+                const step = Math.PI / spikes;
+
+                rawCtx.beginPath();
+                rawCtx.moveTo(cx, cy - outerRadius);
+                for (let i = 0; i < spikes; i++) {
+                    x = cx + Math.cos(rot) * outerRadius;
+                    y = cy + Math.sin(rot) * outerRadius;
+                    rawCtx.lineTo(x, y);
+                    rot += step;
+
+                    x = cx + Math.cos(rot) * innerRadius;
+                    y = cy + Math.sin(rot) * innerRadius;
+                    rawCtx.lineTo(x, y);
+                    rot += step;
+                }
+                rawCtx.lineTo(cx, cy - outerRadius);
+                rawCtx.closePath();
+                rawCtx.fill();
+                if (_currentStroke !== 'transparent') rawCtx.stroke();
+                rawCtx.restore();
+                return this;
+            },
+
+            polygon(cx, cy, sides = 6, radius = 30) {
+                if (sides < 3) return this;
+                rawCtx.save();
+                rawCtx.fillStyle = _currentFill;
+                rawCtx.strokeStyle = _currentStroke;
+                rawCtx.lineWidth = _currentLineWidth;
+                const angle = (Math.PI * 2) / sides;
+                rawCtx.beginPath();
+                for (let i = 0; i < sides; i++) {
+                    const x = cx + radius * Math.cos(i * angle - Math.PI / 2);
+                    const y = cy + radius * Math.sin(i * angle - Math.PI / 2);
+                    if (i === 0) rawCtx.moveTo(x, y);
+                    else rawCtx.lineTo(x, y);
+                }
+                rawCtx.closePath();
                 rawCtx.fill();
                 if (_currentStroke !== 'transparent') rawCtx.stroke();
                 rawCtx.restore();

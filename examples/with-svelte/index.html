@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CairnJS — Svelte Integration Example</title>
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="./assets/cairn-official-logo.svg">
+    <link rel="alternate icon" type="image/png" href="./assets/cairn-official-logo.png">
+    <link rel="apple-touch-icon" href="./assets/cairn-official-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0b0f19;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .svelte-card {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .svelte-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 62, 0, 0.15);
+            color: #ff3e00;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 62, 0, 0.3);
+        }
+
+        .cairn-slot {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: #0f172a;
+            border: 1.5px dashed rgba(255, 62, 0, 0.4);
+            border-radius: 0.85rem;
+        }
+
+        .back-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-nav:hover {
+            color: #ff3e00;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../../docs/index.html" class="back-nav"><i class="fa-solid fa-arrow-left"></i> Back to CairnJS Docs</a>
+
+        <div class="svelte-card">
+            <span class="svelte-badge"><i class="fa-solid fa-fire"></i> Svelte Action + CairnJS Island</span>
+            <h1 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem;">Svelte `use:cairn` Action</h1>
+            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.25rem;">
+                Using Svelte Actions (`use:action`), CairnJS mounts zero-dependency reactive widgets directly onto any
+                DOM node with automatic lifecycle teardown.
+            </p>
+
+            <div id="cairn-svelte-host" class="cairn-slot"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { cairn, component, state, computed, div, h3, p, button, mount } from '../../src/index.js';
+
+        // 1. Svelte Action Emulation for CairnJS Mounting
+        function cairnAction(node, { factory, props = {} }) {
+            let unmount = mount(node, factory(props));
+            return {
+                update(newProps) {
+                    if (unmount) unmount();
+                    unmount = mount(node, factory(newProps));
+                },
+                destroy() {
+                    if (unmount) unmount();
+                }
+            };
+        }
+
+        // 2. CairnJS Micro Component
+        const MetricGauge = component(({ label = 'CPU Load', initial = 42 }) => {
+            const gauge = state(initial);
+            const status = computed(() => gauge.value > 80 ? 'CRITICAL 🔥' : (gauge.value > 50 ? 'ELEVATED ⚠️' : 'OPTIMAL 🟢'));
+
+            return div({ style: { display: 'flex', flexDirection: 'column', gap: '0.6rem' } },
+                h3({ style: { fontSize: '0.95rem', color: '#ff3e00' } }, `⚡ Cairn Island: ${label}`),
+
+                div({ style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' } },
+                    p(() => `Utilization: ${gauge.value}%`, { style: { fontSize: '1.2rem', fontWeight: '800' } }),
+                    p(() => status.value, { style: { fontSize: '0.85rem', fontWeight: '700' } })
+                ),
+
+                div({ style: { height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' } },
+                    () => div({
+                        style: {
+                            height: '100%',
+                            width: `${gauge.value}%`,
+                            background: gauge.value > 80 ? '#ef4444' : (gauge.value > 50 ? '#f59e0b' : '#10b981'),
+                            transition: 'width 0.3s ease, background 0.3s ease'
+                        }
+                    })
+                ),
+
+                div({ style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+                    button('Simulate Spike (+15%)', {
+                        style: {
+                            background: '#ff3e00',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '0.45rem 0.8rem',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.8rem'
+                        },
+                        onclick: () => { gauge.value = Math.min(100, gauge.value + 15); }
+                    }),
+                    button('Cool Down (-15%)', {
+                        style: {
+                            background: '#1e293b',
+                            color: '#94a3b8',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            padding: '0.45rem 0.8rem',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem'
+                        },
+                        onclick: () => { gauge.value = Math.max(0, gauge.value - 15); }
+                    })
+                )
+            );
+        });
+
+        // Initialize Svelte action on target element
+        const host = document.getElementById('cairn-svelte-host');
+        cairnAction(host, { factory: MetricGauge, props: { label: 'Server Memory Cluster', initial: 55 } });
+    </script>
+</body>
+
+</html>

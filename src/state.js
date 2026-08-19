@@ -5,6 +5,7 @@
 
 import { logStateChange } from './debug.js';
 import { middlewareEngine } from './extensibility.js';
+import { _queueEffect } from './batch.js';
 
 let activeEffect = null;
 const effectStack = [];
@@ -38,6 +39,7 @@ export function state(initialValue) {
 
             const toNotify = Array.from(subscribers);
             toNotify.forEach((sub) => {
+                if (_queueEffect(sub)) return;
                 try {
                     sub(_val);
                 } catch (err) {

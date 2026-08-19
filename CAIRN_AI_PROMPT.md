@@ -1,379 +1,238 @@
-# Cairn (`@eldrex/cairn`) — Master AI Prompt & Developer Context Guide
+# CairnJS (`@eldrex/cairnjs`) — Master AI Prompt & Developer Context Guide
 
-> **Instructions for AI Assistants (ChatGPT, Claude, Gemini, DeepSeek, Cursor)**:
-> You are an expert senior engineer specializing in **Cairn** (`@eldrex/cairn`), a zero-dependency, framework-agnostic JavaScript UI library.
-> Read this entire context document carefully to generate 100% syntactically correct, performant, production-ready Cairn code for any web application requirement.
-
----
-
-## 1. Core Principles & LLM Rules
-
-1. **Imports**: Import directly from `@eldrex/cairn`:
-   ```javascript
-   import { cairn, state, computed, effect, collection, resource, component, mount, div, span, p, h1, button, input, img, a, spring, transition, gesture, page, UI, studio } from '@eldrex/cairn';
-   ```
-2. **No JSX**: Do NOT write JSX (`<div />`). Cairn uses native JavaScript function element builders (`div()`, `button()`, `h1()`).
-3. **Element Builder Signature**:
-   `tag(text | props | child, ...children)`
-   - First parameter can be string text, props object, or child node.
-   - Passing an object sets attributes, inline style objects, and event handlers:
-     `button('Submit', { class: 'btn-primary', style: { padding: '12px 24px', borderRadius: '8px' }, onclick: (e) => handleClick(e) })`
-4. **Reactive Text & Attribute Bindings**:
-   - To make text dynamic, pass a **getter function**: `div(() => \`Count: \${count.value}\`)`.
-   - To make inline styles dynamic, pass a function returning a style object: `div({ style: () => ({ color: active.value ? 'green' : 'red' }) })`.
-5. **No Compiler**: Cairn code runs directly in any modern browser without Babel, JSX transpilers, or build steps.
+> **Instructions for AI Assistants (ChatGPT, Claude, Gemini, DeepSeek, Cursor, Copilot)**:
+> You are an expert senior systems architect and UI engineer specializing in **CairnJS** (`@eldrex/cairnjs`), a zero-dependency, framework-agnostic JavaScript UI and reactivity framework.
+> Live Documentation & Demos: https://cairnjs.vercel.app | GitHub: https://github.com/EldrexDelosReyesBula/CairnJS
+> Read this entire context document carefully to generate 100% syntactically correct, performant, production-ready CairnJS code for any web application requirement.
 
 ---
 
-## 2. Core Reactivity Signals System
+## 1. Absolute Golden Rules for AI Generation (ZERO HALLUCINATIONS)
 
-Cairn features fine-grained signals reactivity with automatic dependency tracking:
+1. **NO JSX**: NEVER generate JSX tags (e.g. `<div className="card">`). Cairn uses native JavaScript procedural builder functions:
+   - ✅ `div({ class: 'card' }, h1('Title'), p('Body text'))`
+   - ❌ `<div className="card"><h1>Title</h1></div>`
+2. **Signal Access**: Always read or mutate signals via `.value`:
+   - ✅ `count.value++`, `console.log(count.value)`
+   - ❌ `count++`, `count(5)`
+3. **Reactive Text & Dynamic Children**: Pass a **zero-argument function** (getter) to create reactive DOM bindings:
+   - ✅ `p(() => \`Current count: \${count.value}\`)`
+   - ✅ `div(() => isVisible.value ? p('Now Visible') : null)`
+   - ❌ `p(\`Current count: \${count.value}\`)` *(Evaluates only once, not reactive)*
+4. **Flexible Element Builder Signatures**: Every HTML tag function accepts flexible arguments in any order:
+   - `tag(props, ...children)` OR `tag(...children)`
+   - ✅ `button({ class: 'btn', onclick: () => count.value++ }, 'Increment')`
+   - ✅ `button('Increment', { onclick: () => count.value++ })`
+   - ✅ `div({ style: { padding: '16px' } }, h2('Heading'), p('Paragraph'))`
+5. **Declarative Form Validation**: Use `createForm()` with `validators` and `useFieldArray()` for repeatable rows:
+   - ✅ `createForm({ fields: { ... }, schema: { email: [validators.required(), validators.email()] } })`
+6. **Accessible Overlays**: Use `Modal`, `ConfirmDialog`, `Drawer`, `Toast`, `CommandPalette`, and `ContextMenu`:
+   - ✅ `const ok = await ConfirmDialog.confirm({ title: 'Delete?', variant: 'danger' });`
+   - ✅ `const palette = CommandPalette({ hotkey: true, actions: [...] });`
+7. **No Build Step Required**: Cairn code executes directly in any modern browser using native ES Modules (`<script type="module">`).
 
-### `state(initialValue)`
-Creates a reactive signal. Access or mutate via `.value`.
+---
+
+## 2. Core API Reference
+
+### 2.1. Reactivity Primitives (`src/state.js`)
+
 ```javascript
+import { state, computed, effect, collection, resource, watch, watchEffect, batch } from '@eldrex/cairnjs';
+
+// 1. Reactive State Signal
 const count = state(0);
-count.value++; // Triggers auto-updates
-```
+count.value = 10; // Triggers automatic UI updates
 
-### `computed(getter)`
-Derived signal cached until dependencies update.
-```javascript
-const price = state(100);
-const tax = state(0.12);
-const total = computed(() => price.value * (1 + tax.value));
-```
+// 2. Computed Signal (Cached derivation)
+const double = computed(() => count.value * 2);
 
-### `effect(fn)`
-Executes `fn` immediately and auto-subscribes to any read signals. Returns a teardown/stop function.
-```javascript
+// 3. Side-Effect (Auto-subscribes, runs on change)
 const stop = effect(() => {
-    console.log('Total changed:', total.value);
+    console.log('Count updated:', count.value);
 });
-```
 
-### `collection(initialData)`
-Granular reactive proxy for arrays and objects. Supports array methods (`push`, `pop`, `splice`, `filter`, `map`) with targeted DOM updates.
-```javascript
+// 4. Reactive Collection (Granular array proxy)
 const todos = collection([
-    { id: 1, text: 'Build with Cairn', done: false }
+    { id: 1, text: 'Master Cairn', done: false }
 ]);
-todos.push({ id: 2, text: 'Deploy to Vercel', done: true });
-```
+todos.push({ id: 2, text: 'Deploy app', done: true });
+todos.remove(todos[0]); // Removes item
 
-### `resource(fetcher)`
-Async data fetching helper with `.data`, `.loading`, `.error`, and `.refetch()`.
-```javascript
-const users = resource(() => fetch('https://api.example.com/users').then(r => r.json()));
-
-// Usage in DOM:
-div(
-    () => users.loading.value ? 'Loading users...' : null,
-    () => users.data.value ? users.data.value.map(u => p(u.name)) : null
-);
-```
-
-### `watch(source, handler)` & `batch(fn)`
-- `watch(signal, (newVal, oldVal) => ...)`: Explicit change watcher.
-- `batch(() => { count.value++; price.value += 10; })`: Batches multiple mutations into a single DOM update.
-
----
-
-## 3. DOM Element Builders
-
-Every HTML5 element is exported as a function builder:
-`div`, `span`, `p`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `button`, `input`, `img`, `a`, `section`, `article`, `nav`, `footer`, `header`, `main`, `aside`, `pre`, `code`, `hr`, `br`, `strong`, `em`, `label`, `ul`, `ol`, `li`, `form`, `textarea`, `select`, `option`, `text`, `raw`, `element`, `canvas`.
-
-### Form Helper (`createForm`)
-```javascript
-const loginForm = createForm({
-    initial: { email: '', password: '' },
-    onSubmit: (values) => console.log('Submitted:', values)
+// 5. Async Resource
+const users = resource(async () => {
+    const res = await fetch('https://jsonplaceholder.typicode.com/users');
+    return res.json();
 });
 
-form({ onsubmit: loginForm.handleSubmit },
-    input({ placeholder: 'Email', value: loginForm.values.email, oninput: loginForm.handleChange('email') }),
-    input({ type: 'password', placeholder: 'Password', value: loginForm.values.password, oninput: loginForm.handleChange('password') }),
-    button('Log In', { type: 'submit' })
-);
+// 6. Explicit Watchers
+watch(count, (newVal, oldVal) => {
+    console.log(`Changed from ${oldVal} to ${newVal}`);
+}, { immediate: true });
+
+// 7. Batching Updates (Single DOM render pass)
+batch(() => {
+    count.value = 1;
+    // other mutations...
+});
 ```
 
 ---
 
-## 4. Component Architecture & Lifecycle
-
-Component functions encapsulate state and return element trees wrapped by `component()`:
+### 2.2. Form Validation & Dynamic Arrays (`src/dom.js`)
 
 ```javascript
-import { component, state, onMount, onUnmount, div, h2, button } from '@eldrex/cairn';
+import { createForm, validators, useFieldArray, div, mount } from '@eldrex/cairnjs';
 
-export const Timer = component(({ interval = 1000 }) => {
-    const seconds = state(0);
-    let timerId;
+const profileForm = createForm({
+    fields: {
+        username: { label: 'Username', default: '' },
+        email: { label: 'Email', type: 'email', default: '' }
+    },
+    schema: {
+        username: [validators.required('Username is required'), validators.minLength(3)],
+        email: [validators.required(), validators.email()]
+    },
+    onSubmit: async (values) => {
+        console.log('Valid submitted values:', values);
+    }
+});
 
-    onMount(() => {
-        timerId = setInterval(() => seconds.value++, interval);
+// Dynamic repeating field rows
+const items = useFieldArray([{ name: 'Item 1', qty: 1 }]);
+items.append({ name: 'Item 2', qty: 2 });
+items.remove(0); // Removes row at index 0
+```
+
+---
+
+### 2.3. Accessible Overlays & Dialogs (`src/overlay.js`, `src/ui/index.js`)
+
+```javascript
+import { Modal, ConfirmDialog, Drawer, Toast, NotificationCenter, createFocusTrap } from '@eldrex/cairnjs';
+
+// 1. Accessible Modal
+const myModal = Modal({
+    title: 'Edit Profile',
+    body: 'Enter your details below.',
+    closeOnEscape: true
+});
+
+// 2. Promise Confirm Dialog
+async function deleteProject() {
+    const confirmed = await ConfirmDialog.confirm({
+        title: 'Delete Repository?',
+        message: 'This cannot be undone.',
+        variant: 'danger'
     });
+    if (confirmed) {
+        Toast.success('Repository removed');
+    }
+}
 
-    onUnmount(() => {
-        clearInterval(timerId);
-    });
-
-    return div({ class: 'timer-card', style: { padding: '24px', borderRadius: '12px', background: '#0f172a', color: '#fff' } },
-        h2('Timer Component'),
-        p(() => `Elapsed: ${seconds.value}s`),
-        button('Reset', { onclick: () => seconds.value = 0 })
-    );
-});
-```
-
-### Context & Global Store
-- **Context API**: `createContext()`, `provideContext(key, value)`, `useContext(key)`.
-- **Global Store**:
-  ```javascript
-  const useUserStore = createStore({
-      state: () => ({ user: null, token: null }),
-      actions: {
-          setUser(state, user) { state.user = user; }
-      }
-  });
-  ```
-
----
-
-## 5. Motion & Animation System
-
-Cairn features a 60fps spring physics and motion engine.
-
-### Declarative `animate` Property
-```javascript
-div('Fade in card', { animate: 'fade-in', duration: 400 });
-button('Pulse button', { animate: 'pulse', duration: 600 });
-img('photo.jpg', { animate: 'slide-up', delay: 200 });
-```
-
-Supported `animate` presets:
-`fade-in`, `fade-out`, `slide-up`, `slide-down`, `slide-left`, `slide-right`, `scale-in`, `scale-out`, `rotate-in`, `bounce`, `shake`, `pulse`, `spin`, `typing`.
-
-### Spring Physics Engine
-```javascript
-spring({
-    from: 0,
-    to: 100,
-    stiffness: 180,
-    damping: 12,
-    mass: 1,
-    onUpdate: (val) => element.style.transform = `translateX(${val}px)`
-});
-```
-
-### Gestures (`hover`, `tap`, `drag`)
-```javascript
-gesture(buttonElement, {
-    hover: { scale: 1.05, duration: 200 },
-    tap: { scale: 0.95, duration: 100 }
-});
+// 3. Notification Center Hub
+const notifButton = NotificationCenter.Button();
+const notifPanel = NotificationCenter.Panel();
 ```
 
 ---
 
-## 6. Pre-Styled UI Component Library (`UI.*`)
-
-Cairn includes 50+ pre-styled UI components:
+### 2.4. Power-User Navigation & Advanced Data Display (`src/ui/index.js`)
 
 ```javascript
-import { UI } from '@eldrex/cairn';
+import { CommandPalette, ContextMenu, DataTable, Stepper, Accordion, Timeline, ColorPicker } from '@eldrex/cairnjs';
 
-// 1. Buttons
-UI.button('Click Me', { variant: 'primary', size: 'lg', onclick: () => {} });
-
-// 2. Form Inputs
-UI.input({ placeholder: 'Search...', value: searchTerm, icon: 'search' });
-
-// 3. Cards & Badges
-UI.card({
-    title: 'Pro Subscription',
-    badge: UI.badge('Popular', { color: 'purple' }),
-    content: 'Access all features unlimited.',
-    footer: UI.button('Upgrade')
-});
-
-// 4. Modals
-const modal = UI.modal({
-    title: 'Confirm Delete',
-    body: 'Are you sure you want to delete this record?',
-    onConfirm: () => handleDelete()
-});
-
-// 5. Navigation & Tabs
-UI.tabs({
-    items: [
-        { label: 'Overview', content: div('Overview Content') },
-        { label: 'Settings', content: div('Settings Content') }
+// 1. Command Palette (Ctrl+K / Cmd+K)
+const palette = CommandPalette({
+    hotkey: true,
+    actions: [
+        { title: 'Home', group: 'Navigation', onSelect: () => ... },
+        { title: 'New File', group: 'Actions', onSelect: () => ... }
     ]
 });
 
-// 6. Toasts & Alerts
-UI.toast.success('Successfully saved changes!');
-UI.alert({ type: 'warning', title: 'Network Warning', message: 'Reconnecting...' });
-```
-
----
-
-## 7. 2D/3D Graphics & Charts
-
-### 2D Canvas Builder
-```javascript
-const canvas = createCanvas2D({ width: 600, height: 400 });
-canvas.draw((ctx) => {
-    ctx.fillStyle = '#6366f1';
-    ctx.fillRect(50, 50, 200, 100);
+// 2. Right-Click Context Menu
+const menu = ContextMenu({
+    items: [
+        { label: 'Copy', shortcut: 'Ctrl+C', onClick: () => ... },
+        { label: 'Delete', danger: true, onClick: () => ... }
+    ]
 });
-```
 
-### Reactive Charts
-```javascript
-Charts.line({
-    data: [10, 25, 40, 35, 60, 80],
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    color: '#3b82f6'
+// 3. Interactive Data Table (Sort, Filter, Pagination)
+const table = DataTable({
+    columns: [
+        { key: 'id', header: 'ID', sortable: true },
+        { key: 'title', header: 'Title', sortable: true }
+    ],
+    data: [{ id: 1, title: 'First Post' }, { id: 2, title: 'Second Post' }],
+    searchable: true,
+    pageSize: 5
 });
 ```
 
 ---
 
-## 8. Cairn Studio Visual Prototyping (`studio`)
+### 2.5. Device & Interaction Hooks (`src/utils.js`)
 
 ```javascript
-import { studio } from '@eldrex/cairn';
+import { useMediaQuery, useHotkeys, useClipboard, useInView } from '@eldrex/cairnjs';
 
-// Activate visual workspace
-studio.enable({ target: '#app', mode: 'edit' });
+// 1. Reactive Media Query
+const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-// Export to React, Vue, Svelte, or Cairn code
-const reactCode = studio.export({ format: 'react', componentName: 'MyCard' });
+// 2. Hotkey Listener
+const unbind = useHotkeys('ctrl+k', () => palette.open());
+
+// 3. Clipboard Helper
+const { copy, copied } = useClipboard({ timeout: 1500 });
+
+// 4. Viewport Intersection Observer
+const { inView } = useInView(targetEl, { once: true });
 ```
 
 ---
 
-## 9. Real-World End-to-End Application Example
-
-Here is a complete, production-ready Cairn Dashboard Application:
+### 2.6. Internationalization & RTL Sync (`src/i18n.js`)
 
 ```javascript
-import { component, state, collection, mount, div, h1, h2, button, input, UI } from '@eldrex/cairn';
+import { createI18n } from '@eldrex/cairnjs';
 
-const DashboardApp = component(() => {
-    const search = state('');
-    const items = collection([
-        { id: 1, name: 'Analytics Service', status: 'Active', category: 'Backend' },
-        { id: 2, name: 'Payment Gateway', status: 'Active', category: 'Finance' },
-        { id: 3, name: 'Email Dispatcher', status: 'Paused', category: 'Marketing' }
-    ]);
-
-    const filteredItems = computed(() => {
-        const query = search.value.toLowerCase();
-        return items.filter(item => item.name.toLowerCase().includes(query));
-    });
-
-    const addItem = () => {
-        if (!search.value) return;
-        items.push({ id: Date.now(), name: search.value, status: 'Active', category: 'Custom' });
-        search.value = '';
-    };
-
-    return div({
-        style: {
-            maxWidth: '900px',
-            margin: '40px auto',
-            padding: '32px',
-            borderRadius: '16px',
-            background: '#0f172a',
-            color: '#f8fafc',
-            fontFamily: 'Inter, sans-serif',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-        }
-    },
-        h1('Cairn Enterprise Services Dashboard', { style: { fontSize: '28px', fontWeight: '700', marginBottom: '24px' } }),
-        
-        div({ style: { display: 'flex', gap: '12px', marginBottom: '24px' } },
-            input({
-                placeholder: 'Filter or add new service...',
-                value: search,
-                oninput: (e) => search.value = e.target.value,
-                style: {
-                    flex: '1',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid #334155',
-                    background: '#1e293b',
-                    color: '#fff',
-                    fontSize: '15px'
-                }
-            }),
-            button('Add Service', {
-                onclick: addItem,
-                animate: 'scale-in',
-                style: {
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    background: '#6366f1',
-                    color: '#fff',
-                    fontWeight: '600',
-                    border: 'none',
-                    cursor: 'pointer'
-                }
-            })
-        ),
-
-        div({ class: 'service-list' },
-            () => filteredItems.value.map(service => 
-                div({
-                    key: service.id,
-                    animate: 'fade-in',
-                    style: {
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '16px 20px',
-                        marginBottom: '10px',
-                        borderRadius: '10px',
-                        background: '#1e293b',
-                        border: '1px solid #334155'
-                    }
-                },
-                    div(
-                        h2(service.name, { style: { fontSize: '18px', fontWeight: '600', margin: '0 0 4px 0' } }),
-                        span(service.category, { style: { fontSize: '13px', color: '#94a3b8' } })
-                    ),
-                    div({ style: { display: 'flex', alignItems: 'center', gap: '16px' } },
-                        UI.badge(service.status, { color: service.status === 'Active' ? 'green' : 'amber' }),
-                        button('Remove', {
-                            onclick: () => items.remove(service),
-                            style: {
-                                background: 'transparent',
-                                border: 'none',
-                                color: '#ef4444',
-                                cursor: 'pointer',
-                                fontWeight: '500'
-                            }
-                        })
-                    )
-                )
-            )
-        )
-    );
+const i18n = createI18n({
+    locale: 'en',
+    messages: {
+        en: { greet: 'Hello, {name}' },
+        ar: { greet: 'مرحبا {name}' } // Automatically sets <html dir="rtl">
+    }
 });
 
-mount('#app', DashboardApp());
+i18n.setLocale('ar');
+console.log(i18n.dir.value); // 'rtl'
 ```
 
 ---
 
-## 10. Guidance for AI Responses
+### 2.7. Universal Framework Bridges (`src/framework-bridges.js`)
 
-When answering user prompts for Cairn applications:
-1. Provide complete, working, runnable ESM code.
-2. Structure UI modularly into reusable `component()` functions.
-3. Apply sleek modern styling (dark mode gradients, rounded corners, spring micro-interactions).
-4. Never assume external build tools or transpilers — make code directly executable in browser or Vite/Next.js projects.
+```javascript
+import { defineCustomElement, cairnToReact, cairnToVue, cairnToSvelte, cairnToAngular } from '@eldrex/cairnjs';
+
+// 1. W3C Custom Element (<cairn-widget title="...">)
+defineCustomElement('cairn-widget', MyComponent, ['title']);
+
+// 2. React Wrapper Component
+export const ReactWidget = cairnToReact(MyComponent);
+
+// 3. Vue Wrapper Component
+export const VueWidget = cairnToVue(MyComponent);
+```
+
+---
+
+## 3. Pre-Styled UI Library (`UI.*`)
+
+- **Layout**: `UI.Box`, `UI.Container`, `UI.Grid`, `UI.Stack`, `UI.Center`, `UI.Cluster`, `UI.Split`, `UI.AspectRatio`, `Show`, `Hide`
+- **Forms & Inputs**: `createForm`, `validators`, `useFieldArray`, `UI.NumberInput`, `UI.PasswordInput`, `UI.ColorPicker`, `UI.DropZone`, `UI.Rating`, `UI.SegmentedControl`, `UI.Input`, `UI.Select`, `UI.Textarea`
+- **Feedback & Overlays**: `Modal`, `ConfirmDialog`, `Drawer`, `Toast`, `NotificationCenter`, `createFocusTrap`, `UI.Alert`, `UI.Progress`, `UI.Skeleton`, `UI.Spinner`
+- **Navigation**: `CommandPalette`, `ContextMenu`, `DataTable`, `Stepper`, `Accordion`, `Timeline`, `Tree`, `Pagination`, `Tabs`, `Breadcrumbs`
+- **Dev Tools**: `createPlayground`, `docs`, `studio`, `ai`

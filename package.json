@@ -1,20 +1,47 @@
 {
-  "name": "@eldrex/cairn",
-  "version": "1.0.0",
-  "description": "Framework-agnostic, reactive web components with zero dependencies.",
+  "name": "@eldrex/cairnjs",
+  "version": "1.1.0",
+  "description": "Zero-dependency, high-performance UI framework with fine-grained reactivity, complete motion suite, declarative form validation, overlays, and WASM acceleration.",
   "type": "module",
   "main": "dist/cairn.js",
   "module": "src/index.js",
+  "types": "./cairn.d.ts",
+  "homepage": "https://cairnjs.vercel.app",
   "exports": {
     ".": {
+      "types": "./cairn.d.ts",
       "import": "./src/index.js",
       "require": "./dist/cairn.js"
+    },
+    "./ui": {
+      "types": "./cairn.d.ts",
+      "import": "./src/ui/index.js"
+    },
+    "./dom": {
+      "types": "./cairn.d.ts",
+      "import": "./src/dom.js"
+    },
+    "./styling": {
+      "types": "./cairn.d.ts",
+      "import": "./src/styling.js"
+    },
+    "./docs": {
+      "types": "./cairn.d.ts",
+      "import": "./src/docs.js"
+    },
+    "./wasm": {
+      "types": "./cairn.d.ts",
+      "import": "./src/wasm.js"
     }
   },
   "files": [
     "src",
     "dist",
+    "cairn.d.ts",
+    "cairn.schema.json",
+    "cairn.types.json",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
@@ -22,16 +49,28 @@
     "test": "node tests/index.test.js"
   },
   "keywords": [
+    "cairnjs",
     "cairn",
+    "ui-framework",
     "web-components",
     "reactive",
-    "framework-agnostic",
+    "signals",
+    "state-management",
+    "form-validation",
+    "data-table",
+    "overlays",
+    "command-palette",
     "zero-dependencies",
-    "dom-builder",
-    "state"
+    "wasm",
+    "animation",
+    "accessibility"
   ],
-  "author": "Eldrex Bula & Cairn Contributors",
+  "author": "Eldrex Bula & CairnJS Contributors",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EldrexDelosReyesBula/CairnJS"
+  },
   "publishConfig": {
     "access": "public"
   }

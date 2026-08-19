@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cairnjs.vercel.app/sitemap.xml

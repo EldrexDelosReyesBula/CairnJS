@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CairnJS — Reactive E-Commerce &amp; Cart Demo</title>
+    <meta name="description" content="A reactive e-commerce store and animated cart drawer built with CairnJS fine-grained signals and spring physics.">
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="../docs/assets/cairn-official-logo.svg">
+    <link rel="alternate icon" type="image/png" href="../docs/assets/cairn-official-logo.png">
+    <link rel="apple-touch-icon" href="../docs/assets/cairn-official-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root, [data-theme="dark"] {
+            --bg: #0b0f19;
+            --surface: #111827;
+            --surface-card: #1e293b;
+            --surface-hover: #273549;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --success: #10b981;
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(12px);
+        }
+        .brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text); font-family: var(--font-heading); font-weight: 800; font-size: 1.15rem; }
+        .cart-trigger {
+            position: relative;
+            background: var(--surface-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .cart-badge {
+            background: var(--accent);
+            color: #0b0f19;
+            font-weight: 800;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 9999px;
+        }
+
+        .container { max-width: 1080px; margin: 0 auto; padding: 2rem 1rem; }
+        .hero { text-align: center; margin-bottom: 2rem; }
+        .hero h1 { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .hero p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .product-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .product-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+        .product-img { width: 100%; height: 200px; object-fit: cover; background: #020617; }
+        .product-info { padding: 1.25rem; display: flex; flex-direction: column; flex: 1; }
+        .product-category { font-size: 0.75rem; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 0.35rem; }
+        .product-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .product-desc { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1rem; flex: 1; }
+        .product-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05); }
+        .product-price { font-size: 1.25rem; font-weight: 800; color: #fff; }
+
+        .btn-add {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.15s ease;
+        }
+        .btn-add:hover { filter: brightness(1.1); transform: scale(1.03); }
+
+        /* Slide-Over Cart Drawer */
+        .drawer-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100;
+            display: flex; justify-content: flex-end; backdrop-filter: blur(4px);
+        }
+        .drawer-panel {
+            width: 100%; max-width: 400px; background: var(--surface); height: 100vh;
+            border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 1.5rem;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+        .drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+        .drawer-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+        .cart-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--surface-card); border-radius: 0.5rem; }
+        .cart-item-img { width: 50px; height: 50px; border-radius: 0.375rem; object-fit: cover; }
+        .cart-item-info { flex: 1; }
+        .cart-item-title { font-weight: 700; font-size: 0.85rem; }
+        .cart-item-price { font-size: 0.8rem; color: var(--accent); }
+        .qty-controls { display: flex; align-items: center; gap: 0.4rem; }
+        .qty-btn { width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+        
+        .drawer-footer { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-muted); }
+        .summary-row.total { font-size: 1.15rem; font-weight: 800; color: #fff; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); }
+        .btn-checkout { width: 100%; padding: 0.75rem; background: #10b981; color: #fff; border: none; border-radius: 0.5rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-top: 1rem; }
+        .btn-checkout:hover { filter: brightness(1.1); }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="./index.html" class="brand">
+            <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS Logo" style="width: 26px; height: 26px;" onerror="this.src='../docs/assets/cairn-logo.png'">
+            <span>CairnJS Store</span>
+        </a>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <a href="./index.html" class="btn" style="background: transparent; border: none; color: var(--text-muted);"><i class="fa-solid fa-arrow-left"></i> Gallery</a>
+            <button id="btn-open-cart" class="cart-trigger">
+                <i class="fa-solid fa-cart-shopping"></i> Cart
+                <span id="header-cart-count" class="cart-badge">0</span>
+            </button>
+        </div>
+    </header>
+
+    <div id="store-app" class="container"></div>
+
+    <script type="module">
+        import { cairn, state, computed, spring, Toast, ConfirmDialog } from '../src/index.js';
+        const { div, h1, h2, h3, p, button, span, img, input, mount } = cairn;
+
+        // Products Catalog
+        const PRODUCTS = [
+            { id: 1, name: 'Precision Wireless ANC Headphones', category: 'Audio', price: 249, desc: 'Ultra-low latency studio monitor with custom titanium drivers and active noise cancellation.', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80' },
+            { id: 2, name: 'Mechanical Ergonomic Keyboard', category: 'Hardware', price: 189, desc: 'Hot-swappable tactile switches, gasket-mounted aluminum frame, and PBT keycaps.', img: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=80' },
+            { id: 3, name: 'Minimalist Titanium Timepiece', category: 'Accessories', price: 320, desc: 'Sapphire crystal glass, automatic mechanical movement, and waterproof construction.', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=80' },
+            { id: 4, name: 'Studio Monitoring Microphone', category: 'Audio', price: 149, desc: 'Cardioid condenser capsule with integrated pop filter and 24-bit/96kHz DSP audio processing.', img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&auto=format&fit=crop&q=80' },
+            { id: 5, name: 'Wireless Charging Desk Pad', category: 'Desk Setup', price: 79, desc: 'Full grain leather surface with dual fast Qi wireless charging coils.', img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=80' },
+            { id: 6, name: '4K Creator Display Monitor', category: 'Displays', price: 599, desc: 'Factory-calibrated 99% DCI-P3 color gamut with USB-C 90W single-cable power delivery.', img: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&auto=format&fit=crop&q=80' }
+        ];
+
+        // Reactive Cart Signals
+        const cart = state([
+            { ...PRODUCTS[0], qty: 1 },
+            { ...PRODUCTS[1], qty: 1 }
+        ]);
+        const isCartOpen = state(false);
+        const promoCode = state('');
+        const discountPercent = state(0);
+
+        const totalItemCount = computed(() => cart.value.reduce((sum, item) => sum + item.qty, 0));
+        const subtotal = computed(() => cart.value.reduce((sum, item) => sum + item.price * item.qty, 0));
+        const discountAmount = computed(() => (subtotal.value * discountPercent.value) / 100);
+        const tax = computed(() => (subtotal.value - discountAmount.value) * 0.08);
+        const grandTotal = computed(() => Math.max(0, subtotal.value - discountAmount.value + tax.value));
+
+        // Sync header badge
+        const badgeEl = document.getElementById('header-cart-count');
+        const openCartBtn = document.getElementById('btn-open-cart');
+        if (badgeEl) {
+            cairn.effect(() => { badgeEl.textContent = totalItemCount.value; });
+        }
+        if (openCartBtn) {
+            openCartBtn.onclick = () => { isCartOpen.value = true; };
+        }
+
+        const addToCart = (product, btnEl) => {
+            const existing = cart.value.find(item => item.id === product.id);
+            if (existing) {
+                cart.value = cart.value.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+            } else {
+                cart.value = [...cart.value, { ...product, qty: 1 }];
+            }
+            Toast.success(`Added ${product.name} to cart!`);
+
+            if (btnEl) {
+                spring({
+                    from: 1, to: 1.25, stiffness: 350, damping: 10,
+                    onUpdate: (s) => btnEl.style.transform = `scale(${s})`,
+                    onComplete: () => {
+                        spring({ from: 1.25, to: 1, stiffness: 250, damping: 12, onUpdate: (s) => btnEl.style.transform = `scale(${s})` });
+                    }
+                });
+            }
+        };
+
+        const updateQty = (id, delta) => {
+            cart.value = cart.value
+                .map(item => item.id === id ? { ...item, qty: item.qty + delta } : item)
+                .filter(item => item.qty > 0);
+        };
+
+        const applyPromo = () => {
+            if (promoCode.value.toUpperCase() === 'CAIRN20') {
+                discountPercent.value = 20;
+                Toast.success('20% Discount Code Applied!');
+            } else {
+                Toast.error('Invalid promo code. Try CAIRN20');
+            }
+        };
+
+        const handleCheckout = async () => {
+            if (cart.value.length === 0) return;
+            const ok = await ConfirmDialog.confirm({
+                title: 'Confirm Order Payment',
+                message: `Total charge will be $${grandTotal.value.toFixed(2)}. Process immediate payment?`,
+                confirmText: 'Pay Now',
+                cancelText: 'Cancel'
+            });
+            if (ok) {
+                cart.value = [];
+                isCartOpen.value = false;
+                Toast.success('Order placed successfully! Receipt sent.');
+            }
+        };
+
+        // Cart Drawer Component
+        const CartDrawer = () => () => isCartOpen.value ? div({
+            class: 'drawer-backdrop',
+            onclick: (e) => { if (e.target.classList.contains('drawer-backdrop')) isCartOpen.value = false; }
+        },
+            div({ class: 'drawer-panel' },
+                div({ class: 'drawer-header' },
+                    h3(`Your Cart (${totalItemCount.value})`),
+                    button({
+                        style: { background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' },
+                        onclick: () => isCartOpen.value = false
+                    }, span({ class: 'fa-solid fa-xmark' }))
+                ),
+
+                div({ class: 'drawer-items' },
+                    () => cart.value.length === 0 ? div({ style: { textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' } },
+                        span({ class: 'fa-solid fa-bag-shopping', style: { fontSize: '2.5rem', marginBottom: '1rem', display: 'block', opacity: 0.5 } }),
+                        p('Your cart is currently empty.')
+                    ) : cart.value.map(item => div({ class: 'cart-item' },
+                        img(item.img, { class: 'cart-item-img', alt: item.name }),
+                        div({ class: 'cart-item-info' },
+                            div({ class: 'cart-item-title' }, item.name),
+                            div({ class: 'cart-item-price' }, `$${item.price} each`)
+                        ),
+                        div({ class: 'qty-controls' },
+                            button({ class: 'qty-btn', onclick: () => updateQty(item.id, -1) }, '-'),
+                            span(item.qty, { style: { fontSize: '0.85rem', fontWeight: '700', minWidth: '16px', textAlign: 'center' } }),
+                            button({ class: 'qty-btn', onclick: () => updateQty(item.id, 1) }, '+')
+                        )
+                    ))
+                ),
+
+                div({ class: 'drawer-footer' },
+                    div({ style: { display: 'flex', gap: '0.4rem', marginBottom: '1rem' } },
+                        input({
+                            placeholder: 'Promo code (CAIRN20)',
+                            value: promoCode,
+                            style: { flex: 1, background: '#0b0f19', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.4rem 0.6rem', color: '#fff', fontSize: '0.8rem' },
+                            oninput: (e) => promoCode.value = e.target.value
+                        }),
+                        button('Apply', {
+                            style: { background: '#1e293b', border: '1px solid var(--border)', color: '#fff', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.8rem', cursor: 'pointer' },
+                            onclick: applyPromo
+                        })
+                    ),
+                    div({ class: 'summary-row' }, span('Subtotal'), () => span(`$${subtotal.value.toFixed(2)}`)),
+                    () => discountPercent.value > 0 ? div({ class: 'summary-row', style: { color: '#34d399' } }, span(`Discount (${discountPercent.value}%)`), () => span(`-$${discountAmount.value.toFixed(2)}`)) : null,
+                    div({ class: 'summary-row' }, span('Estimated Tax (8%)'), () => span(`$${tax.value.toFixed(2)}`)),
+                    div({ class: 'summary-row total' }, span('Total Due'), () => span(`$${grandTotal.value.toFixed(2)}`)),
+                    button({
+                        class: 'btn-checkout',
+                        onclick: handleCheckout
+                    }, span({ class: 'fa-solid fa-lock', style: { marginRight: '0.4rem' } }), 'Secure Checkout')
+                )
+            )
+        ) : null;
+
+        // Store App Component
+        const App = () => div(
+            div({ class: 'hero' },
+                h1('Next-Gen Developer Gear Store'),
+                p('Engineered with fine-grained CairnJS signals, reactive computations, and spring physics.')
+            ),
+            div({ class: 'product-grid' },
+                PRODUCTS.map(prod => div({ class: 'product-card' },
+                    img(prod.img, { class: 'product-img', alt: prod.name, loading: 'lazy' }),
+                    div({ class: 'product-info' },
+                        span({ class: 'product-category' }, prod.category),
+                        h3({ class: 'product-title' }, prod.name),
+                        p({ class: 'product-desc' }, prod.desc),
+                        div({ class: 'product-bottom' },
+                            span({ class: 'product-price' }, `$${prod.price}`),
+                            button({
+                                class: 'btn-add',
+                                onclick: (e) => addToCart(prod, e.currentTarget)
+                            }, span({ class: 'fa-solid fa-plus' }), 'Add to Cart')
+                        )
+                    )
+                ))
+            ),
+            CartDrawer()
+        );
+
+        mount('#store-app', App());
+    </script>
+</body>
+</html>

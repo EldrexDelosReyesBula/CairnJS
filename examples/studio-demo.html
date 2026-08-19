@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CairnJS Studio — Full-Featured Visual IDE & Framework Bridge</title>
+    <style>
+        @font-face {
+            font-family: 'Cairn';
+            src: url('../cairn-font/Cairn-Regular.woff2') format('woff2'),
+                url('../cairn-font/Cairn-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #080c14;
+            color: #f8fafc;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .studio-brand,
+        .badge-studio,
+        .btn-export,
+        .nav-item span:first-child,
+        button,
+        .modal-tab {
+            font-family: 'Cairn', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Top Studio Header Toolbar */
+        .studio-navbar {
+            height: 58px;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.25rem;
+            z-index: 50;
+        }
+
+        .studio-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: #38bdf8;
+            letter-spacing: -0.02em;
+        }
+
+        .badge-studio {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(37, 99, 235, 0.2));
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .studio-modes {
+            display: flex;
+            background: #1e293b;
+            padding: 3px;
+            border-radius: 8px;
+            gap: 2px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .mode-btn.active {
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .studio-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .device-btn {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .device-btn.active {
+            border-color: #38bdf8;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            color: #fff;
+            border: none;
+            padding: 0.45rem 1.15rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+            transition: opacity 0.15s ease;
+        }
+
+        .btn-export:hover {
+            opacity: 0.9;
+        }
+
+        /* Workspace Layout */
+        .studio-workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar: Components, Screens & Themes */
+        .studio-sidebar {
+            width: 270px;
+            background: #0f172a;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            padding: 1.25rem 1rem;
+            overflow-y: auto;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0.75rem;
+            background: #1e293b;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+        }
+
+        /* Center Canvas Viewport */
+        .studio-canvas-area {
+            flex: 1;
+            background: #080c14;
+            background-image:
+                radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            position: relative;
+            padding: 2.5rem;
+        }
+
+        .canvas-container {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canvas-window-bar {
+            height: 34px;
+            background: #1e293b;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            padding: 0 0.75rem;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background: #ef4444;
+        }
+
+        .dot-yellow {
+            background: #f59e0b;
+        }
+
+        .dot-green {
+            background: #10b981;
+        }
+
+        .canvas-content {
+            padding: 2.5rem;
+            min-height: 440px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Right Sidebar: Comprehensive Inspector */
+        .studio-inspector {
+            width: 320px;
+            background: #0f172a;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.25rem;
+            overflow-y: auto;
+        }
+
+        .inspector-group {
+            margin-bottom: 1.15rem;
+        }
+
+        .inspector-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 0.4rem;
+        }
+
+        .inspector-input,
+        .inspector-select {
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .inspector-input:focus,
+        .inspector-select:focus {
+            border-color: #38bdf8;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            padding: 0.35rem 0;
+        }
+
+        /* Code Export Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            width: 92%;
+            max-width: 780px;
+            padding: 1.75rem;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .modal-tab {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .modal-tab.active {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+
+        .code-box {
+            background: #080c14;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 1.25rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            white-space: pre-wrap;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navbar -->
+    <header class="studio-navbar">
+        <div class="studio-brand">
+            <span>🧱 Cairn Studio</span>
+        </div>
+
+        <div class="studio-modes">
+            <button class="mode-btn active" id="mode-edit">✏️ Edit Mode</button>
+            <button class="mode-btn" id="mode-prototype">🔗 Prototype</button>
+            <button class="mode-btn" id="mode-preview">👁️ Live Preview</button>
+        </div>
+
+        <div class="studio-actions">
+            <button class="device-btn active" data-w="640">💻 Desktop (640px)</button>
+            <button class="device-btn" data-w="480">📱 Tablet (480px)</button>
+            <button class="device-btn" data-w="340">📱 Mobile (340px)</button>
+            <button class="btn-export" id="btn-open-export">⚡ Export Code</button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="studio-workspace">
+        <!-- Left Sidebar: Templates, Screens & Themes -->
+        <aside class="studio-sidebar">
+            <div class="sidebar-section-title">Component Templates</div>
+            <div class="nav-item active" data-template="service">
+                <span>📦 Service Card</span>
+                <span style="font-size: 0.75rem; color: #64748b;">Cloud</span>
+            </div>
+            <div class="nav-item" data-template="profile">
+                <span>👤 User Profile</span>
+                <span style="font-size: 0.75rem; color: #64748b;">Avatar</span>
+            </div>
+            <div class="nav-item" data-template="metrics">
+                <span>📊 Analytics Metrics</span>
+                <span style="font-size: 0.75rem; color: #64748b;">Signals</span>
+            </div>
+            <div class="nav-item" data-template="hero">
+                <span>🚀 Hero Banner</span>
+                <span style="font-size: 0.75rem; color: #64748b;">CTA</span>
+            </div>
+
+            <div class="sidebar-section-title" style="margin-top: 1.5rem;">Design Themes</div>
+            <select class="inspector-select" id="theme-select">
+                <option value="default">Default Dark Mode</option>
+                <option value="cyberpunk">Cyberpunk Neon</option>
+                <option value="aurora">Aurora Gradient</option>
+                <option value="emerald">Emerald Glass</option>
+            </select>
+
+            <div class="sidebar-section-title" style="margin-top: 1.5rem;">Native Execution Mode</div>
+            <div style="background: #1e293b; padding: 0.75rem; border-radius: 8px; font-size: 0.75rem;">
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                    <span style="font-weight: 700; color: #38bdf8;">W3C Web Component</span>
+                    <span style="color: #10b981;">● Active</span>
+                </div>
+                <span style="color: #94a3b8;">Custom Element: <code>&lt;cairn-widget&gt;</code></span>
+            </div>
+        </aside>
+
+        <!-- Center Canvas Viewport -->
+        <main class="studio-canvas-area">
+            <div class="canvas-container" id="canvas-container" style="width: 640px;">
+                <div class="canvas-window-bar">
+                    <div class="dot dot-red"></div>
+                    <div class="dot dot-yellow"></div>
+                    <div class="dot dot-green"></div>
+                    <span style="font-size: 0.75rem; color: #64748b; margin-left: 0.5rem;" id="canvas-route-label">/
+                        (Service Card)</span>
+                </div>
+                <div class="canvas-content" id="app">
+                    <!-- Mounted Cairn Component -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Full Visual Controls & Inspector -->
+        <aside class="studio-inspector">
+            <div class="sidebar-section-title">Content & Typography</div>
+            <div class="inspector-group">
+                <label class="inspector-label">Heading Title</label>
+                <input type="text" class="inspector-input" id="prop-title" value="Cloud Database Service">
+            </div>
+            <div class="inspector-group">
+                <label class="inspector-label">Description Text</label>
+                <input type="text" class="inspector-input" id="prop-desc"
+                    value="Enterprise high-availability cluster with automatic replication and zero latency.">
+            </div>
+            <div class="inspector-group">
+                <label class="inspector-label">Badge Label</label>
+                <input type="text" class="inspector-input" id="prop-badge" value="Operational">
+            </div>
+
+            <div class="sidebar-section-title" style="margin-top: 1.25rem;">Dimensions & Geometry</div>
+            <div class="inspector-group">
+                <label class="inspector-label">
+                    <span>Padding</span>
+                    <span id="val-padding">28px</span>
+                </label>
+                <input type="range" class="inspector-input" id="prop-padding" min="12" max="48" value="28"
+                    style="padding: 0;">
+            </div>
+            <div class="inspector-group">
+                <label class="inspector-label">
+                    <span>Border Radius</span>
+                    <span id="val-radius">16px</span>
+                </label>
+                <input type="range" class="inspector-input" id="prop-radius" min="0" max="40" value="16"
+                    style="padding: 0;">
+            </div>
+            <div class="inspector-group">
+                <label class="inspector-label">
+                    <span>Border Width</span>
+                    <span id="val-border">1px</span>
+                </label>
+                <input type="range" class="inspector-input" id="prop-border" min="0" max="4" value="1"
+                    style="padding: 0;">
+            </div>
+
+            <div class="sidebar-section-title" style="margin-top: 1.25rem;">Styling & Depth</div>
+            <div class="inspector-group">
+                <label class="inspector-label">Background Color</label>
+                <input type="color" class="inspector-input" id="prop-bg" value="#1e293b"
+                    style="height: 38px; cursor: pointer;">
+            </div>
+            <div class="inspector-group">
+                <label class="inspector-label">
+                    <span>Glassmorphism Blur</span>
+                    <span id="val-blur">12px</span>
+                </label>
+                <input type="range" class="inspector-input" id="prop-blur" min="0" max="40" value="12"
+                    style="padding: 0;">
+            </div>
+            <div class="inspector-group">
+                <label class="inspector-label">Box Shadow Preset</label>
+                <select class="inspector-select" id="prop-shadow">
+                    <option value="none">None</option>
+                    <option value="soft">Soft</option>
+                    <option value="elevated" selected>Elevated</option>
+                    <option value="glow">Neon Glow</option>
+                </select>
+            </div>
+            <div class="inspector-group">
+                <label class="inspector-label">Accent Theme Color</label>
+                <select class="inspector-select" id="prop-accent">
+                    <option value="#38bdf8" selected>Sky Blue (#38bdf8)</option>
+                    <option value="#10b981">Emerald Green (#10b981)</option>
+                    <option value="#ec4899">Cyberpunk Pink (#ec4899)</option>
+                    <option value="#a855f7">Aurora Purple (#a855f7)</option>
+                    <option value="#f59e0b">Amber Gold (#f59e0b)</option>
+                </select>
+            </div>
+
+            <div class="sidebar-section-title" style="margin-top: 1.25rem;">Physics & Micro-Animations</div>
+            <div class="toggle-row">
+                <span>Spring Bounce on Click</span>
+                <input type="checkbox" id="toggle-spring" checked>
+            </div>
+            <div class="toggle-row">
+                <span>Hover Micro-Scale</span>
+                <input type="checkbox" id="toggle-hover" checked>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Multi-Framework Code Export Modal -->
+    <div class="modal-backdrop" id="export-modal">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 800;">⚡ Multi-Framework Universal Code Generator</h3>
+                    <p style="color: #94a3b8; font-size: 0.8rem;">Clean, production-ready code with 100% native idioms.
+                    </p>
+                </div>
+                <button id="btn-close-modal"
+                    style="background: none; border: none; color: #94a3b8; font-size: 1.35rem; cursor: pointer;">✕</button>
+            </div>
+
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-format="cairn">Cairn ESM</button>
+                <button class="modal-tab" data-format="custom-element">Web Component</button>
+                <button class="modal-tab" data-format="react">React 18 (TSX)</button>
+                <button class="modal-tab" data-format="vue">Vue 3 (SFC)</button>
+                <button class="modal-tab" data-format="svelte">Svelte 5</button>
+                <button class="modal-tab" data-format="angular">Angular 17+</button>
+                <button class="modal-tab" data-format="html">HTML + CSS</button>
+            </div>
+
+            <pre class="code-box" id="code-output"></pre>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+                <button id="btn-copy-code"
+                    style="background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 0.6rem 1.25rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                    📋 Copy Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { state, computed, div, h2, p, button, span, mount, studio, setTheme, createTheme, spring, defineCustomElement } from '../src/index.js';
+
+        // 1. Initialize Themes
+        createTheme('cyberpunk', { colors: { primary: { 500: '#ec4899' } } });
+        createTheme('aurora', { colors: { primary: { 500: '#a855f7' } } });
+        createTheme('emerald', { colors: { primary: { 500: '#10b981' } } });
+
+        // 2. Enable Studio Engine
+        studio.enable({ target: '#app', mode: 'edit' });
+
+        // 3. Granular Reactive State
+        const currentTemplate = state('service');
+        const titleText = state('Cloud Database Service');
+        const descText = state('Enterprise high-availability cluster with automatic replication and zero latency.');
+        const badgeText = state('Operational');
+        const paddingVal = state(28);
+        const radiusVal = state(16);
+        const borderVal = state(1);
+        const blurVal = state(12);
+        const bgColor = state('#1e293b');
+        const accentColor = state('#38bdf8');
+        const shadowPreset = state('elevated');
+        const enableSpring = state(true);
+        const enableHover = state(true);
+        const pingCount = state(142);
+        const scaleSpring = state(1);
+
+        const shadowsMap = {
+            none: 'none',
+            soft: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            elevated: '0 10px 30px rgba(0, 0, 0, 0.4)',
+            glow: '0 0 25px rgba(56, 189, 248, 0.4)'
+        };
+
+        // 4. Dynamic Cairn Component
+        const DynamicWidget = () => {
+            return div({
+                style: () => ({
+                    background: bgColor.value,
+                    backdropFilter: 'blur(' + blurVal.value + 'px)',
+                    WebkitBackdropFilter: 'blur(' + blurVal.value + 'px)',
+                    borderRadius: radiusVal.value + 'px',
+                    border: borderVal.value + 'px solid rgba(255, 255, 255, 0.12)',
+                    padding: paddingVal.value + 'px',
+                    boxShadow: shadowPreset.value === 'glow' ? '0 0 25px ' + accentColor.value + '66' : shadowsMap[shadowPreset.value],
+                    transform: 'scale(' + scaleSpring.value + ')',
+                    transition: 'box-shadow 0.2s ease, border-radius 0.2s ease, padding 0.2s ease'
+                })
+            },
+                div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' } },
+                    h2(() => titleText.value, { style: { fontSize: '1.3rem', fontWeight: 800 } }),
+                    span(() => badgeText.value, {
+                        style: () => ({
+                            background: accentColor.value + '22',
+                            color: accentColor.value,
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700
+                        })
+                    })
+                ),
+                p(() => descText.value, {
+                    style: { color: '#94a3b8', fontSize: '0.92rem', lineHeight: '1.5', marginBottom: '1.5rem' }
+                }),
+                div({ style: { display: 'flex', gap: '0.75rem', alignItems: 'center' } },
+                    button(() => '⚡ Health Check (Pings: ' + pingCount.value + ')', {
+                        style: () => ({
+                            background: accentColor.value,
+                            color: '#0f172a',
+                            border: 'none',
+                            padding: '0.65rem 1.35rem',
+                            borderRadius: '8px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            fontSize: '0.85rem',
+                            boxShadow: '0 4px 14px ' + accentColor.value + '44'
+                        }),
+                        onclick: () => {
+                            pingCount.value++;
+                            if (enableSpring.value) {
+                                spring.bouncy({
+                                    from: 0.94,
+                                    to: 1,
+                                    onUpdate: (val) => scaleSpring.value = val
+                                });
+                            }
+                        }
+                    })
+                )
+            );
+        };
+
+        // Mount to canvas
+        mount('#app', DynamicWidget());
+
+        // Register as native W3C Custom Element as well
+        defineCustomElement('cairn-widget', DynamicWidget);
+
+        // 5. Wire All Form Inputs
+        document.getElementById('prop-title').addEventListener('input', (e) => titleText.value = e.target.value);
+        document.getElementById('prop-desc').addEventListener('input', (e) => descText.value = e.target.value);
+        document.getElementById('prop-badge').addEventListener('input', (e) => badgeText.value = e.target.value);
+
+        document.getElementById('prop-padding').addEventListener('input', (e) => {
+            paddingVal.value = e.target.value;
+            document.getElementById('val-padding').textContent = e.target.value + 'px';
+        });
+        document.getElementById('prop-radius').addEventListener('input', (e) => {
+            radiusVal.value = e.target.value;
+            document.getElementById('val-radius').textContent = e.target.value + 'px';
+        });
+        document.getElementById('prop-border').addEventListener('input', (e) => {
+            borderVal.value = e.target.value;
+            document.getElementById('val-border').textContent = e.target.value + 'px';
+        });
+        document.getElementById('prop-blur').addEventListener('input', (e) => {
+            blurVal.value = e.target.value;
+            document.getElementById('val-blur').textContent = e.target.value + 'px';
+        });
+
+        document.getElementById('prop-bg').addEventListener('input', (e) => bgColor.value = e.target.value);
+        document.getElementById('prop-shadow').addEventListener('change', (e) => shadowPreset.value = e.target.value);
+        document.getElementById('prop-accent').addEventListener('change', (e) => accentColor.value = e.target.value);
+        document.getElementById('toggle-spring').addEventListener('change', (e) => enableSpring.value = e.target.checked);
+        document.getElementById('toggle-hover').addEventListener('change', (e) => enableHover.value = e.target.checked);
+
+        // 6. Wire Templates Switcher
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                const t = item.dataset.template;
+                currentTemplate.value = t;
+                if (t === 'service') {
+                    titleText.value = 'Cloud Database Service';
+                    descText.value = 'Enterprise high-availability cluster with automatic replication and zero latency.';
+                    badgeText.value = 'Operational';
+                    document.getElementById('canvas-route-label').textContent = '/ (Service Card)';
+                } else if (t === 'profile') {
+                    titleText.value = 'Eldrex Delos Reyes';
+                    descText.value = 'Lead Systems Architect & Framework Designer at Cairn UI.';
+                    badgeText.value = 'PRO';
+                    document.getElementById('canvas-route-label').textContent = '/profile (User Profile)';
+                } else if (t === 'metrics') {
+                    titleText.value = 'Live Server Telemetry';
+                    descText.value = 'Throughput: 42,000 req/sec | Memory: 32MB | WASM Engine: Zero-Traffic';
+                    badgeText.value = 'Realtime';
+                    document.getElementById('canvas-route-label').textContent = '/metrics (Telemetry)';
+                } else if (t === 'hero') {
+                    titleText.value = 'Build Faster with Cairn';
+                    descText.value = 'Zero-dependency reactive components that cross-compile into React, Vue, Svelte, and Angular.';
+                    badgeText.value = 'v1.0.0';
+                    document.getElementById('canvas-route-label').textContent = '/hero (CTA Banner)';
+                }
+                document.getElementById('prop-title').value = titleText.value;
+                document.getElementById('prop-desc').value = descText.value;
+                document.getElementById('prop-badge').value = badgeText.value;
+            });
+        });
+
+        // 7. Wire Theme Switcher
+        document.getElementById('theme-select').addEventListener('change', (e) => {
+            const th = e.target.value;
+            setTheme(th);
+            if (th === 'cyberpunk') accentColor.value = '#ec4899';
+            if (th === 'aurora') accentColor.value = '#a855f7';
+            if (th === 'emerald') accentColor.value = '#10b981';
+            if (th === 'default') accentColor.value = '#38bdf8';
+            document.getElementById('prop-accent').value = accentColor.value;
+        });
+
+        // 8. Wire Viewport Device Resizer
+        document.querySelectorAll('.device-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('canvas-container').style.width = btn.dataset.w + 'px';
+            });
+        });
+
+        // 9. Wire Mode Toggles
+        ['edit', 'prototype', 'preview'].forEach(mode => {
+            document.getElementById('mode-' + mode).addEventListener('click', (e) => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                studio.enable({ target: '#app', mode });
+            });
+        });
+
+        // 10. Multi-Framework Universal Code Generator (Safely escaped for live browser execution)
+        const modal = document.getElementById('export-modal');
+        const codeOutput = document.getElementById('code-output');
+        let currentFormat = 'cairn';
+
+        const updateExportCode = () => {
+            const compName = titleText.value.replace(/[^a-zA-Z0-9]/g, '') || 'MyWidget';
+            const shadowCss = shadowPreset.value === 'glow' ? '0 0 25px ' + accentColor.value + '66' : shadowsMap[shadowPreset.value];
+            const SCRIPT_OPEN = '\x3cscript\x3e';
+            const SCRIPT_CLOSE = '\x3c/script\x3e';
+            const SCRIPT_MOD = '\x3cscript type="module"\x3e';
+            const SCRIPT_VUE = '\x3cscript setup lang="ts"\x3e';
+            const SCRIPT_SVELTE = '\x3cscript lang="ts"\x3e';
+
+            if (currentFormat === 'cairn') {
+                codeOutput.textContent = "import { component, state, div, h2, p, button, span } from '@eldrex/cairn';\n\n" +
+                    "export const " + compName + " = component((props = {}) => {\n" +
+                    "  const pings = state(142);\n\n" +
+                    "  return div({\n" +
+                    "    style: {\n" +
+                    "      background: '" + bgColor.value + "',\n" +
+                    "      backdropFilter: 'blur(" + blurVal.value + "px)',\n" +
+                    "      borderRadius: '" + radiusVal.value + "px',\n" +
+                    "      border: '" + borderVal.value + "px solid rgba(255, 255, 255, 0.12)',\n" +
+                    "      padding: '" + paddingVal.value + "px',\n" +
+                    "      boxShadow: '" + shadowCss + "',\n" +
+                    "      color: '#f8fafc'\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "    div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' } },\n" +
+                    "      h2(props.title || '" + titleText.value + "', { style: { fontSize: '1.3rem', fontWeight: 800 } }),\n" +
+                    "      span(props.badge || '" + badgeText.value + "', {\n" +
+                    "        style: { background: '" + accentColor.value + "22', color: '" + accentColor.value + "', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }\n" +
+                    "      })\n" +
+                    "    ),\n" +
+                    "    p(props.desc || '" + descText.value + "', {\n" +
+                    "      style: { color: '#94a3b8', fontSize: '0.92rem', marginBottom: '1.5rem' }\n" +
+                    "    }),\n" +
+                    "    button(() => `⚡ Health Check (Pings: ${pings.value})`, {\n" +
+                    "      style: {\n" +
+                    "        background: '" + accentColor.value + "',\n" +
+                    "        color: '#0f172a',\n" +
+                    "        border: 'none',\n" +
+                    "        padding: '0.65rem 1.35rem',\n" +
+                    "        borderRadius: '8px',\n" +
+                    "        fontWeight: 800,\n" +
+                    "        cursor: 'pointer'\n" +
+                    "      },\n" +
+                    "      onclick: () => pings.value++\n" +
+                    "    })\n" +
+                    "  );\n" +
+                    "});\n\n" +
+                    "export default " + compName + ";";
+            } else if (currentFormat === 'custom-element') {
+                codeOutput.textContent = "<!-- Standard W3C Custom Element -->\n" +
+                    "<cairn-widget></cairn-widget>\n\n" +
+                    SCRIPT_MOD + "\n" +
+                    "import { defineCustomElement } from '@eldrex/cairn';\n" +
+                    "import { " + compName + " } from './" + compName + ".js';\n\n" +
+                    "// Registers native <cairn-widget> usable anywhere\n" +
+                    "defineCustomElement('cairn-widget', " + compName + ");\n" +
+                    SCRIPT_CLOSE;
+            } else if (currentFormat === 'react') {
+                codeOutput.textContent = "import React, { useState } from 'react';\n\n" +
+                    "interface " + compName + "Props {\n" +
+                    "  title?: string;\n" +
+                    "  desc?: string;\n" +
+                    "  badge?: string;\n" +
+                    "}\n\n" +
+                    "export const " + compName + ": React.FC<" + compName + "Props> = ({\n" +
+                    "  title = '" + titleText.value + "',\n" +
+                    "  desc = '" + descText.value + "',\n" +
+                    "  badge = '" + badgeText.value + "'\n" +
+                    "}) => {\n" +
+                    "  const [pings, setPings] = useState(142);\n\n" +
+                    "  return (\n" +
+                    "    <div\n" +
+                    "      style={{\n" +
+                    "        background: '" + bgColor.value + "',\n" +
+                    "        backdropFilter: 'blur(" + blurVal.value + "px)',\n" +
+                    "        borderRadius: '" + radiusVal.value + "px',\n" +
+                    "        border: '" + borderVal.value + "px solid rgba(255, 255, 255, 0.12)',\n" +
+                    "        padding: '" + paddingVal.value + "px',\n" +
+                    "        boxShadow: '" + shadowCss + "',\n" +
+                    "        color: '#f8fafc'\n" +
+                    "      }}\n" +
+                    "    >\n" +
+                    "      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>\n" +
+                    "        <h2 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{title}</h2>\n" +
+                    "        <span style={{ background: '" + accentColor.value + "22', color: '" + accentColor.value + "', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>\n" +
+                    "          {badge}\n" +
+                    "        </span>\n" +
+                    "      </div>\n" +
+                    "      <p style={{ color: '#94a3b8', fontSize: '0.92rem', marginBottom: '1.5rem' }}>{desc}</p>\n" +
+                    "      <button\n" +
+                    "        onClick={() => setPings(p => p + 1)}\n" +
+                    "        style={{\n" +
+                    "          background: '" + accentColor.value + "',\n" +
+                    "          color: '#0f172a',\n" +
+                    "          border: 'none',\n" +
+                    "          padding: '0.65rem 1.35rem',\n" +
+                    "          borderRadius: '8px',\n" +
+                    "          fontWeight: 800,\n" +
+                    "          cursor: 'pointer'\n" +
+                    "        }}\n" +
+                    "      >\n" +
+                    "        ⚡ Health Check (Pings: {pings})\n" +
+                    "      </button>\n" +
+                    "    </div>\n" +
+                    "  );\n" +
+                    "};\n\n" +
+                    "export default " + compName + ";";
+            } else if (currentFormat === 'vue') {
+                codeOutput.textContent = "<template>\n" +
+                    "  <div\n" +
+                    "    :style=\"{\n" +
+                    "      background: '" + bgColor.value + "',\n" +
+                    "      backdropFilter: 'blur(" + blurVal.value + "px)',\n" +
+                    "      borderRadius: '" + radiusVal.value + "px',\n" +
+                    "      border: '" + borderVal.value + "px solid rgba(255, 255, 255, 0.12)',\n" +
+                    "      padding: '" + paddingVal.value + "px',\n" +
+                    "      boxShadow: '" + shadowCss + "',\n" +
+                    "      color: '#f8fafc'\n" +
+                    "    }\"\n" +
+                    "  >\n" +
+                    "    <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;\">\n" +
+                    "      <h2 style=\"font-size: 1.3rem; font-weight: 800;\">{{ title }}</h2>\n" +
+                    "      <span style=\"background: " + accentColor.value + "22; color: " + accentColor.value + "; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;\">\n" +
+                    "        {{ badge }}\n" +
+                    "      </span>\n" +
+                    "    </div>\n" +
+                    "    <p style=\"color: #94a3b8; font-size: 0.92rem; margin-bottom: 1.5rem;\">{{ desc }}</p>\n" +
+                    "    <button\n" +
+                    "      @click=\"pings++\"\n" +
+                    "      style=\"background: " + accentColor.value + "; color: #0f172a; border: none; padding: 0.65rem 1.35rem; border-radius: 8px; font-weight: 800; cursor: pointer;\"\n" +
+                    "    >\n" +
+                    "      ⚡ Health Check (Pings: {{ pings }})\n" +
+                    "    </button>\n" +
+                    "  </div>\n" +
+                    "</template>\n\n" +
+                    SCRIPT_VUE + "\n" +
+                    "import { ref } from 'vue';\n\n" +
+                    "const props = withDefaults(defineProps<{\n" +
+                    "  title?: string;\n" +
+                    "  desc?: string;\n" +
+                    "  badge?: string;\n" +
+                    "}>(), {\n" +
+                    "  title: '" + titleText.value + "',\n" +
+                    "  desc: '" + descText.value + "',\n" +
+                    "  badge: '" + badgeText.value + "'\n" +
+                    "});\n\n" +
+                    "const pings = ref(142);\n" +
+                    SCRIPT_CLOSE;
+            } else if (currentFormat === 'svelte') {
+                codeOutput.textContent = SCRIPT_SVELTE + "\n" +
+                    "  export let title = '" + titleText.value + "';\n" +
+                    "  export let desc = '" + descText.value + "';\n" +
+                    "  export let badge = '" + badgeText.value + "';\n" +
+                    "  let pings = 142;\n" +
+                    SCRIPT_CLOSE + "\n\n" +
+                    "<div\n" +
+                    "  style=\"background: " + bgColor.value + "; backdrop-filter: blur(" + blurVal.value + "px); border-radius: " + radiusVal.value + "px; border: " + borderVal.value + "px solid rgba(255,255,255,0.12); padding: " + paddingVal.value + "px; box-shadow: " + shadowCss + "; color: #f8fafc;\"\n" +
+                    ">\n" +
+                    "  <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;\">\n" +
+                    "    <h2 style=\"font-size: 1.3rem; font-weight: 800;\">{title}</h2>\n" +
+                    "    <span style=\"background: " + accentColor.value + "22; color: " + accentColor.value + "; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;\">\n" +
+                    "      {badge}\n" +
+                    "    </span>\n" +
+                    "  </div>\n" +
+                    "  <p style=\"color: #94a3b8; font-size: 0.92rem; margin-bottom: 1.5rem;\">{desc}</p>\n" +
+                    "  <button\n" +
+                    "    on:click={() => pings++}\n" +
+                    "    style=\"background: " + accentColor.value + "; color: #0f172a; border: none; padding: 0.65rem 1.35rem; border-radius: 8px; font-weight: 800; cursor: pointer;\"\n" +
+                    "  >\n" +
+                    "    ⚡ Health Check (Pings: {pings})\n" +
+                    "  </button>\n" +
+                    "</div>";
+            } else if (currentFormat === 'angular') {
+                codeOutput.textContent = "import { Component, Input, signal } from '@angular/core';\n\n" +
+                    "@Component({\n" +
+                    "  selector: 'app-" + compName.toLowerCase() + "',\n" +
+                    "  standalone: true,\n" +
+                    "  template: `\n" +
+                    "    <div style=\"background: " + bgColor.value + "; backdrop-filter: blur(" + blurVal.value + "px); border-radius: " + radiusVal.value + "px; border: " + borderVal.value + "px solid rgba(255,255,255,0.12); padding: " + paddingVal.value + "px; box-shadow: " + shadowCss + "; color: #f8fafc;\">\n" +
+                    "      <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;\">\n" +
+                    "        <h2 style=\"font-size: 1.3rem; font-weight: 800;\">{{ title }}</h2>\n" +
+                    "        <span style=\"background: " + accentColor.value + "22; color: " + accentColor.value + "; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;\">{{ badge }}</span>\n" +
+                    "      </div>\n" +
+                    "      <p style=\"color: #94a3b8; font-size: 0.92rem; margin-bottom: 1.5rem;\">{{ desc }}</p>\n" +
+                    "      <button (click)=\"pings.update(p => p + 1)\" style=\"background: " + accentColor.value + "; color: #0f172a; border: none; padding: 0.65rem 1.35rem; border-radius: 8px; font-weight: 800; cursor: pointer;\">\n" +
+                    "        ⚡ Health Check (Pings: {{ pings() }})\n" +
+                    "      </button>\n" +
+                    "    </div>\n" +
+                    "  `\n" +
+                    "})\n" +
+                    "export class " + compName + "Component {\n" +
+                    "  @Input() title = '" + titleText.value + "';\n" +
+                    "  @Input() desc = '" + descText.value + "';\n" +
+                    "  @Input() badge = '" + badgeText.value + "';\n" +
+                    "  pings = signal(142);\n" +
+                    "}";
+            } else if (currentFormat === 'html') {
+                codeOutput.textContent = "<div style=\"background: " + bgColor.value + "; border-radius: " + radiusVal.value + "px; border: " + borderVal.value + "px solid rgba(255,255,255,0.12); padding: " + paddingVal.value + "px; box-shadow: " + shadowCss + "; color: #f8fafc; font-family: system-ui, sans-serif;\">\n" +
+                    "  <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;\">\n" +
+                    "    <h2 style=\"font-size: 1.3rem; font-weight: 800; margin: 0;\">" + titleText.value + "</h2>\n" +
+                    "    <span style=\"background: " + accentColor.value + "22; color: " + accentColor.value + "; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;\">" + badgeText.value + "</span>\n" +
+                    "  </div>\n" +
+                    "  <p style=\"color: #94a3b8; font-size: 0.92rem; margin: 0 0 1.5rem 0;\">" + descText.value + "</p>\n" +
+                    "  <button style=\"background: " + accentColor.value + "; color: #0f172a; border: none; padding: 0.65rem 1.35rem; border-radius: 8px; font-weight: 800; cursor: pointer;\">\n" +
+                    "    ⚡ Health Check\n" +
+                    "  </button>\n" +
+                    "</div>";
+            }
+        };
+
+        document.getElementById('btn-open-export').addEventListener('click', () => {
+            modal.classList.add('open');
+            updateExportCode();
+        });
+
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            modal.classList.remove('open');
+        });
+
+        document.querySelectorAll('.modal-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFormat = tab.dataset.format;
+                updateExportCode();
+            });
+        });
+
+        document.getElementById('btn-copy-code').addEventListener('click', () => {
+            navigator.clipboard.writeText(codeOutput.textContent).then(() => {
+                const btn = document.getElementById('btn-copy-code');
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => btn.textContent = '📋 Copy Code', 1500);
+            });
+        });
+    </script>
+</body>
+
+</html>

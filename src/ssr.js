@@ -40,7 +40,11 @@ export function renderToString(node) {
     // Virtual node (Cairn's SSR-safe object format)
     if (node._isCairnVNode || typeof node.tagName === 'string') {
         const tag = (node.tagName || 'div').toLowerCase();
-        const attrs = serializeAttributes(node.attributes || node._attrs || {});
+        const attrsObj = { ...(node.attributes || node._attrs || {}) };
+        if (node.className && !attrsObj.class && !attrsObj.className) {
+            attrsObj.class = node.className;
+        }
+        const attrs = serializeAttributes(attrsObj);
         const children = serializeChildren(node.childNodes || node._children || []);
 
         if (VOID_TAGS.has(tag)) {

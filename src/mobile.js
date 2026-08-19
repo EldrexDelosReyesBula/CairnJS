@@ -42,56 +42,82 @@ export const mobile = {
         }, children);
     },
 
-    BottomSheet({ trigger, content, snapPoints = [0.5, 0.9], initialSnap = 0.5 } = {}) {
+    BottomSheet({ trigger, content, snapPoints = [0.5, 0.9], initialSnap = 0.5, theme = 'dark' } = {}) {
         const isOpen = state(false);
         const dragY = state(0);
         let startY = 0;
 
+        const isDark = theme === 'dark';
+
         return div({},
             trigger ? div({ onclick: () => isOpen.value = !isOpen.value }, trigger) : null,
             () => isOpen.value ? div({
-                style: () => ({
+                style: {
                     position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: `${initialSnap * 100}vh`,
-                    background: '#ffffff',
-                    borderTopLeftRadius: '20px',
-                    borderTopRightRadius: '20px',
-                    boxShadow: '0 -10px 30px rgba(0,0,0,0.25)',
-                    padding: '24px',
-                    zIndex: 99999,
-                    transform: `translateY(${Math.max(0, dragY.value)}px)`,
-                    transition: dragY.value === 0 ? 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)' : 'none'
-                }),
-                ontouchstart: (e) => {
-                    startY = e.touches[0].clientY;
+                    inset: 0,
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(4px)',
+                    zIndex: 99998,
+                    display: 'flex',
+                    alignItems: 'flex-end'
                 },
-                ontouchmove: (e) => {
-                    const currentY = e.touches[0].clientY;
-                    const diff = currentY - startY;
-                    if (diff > 0) dragY.value = diff;
-                },
-                ontouchend: () => {
-                    if (dragY.value > 120) {
-                        isOpen.value = false;
-                    }
-                    dragY.value = 0;
-                }
+                onclick: (e) => e.target === e.currentTarget && (isOpen.value = false)
             },
                 div({
-                    style: {
-                        width: '40px',
-                        height: '5px',
-                        background: '#cbd5e1',
-                        borderRadius: '3px',
-                        margin: '0 auto 16px auto',
-                        cursor: 'grab'
+                    style: () => ({
+                        width: '100%',
+                        height: `${initialSnap * 100}vh`,
+                        background: isDark ? '#0f172a' : '#ffffff',
+                        color: isDark ? '#f8fafc' : '#0f172a',
+                        borderTopLeftRadius: '24px',
+                        borderTopRightRadius: '24px',
+                        border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+                        boxShadow: '0 -10px 40px rgba(0,0,0,0.35)',
+                        padding: '20px 24px',
+                        zIndex: 99999,
+                        transform: `translateY(${Math.max(0, dragY.value)}px)`,
+                        transition: dragY.value === 0 ? 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)' : 'none',
+                        boxSizing: 'border-box'
+                    }),
+                    ontouchstart: (e) => {
+                        startY = e.touches[0].clientY;
+                    },
+                    ontouchmove: (e) => {
+                        const currentY = e.touches[0].clientY;
+                        const diff = currentY - startY;
+                        if (diff > 0) dragY.value = diff;
+                    },
+                    ontouchend: () => {
+                        if (dragY.value > 120) {
+                            isOpen.value = false;
+                        }
+                        dragY.value = 0;
                     }
-                }),
-                button('Close', { onclick: () => isOpen.value = false, style: { float: 'right' } }),
-                content
+                },
+                    // Grab handle
+                    div({
+                        style: {
+                            width: '44px',
+                            height: '5px',
+                            background: isDark ? '#334155' : '#cbd5e1',
+                            borderRadius: '9999px',
+                            margin: '0 auto 16px auto',
+                            cursor: 'grab'
+                        }
+                    }),
+                    button('✕', {
+                        onclick: () => isOpen.value = false,
+                        style: {
+                            float: 'right',
+                            background: 'none',
+                            border: 'none',
+                            color: isDark ? '#94a3b8' : '#64748b',
+                            fontSize: '1.2rem',
+                            cursor: 'pointer'
+                        }
+                    }),
+                    content
+                )
             ) : null
         );
     },
@@ -123,10 +149,12 @@ export const mobile = {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#64748b',
-                    fontSize: '13px'
+                    gap: '8px',
+                    color: '#38bdf8',
+                    fontSize: '13px',
+                    fontWeight: 700
                 })
-            }, refreshing.value ? 'Refreshing...' : 'Pull to refresh') : null,
+            }, refreshing.value ? '🔄 Refreshing data...' : '⬇️ Pull to refresh') : null,
             children
         );
     },

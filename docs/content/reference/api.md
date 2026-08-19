@@ -1,13 +1,13 @@
 # Cairn API Reference
 
-Complete, AI-readable function signatures for `@eldrex/cairn`.
+Complete, AI-readable function signatures and specifications for `@eldrex/cairn`.
 
 ---
 
-## Reactivity
+## 1. Reactivity Primitives (`src/state.js`)
 
-### state(initialValue)
-Creates a reactive signal. Pass a function to auto-delegate to `computed()`.
+### `state(initialValue)`
+Creates a fine-grained reactive signal. Pass a function to auto-delegate to `computed()`.
 - **Returns**: `{ value, peek(), subscribe(fn), toString(), valueOf() }`
 ```js
 const count = state(0);
@@ -15,412 +15,388 @@ count.value++;
 const double = state(() => count.value * 2);
 ```
 
-### computed(getter)
-Derived reactive value cached until dependencies change.
+### `computed(getter)`
+Derived reactive value cached until accessed dependencies change.
 - **Returns**: `{ value, peek(), subscribe(fn) }`
 ```js
 const total = computed(() => price.value * qty.value);
 ```
 
-### effect(fn)
-Runs `fn` immediately and re-runs on dependency changes. Optionally returns cleanup.
-- **Returns**: `Function` (stop)
+### `effect(fn)`
+Executes `fn` immediately and re-runs whenever accessed signals mutate. Optionally returns a cleanup function.
+- **Returns**: `Function` (stop handle)
 ```js
-const stop = effect(() => console.log(count.value));
+const stop = effect(() => console.log('Count:', count.value));
 ```
 
-### collection(initialData)
-Reactive proxy for arrays/objects with granular mutation tracking.
+### `collection(initialData)`
+Reactive proxy for arrays and objects with granular mutation tracking and helper methods.
 ```js
 const items = collection(['A', 'B']);
 items.push('C');
 items.remove('A');
+items.clear();
 ```
 
-### resource(fetcher)
-Async data loader with `.data`, `.loading`, `.error`, `.refetch()`, `.poll()`, `.cache()`.
+### `resource(fetcher)`
+Async data loader with `.data`, `.loading`, `.error`, `.refetch()`, `.poll(ms)`, and `.cache(ttl)`.
 ```js
 const users = resource(() => fetch('/api/users').then(r => r.json()));
 ```
 
 ---
 
-## Advanced Reactivity
+## 2. Advanced Reactivity Primitives
 
-### watch(source, handler, opts?)
-Explicit watcher. `handler(newVal, oldVal)`. Options: `{ immediate, deep }`.
+### `watch(source, handler, opts?)`
+Explicit signal watcher. `handler(newVal, oldVal)`. Options: `{ immediate: boolean, deep: boolean }`.
 ```js
-const stop = watch(count, (n, o) => console.log(n, o), { immediate: true });
+const stop = watch(count, (next, prev) => console.log(next, prev), { immediate: true });
 ```
 
-### watchEffect(sources, handler, opts?)
-Watch multiple signals simultaneously.
+### `watchEffect(sources, handler, opts?)`
+Watches an array of signals simultaneously.
 ```js
 watchEffect([x, y], ([nx, ny]) => redraw(nx, ny));
 ```
 
-### batch(fn)
-Flush multiple state writes in one render pass.
+### `batch(fn)`
+Flushes multiple state mutations in a single DOM render pass.
 ```js
-batch(() => { x.value = 1; y.value = 2; z.value = 3; });
+batch(() => {
+    x.value = 1;
+    y.value = 2;
+    z.value = 3;
+});
 ```
 
 ---
 
-## DOM Builders
+## 3. DOM Builders & Element Factories (`src/dom.js`)
 
-### h(tag, ...args)
-Creates a native HTML element with reactive prop bindings.
+### `h(tag, ...args)`
+Creates a native HTML element with reactive attribute and child bindings.
 ```js
 h('div', { class: 'card' }, 'Hello World');
 ```
 
-### Element Helpers
-`div`, `span`, `p`, `h1`–`h6`, `button`, `input`, `img`, `a`, `section`, `article`, `nav`, `footer`, `header`, `main`, `aside`, `pre`, `code`, `hr`, `br`, `strong`, `em`, `label`, `ul`, `ol`, `li`, `form`, `createForm`, `textarea`, `select`, `option`, `text`
+### Element Builders
+Every standard HTML element is exported as a builder function:
+`div`, `span`, `p`, `h1`–`h6`, `button`, `input`, `img`, `a`, `section`, `article`, `nav`, `footer`, `header`, `main`, `aside`, `pre`, `code`, `hr`, `br`, `strong`, `em`, `label`, `ul`, `ol`, `li`, `form`, `createForm`, `textarea`, `select`, `option`, `text`.
+
+### Escape Hatches
+- `raw(htmlString)`: Parses raw HTML string into native DOM nodes.
+- `element(tag, props, ...children)`: Instantiates custom HTML elements or Web Components.
+- `canvas(props)`: Factory creating `<canvas>` element with `.create2D()` and `.create3D()` context helpers.
 
 ---
 
-## Component Model
+## 4. Component Model & Mounting (`src/component.js`, `src/mount.js`)
 
-### component(config)
-Wraps a render function or `{ props, setup, slots }` object.
+### `component(renderFn | config)`
+Wraps a render function or `{ props, setup, slots }` object into a Cairn component.
 ```js
 const Card = component(({ title }) => div(h3(title)));
 ```
 
-### mount(target, node)
-Mounts a Cairn node into a DOM selector or element.
+### `mount(target, node)`
+Mounts a Cairn component or element tree into a DOM selector or HTMLElement.
+- **Returns**: `Function` (unmount cleanup)
 ```js
-mount('#app', App());
+const unmount = mount('#app', Card({ title: 'Dashboard' }));
 ```
 
 ---
 
-## Store
+## 5. Universal Framework Bridges & Web Components (`src/framework-bridges.js`)
 
-### createStore(name, config)
-Pinia-style global reactive store.
+### `defineCustomElement(tagName, Component, observedAttrs?)`
+Registers a Cairn component as a native W3C Custom Element.
+```js
+defineCustomElement('cairn-widget', MyWidget, ['title', 'count']);
+```
+
+### `cairnToCustomElement(Component, observedAttrs?)`
+Returns a `CustomElementConstructor` class without registering it globally.
+
+### `cairnToReact(Component)`
+Wraps a Cairn component into a React 18+ Functional Component.
+
+### `useCairn(factory, deps)`
+React hook returning a `ref` that mounts a Cairn component.
+```js
+const containerRef = useCairn(() => MyCairnComponent({ id: 1 }), []);
+```
+
+### `cairnToVue(Component)`
+Converts a Cairn component into a Vue 3 component definition with deep prop watchers.
+
+### `cairnToSvelte(Component)`
+Returns a Svelte 5 action directive (`use:cairnAction={props}`).
+
+### `cairnToAngular(Component)`
+Returns an Angular standalone directive with `ngOnInit` and `ngOnDestroy`.
+
+---
+
+## 6. Physics & Micro-Animations (`src/animation.js`, `src/physics.js`)
+
+### `spring(opts)`
+Physics spring interpolator. Options: `{ from, to, stiffness, damping, mass, onUpdate, onComplete }`.
+
+### Spring Presets
+- `spring.bouncy(opts)` — High energy bounce (stiffness 300, damping 10).
+- `spring.gentle(opts)` — Smooth floating transition (stiffness 120, damping 14).
+- `spring.stiff(opts)` — Snappy responsive movement (stiffness 400, damping 30).
+- `spring.wobbly(opts)` — Dramatic oscillation (stiffness 180, damping 8).
+- `spring.slow(opts)` — Deliberate slow transition (stiffness 80, damping 20).
+
+### Kinematic Particle Physics
+```js
+import { physics } from '@eldrex/cairn';
+
+const p = physics.particle({ x: 100, y: 100, vx: 2, vy: -5, mass: 1, damping: 0.98 });
+p.applyForce(0, 9.8); // Apply gravity
+p.step(0.016, { minX: 0, maxX: 800, minY: 0, maxY: 600 }); // Simulation step
+```
+
+### `physics.attractor(opts)`
+Creates a gravitational attractor attracting particles.
+
+---
+
+## 7. 2D Canvas Fluent API (`src/canvas2d.js`)
+
+### `canvas2d(opts)` / `createCanvas2D(target, opts)`
+```js
+const c = canvas2d({ width: 800, height: 600 });
+c.render((ctx) => {
+    ctx.clear()
+       .shadow('rgba(0,0,0,0.4)', 12, 0, 4)
+       .fill('#38bdf8')
+       .circle(100, 100, 40)
+       .star(300, 100, 5, 40, 20)
+       .polygon(500, 100, 6, 35)
+       .stroke('#f8fafc', 2);
+});
+```
+
+**Fluent Methods**:
+`.fill()`, `.stroke()`, `.shadow(color, blur, x, y)`, `.rect()`, `.circle()`, `.arc(x,y,r,s,e)`, `.star(x,y,points,outerR,innerR)`, `.polygon(x,y,sides,r)`, `.ellipse()`, `.line()`, `.path()`, `.text()`, `.gradient()`, `.image()`, `.save()`, `.restore()`, `.translate()`, `.rotate()`, `.scale()`, `.clear()`.
+
+---
+
+## 8. Styling & Theme Engine (`src/styling.js`)
+
+### `createTheme(name, customTokens)`
+Registers a design theme and merges it with default tokens.
+```js
+createTheme('cyberpunk', {
+    colors: { primary: { 500: '#ec4899' } }
+});
+```
+
+### `setTheme(name)`
+Switches the active theme and injects CSS custom properties (`--cairn-*`) on `:root`.
+
+### `activeTheme`
+Signal holding the current theme name and token tree.
+
+### `css(rulesObj)`
+Generates and injects a scoped CSS class name.
+```js
+const cardClass = css({
+    padding: '1.5rem',
+    borderRadius: '12px',
+    background: 'rgba(30, 41, 59, 0.7)'
+});
+```
+
+### `fluid(minPx, maxPx, minVw?, maxVw?)`
+Generates a CSS `clamp()` expression for responsive fluid typography or spacing.
+```js
+const size = fluid(14, 20); // clamp(14px, 3.5vw, 20px)
+```
+
+### `defaultTokens`
+Comprehensive token definitions for `colors`, `spacing`, `radius`, `typography` (display, brand, sans, mono), `shadows`, `glass` (sm, md, dark), and `gradients` (sky, sunset, emerald, aurora, cyberpunk).
+
+---
+
+## 9. Visual Prototyping Studio (`src/studio.js`)
+
+### `studio.enable(opts)`
+Activates the embedded visual workspace (`{ target: '#app', mode: 'edit' | 'prototype' | 'preview' }`).
+
+### `studio.inspect(element)`
+Inspects a DOM node, highlighting its bounds and properties in the studio panel.
+
+### `studio.addScreen(name, route)` / `studio.switchScreen(id)`
+Registers and navigates between prototype screens and routes.
+
+### `studio.export(options)`
+Generates clean, production-ready code in multiple framework formats:
+- `'cairn'` (ESM Component)
+- `'custom-element'` (W3C Web Component)
+- `'react'` (React 18 TSX)
+- `'vue'` (Vue 3 SFC)
+- `'svelte'` (Svelte 5)
+- `'angular'` (Angular 17+ Standalone)
+- `'html'` (Vanilla HTML + CSS)
+
+---
+
+## 10. Global Store (`src/store.js`)
+
+### `createStore(name, config)`
+Pinia/Zustand-style global reactive store.
 ```js
 const auth = createStore('auth', {
-  state: { user: null },
-  getters: { isLoggedIn: (s) => !!s.user },
-  actions: { login(u) { this.user = u; } }
+    state: { user: null },
+    getters: { isLoggedIn: (s) => !!s.user },
+    actions: { login(u) { this.user = u; } }
 });
-auth.login({ name: 'Eldrex' });
 ```
 
-### useStore(name) → store
-Retrieves registered store by name.
-
-### listStores() → string[]
-Returns all registered store names.
-
-**Store interface**: `.key`, `.key = val`, `.getterName`, `.actionName()`, `.$reset()`, `.$patch({})`, `.$subscribe(key, fn)`
+### `useStore(name)`
+Retrieves a registered store by name.
 
 ---
 
-## Context
+## 11. Context & Lifecycle (`src/context.js`, `src/lifecycle.js`)
 
-### createContext(name, defaultValue?)
-Defines a named context slot.
+- `createContext(name, defaultValue)`
+- `provideContext(context, value)`
+- `useContext(context)`
+- `onMount(fn)`
+- `onUnmount(fn)`
+- `onUpdate(fn)`
+- `withLifecycle(setupFn)`
+
+---
+
+## 12. Extensibility & Plugins (`src/extensibility.js`)
+
+### `cairn.use(pluginFn)`
+Registers a plugin function receiving Cairn context:
+`{ components, utils, animations, hooks, middleware, config }`.
+
+### `cairn.middleware.add(hooks)`
+Registers lifecycle interceptors (`beforeElementCreate`, `afterElementCreate`, `afterStateChange`, `beforeMount`, `afterMount`).
+
+---
+
+## 13. Extensible Multi-Styling Adapters (`src/adapters`)
+
+### `createAdapter(name, transformFn)`
+Authors custom 3rd-party styling and behavioral adapters.
 ```js
-const ThemeCtx = createContext('theme', 'dark');
+const bulma = createAdapter('bulma', (props) => {
+    if (props.bulma) {
+        props.class = `${props.class || ''} is-${props.bulma}`.trim();
+        delete props.bulma;
+    }
+    return props;
+});
+registerAdapter(bulma);
 ```
 
-### provideContext(context, value)
-Provides a value (or signal) to child components.
+### `registerAdapter(nameOrAdapter, fn?)` / `useAdapter(adapter)`
+Registers an adapter into Cairn's global element resolution pipeline.
 
-### useContext(context) → signal
-Retrieves provided value as reactive signal.
-
-### removeContext(context)
-Removes a provided context.
-
----
-
-## Lifecycle
-
-### onMount(fn)
-Fires after component DOM insertion. `fn(el)`.
-
-### onUnmount(fn)
-Fires on element removal (MutationObserver). Use for cleanup.
-
-### onUpdate(fn)
-Fires on reactive re-render.
-
-### withLifecycle(setupFn) → HTMLElement
-Wraps setup with lifecycle context. Auto-attaches hooks.
+### Built-in Adapters:
+- **Tailwind**: `tailwind: 'px-4 py-2 bg-blue-500'` or `tailwind: ['px-4', 'py-2']`
+- **UnoCSS**: `uno: 'p-4 bg-sky-500'`
+- **Bootstrap 5**: `bs: 'btn btn-primary'` / `bootstrap: 'col-md-6'`
+- **CSS Modules**: `modules: styles` / `class: styles.btn`
+- **Styled CSS-in-JS**: `css: { color: 'white', padding: '16px' }`
+- **Motion**: `motion: { animate: 'fade-up', duration: 0.3 }`
+- **Design Tokens**: `tokens: { color: 'primary', size: 'lg', radius: 'md' }`
 
 ---
 
-## Boundaries & Portals
+## 14. Agentic AI & Developer Intelligence (`src/ai.js`)
 
-### portal(target, ...children) → { destroy() }
-Renders nodes into any DOM target.
+### `ai.prompt(options)`
+Generates authoritative system prompt and rulebook for LLMs (ChatGPT, Claude, Gemini, Cursor).
 ```js
-const p = portal('#modals', ModalComponent());
-p.destroy();
+const promptMd = ai.prompt({ format: 'markdown' });
 ```
 
-### errorBoundary({ children, fallback, onError })
-Catches child render errors, shows fallback UI.
-
-### suspense({ resources, loading, error, children })
-Renders loading fallback until all `resource()` signals resolve.
-
----
-
-## Animation & Physics
-
-### spring({ from, to, stiffness, damping, mass, onUpdate, onComplete })
-Spring physics interpolator using `requestAnimationFrame`.
-
-### transition(el, { enter, from, duration, timingFunction })
-Applies CSS enter/exit transition to a DOM element.
-
-### gesture(el, { onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, onTap })
-Touch gesture event handler. Returns detach function.
-
-### physics.grid(count, config) → { onFrame(cb) }
-Verlet particle physics engine. `onFrame(positions => {})`.
-
----
-
-## 2D Canvas
-
-### createCanvas2D(target, opts?) → Canvas2D
+### `ai.lint(codeString)`
+Cairn AST linter that flags JSX tags, React hooks, unreactive template strings, and provides auto-fixed code.
 ```js
-const c = createCanvas2D('#canvas', { width: 800, height: 600 });
-c.onDraw((ctx, dt) => ctx.fillStyle('#38bdf8').circle(400, 300, 50)).start();
+const result = ai.lint(`function Bad() { return <div><p>Count: {count}</p></div>; }`);
+console.log(result.valid); // false
+console.log(result.suggestedCode); // Cairn procedural builder code
 ```
 
-**Draw methods**: `.fillStyle()`, `.strokeStyle()`, `.lineWidth()`, `.rect()`, `.circle()`, `.ellipse()`, `.line()`, `.path()`, `.bezier()`, `.text()`, `.gradient()`, `.image()`, `.save()`, `.restore()`, `.translate()`, `.rotate()`, `.scale()`, `.clear()`
-
-**Controller**: `.start()`, `.stop()`, `.render()`, `.onDraw(fn)`, `.reactive(signal)`, `.toDataURL()`
-
----
-
-## 3D WebGL
-
-### createScene3D(target, opts?) → Scene3D
+### `ai.generate(prompt)`
+Synthesizes clean Cairn component code and component factories from natural language.
 ```js
-const scene = createScene3D('#canvas3d', { width: 800, height: 600 });
-scene.camera({ fov: 60, position: [0, 1, 5] });
-scene.light({ direction: [1, -1, -1] });
-const box = scene.add(scene.box({ size: 1, color: [0.22, 0.75, 0.98] }));
-scene.animate((dt) => { box.rotation[1] += dt; scene.render(); });
+const { code, component } = await ai.generate('Create an interactive counter');
 ```
 
-**Methods**: `.camera()`, `.light()`, `.box()`, `.sphere()`, `.plane()`, `.mesh()`, `.add()`, `.remove()`, `.render()`, `.animate(fn)`, `.stop()`
+### `ai.build(jsonSpec)`
+Compiles declarative JSON specifications directly into live interactive Cairn DOM trees.
 
-**Mesh properties**: `.position[x,y,z]`, `.rotation[rx,ry,rz]`, `.scale[sx,sy,sz]`, `.material.color`, `.material.wireframe`
+### `ai.generateTests(name, options)`
+Generates complete test suites for Node.js, Vitest, or Playwright.
 
 ---
 
-## Charts
+## 15. Client-Side SPA Router (`src/router.js`)
 
-### Charts.bar(target, data, opts?)
-### Charts.line(target, data, opts?)
-### Charts.donut(target, data, opts?)
-### Charts.scatter(target, data, opts?)
-### Charts.reactive(type, target, dataFn, opts?) → stop
+### `router(routes, options)`
+Client-side Single Page App router with parameterized route matching (`:id`), query parsing, and history/hash modes.
 ```js
-Charts.bar('#chart', { labels: ['A','B'], datasets: [{ values: [10,20] }] });
-Charts.reactive('line', '#live', () => data.value);
+const appRouter = router({
+    '/': () => HomePage(),
+    '/users/:id': ({ params, query }) => UserProfile({ id: params.id, tab: query.tab }),
+    '*': () => NotFoundPage()
+}, { mode: 'history' });
 ```
 
----
-
-## SVG Shapes
-
-### shapes.svg(opts, ...children)
-### shapes.rect(opts) / shapes.circle(opts) / shapes.bezier(opts)
-### shapes.polygon({ points, fill, stroke })
-### shapes.ellipse({ cx, cy, rx, ry })
-### shapes.line({ x1, y1, x2, y2, stroke })
-### shapes.path({ d, fill, stroke })
-### shapes.text(content, opts)
-### shapes.group(opts, ...children)
-### shapes.arrow({ x1, y1, x2, y2, color })
-### shapes.star({ cx, cy, outerRadius, innerRadius, points })
-### shapes.triangle({ x, y, size, fill })
-
----
-
-## Keyboard
-
-### keyboard.on(combo, handler, opts?) → stop
+### `Link(props, ...children)`
+Declarative SPA link component intercepting clicks for pushState navigation without full-page reloads.
 ```js
-keyboard.on('ctrl+k', () => openSearch());
+Link({ href: '/users/42?tab=settings' }, 'View Profile');
 ```
-
-### keyboard.off(combo)
-### keyboard.clear()
-### keyboard.list() → [{ combo, description }]
 
 ---
 
-## i18n
+## 16. Reactive SVG Shapes & Vector Graphics (`src/shapes`)
 
-### createI18n({ locale, messages, fallbackLocale? }) → i18n
+Vector graphics primitives with browser and Node.js SSR support:
+- `shapes.svg(opts, ...children)`
+- `shapes.rect({ w, h, rx, ry, fill, stroke })`
+- `shapes.circle({ r, fill, stroke })`
+- `shapes.ellipse({ cx, cy, rx, ry })`
+- `shapes.line({ x1, y1, x2, y2, stroke })`
+- `shapes.path({ d, fill, stroke })`
+- `shapes.polygon({ points: [[x,y],...] })`
+- `shapes.bezier({ points, w, h })`
+- `shapes.text(content, opts)`
+- `shapes.group(opts, ...children)`
+- `shapes.defs(...)` & `shapes.linearGradient({ id, stops })`
+- `shapes.arrow({ x1, y1, x2, y2, color, size })`
+- `shapes.star({ cx, cy, outerRadius, innerRadius, points })`
+- `shapes.triangle({ x, y, size })`
+
+---
+
+## 17. Multi-Theme CodeBlock Syntax Highlighting (`src/docs.js`, `src/ui/index.js`)
+
+### `UI.CodeBlock(options)` / `docs.CodeBlock(options)`
+Interactive syntax highlighter supporting `dracula`, `one-dark`, `github-dark`, `tokyo-night`, `monokai`, and `cairn` themes with 1-click reactive copy.
 ```js
-const i18n = createI18n({ locale: 'en', messages: { en: { hello: 'Hi' } } });
-i18n.t('hello');          // 'Hi'
-i18n.t('name', { n: 'X' }); // interpolation
-i18n.t('items', { count: 5 }); // pluralization
-i18n.rt('hello');         // reactive computed signal
-i18n.setLocale('fr');
-i18n.locale.value;        // 'fr'
-i18n.availableLocales;    // ['en', 'fr']
+UI.CodeBlock({
+    code: `import { state } from '@eldrex/cairn';\nconst count = state(0);`,
+    language: 'javascript',
+    theme: 'dracula',
+    title: 'Counter.js',
+    lineNumbers: true,
+    copyable: true
+});
 ```
-
----
-
-## Utilities
-
-### color
-`.hexToRgb(hex)`, `.rgbToHex({r,g,b})`, `.darken(hex, amount)`, `.lighten(hex, amount)`, `.mix(hex1, hex2, ratio)`, `.rgba(hex, alpha)`, `.gradient(dir, ...stops)`
-
-### clipboard
-`.copy(text)` → `Promise<bool>`, `.read()` → `Promise<string>`
-
-### storage
-`.get(key, default?)`, `.set(key, val)`, `.remove(key)`, `.reactive(key, default?)` → signal
-
-### fullscreen
-`.enter(el?)`, `.exit()`, `.toggle(el?)`, `.isFullscreen()` → signal
-
-### onVisible(el, opts?) → signal
-### useResize(el) → `{ width, height }` signal
-### debounce(fn, delay?)
-### throttle(fn, limit?)
-### uuid() → string
-### sleep(ms) → Promise
-
----
-
-## SSR
-
-### renderToString(node) → string
-Serializes Cairn nodes to HTML. Safe in Node.js.
-
-### hydrate(container, componentFn, props?)
-Mounts a component onto server-rendered HTML.
-
----
-
-## Reconciler
-
-### reconcile(parent, oldItems, newItems, renderItem, getKey?)
-Key-based DOM patching for large reactive lists.
-
-### createList(parent, listSignal, renderItem, getKey?) → stop
-Auto-reconciling reactive list.
-
-### patchProps(el, oldProps, newProps)
-Surgical attribute diffing for a single element.
-
----
-
-## Styling
-
-### tokens
-Design token object: `.colors`, `.spacing`, `.radius`, `.typography`, `.shadows`
-
-### keyframes(rulesObj) → animationName
-Injects a `@keyframes` CSS animation and returns its generated name.
-
-### media(query) → signal
-Reactive media query signal.
-
-### styleHelper
-`.media(query, rules)`, `.container(minWidth, rules)`, `.darkMode({ dark, light })`
-
----
-
-## Debug & Tools
-
-### debug
-`.enable()`, `.disable()`, `.toggle()`, `.stats()`, `.inspect(signal)`
-
-### router(routes) → { go(path), resolve(), currentPath }
-Client-side hash/history router.
-
-### wasmEngine
-`.isAccelerated`, `.engine(mode)`, `.batchUpdate(updates, buffer)`, `.precomputeStyles(stateObj)`, `.scheduleDomUpdate(domRef, prop, val)`, `.flushDomUpdates()`, `.updateParticles(particles, dt)`
-
-### isWasmSupported() → boolean
-
-### SharedStateBuffer(size?)
-SharedArrayBuffer memory allocator for zero-copy state sharing between JS & WASM.
-
-### DomRef(element)
-Direct DOM pointer wrapper for zero-serialization attribute/text updates.
-
----
-
-## Extensibility & Middleware
-
-### use(pluginFn)
-Registers a plugin function receiving Cairn context `{ components, utils, animations, hooks, middleware, config }`.
-
-### componentsRegistry / utilsRegistry / animationRegistry / hooksBus / middlewareEngine
-Core registry and middleware interceptor instances.
-
-### tailwind(cairn)
-Tailwind CSS adapter plugin enabling utility class strings and token resolution.
-
----
-
-## Escape Hatches & Configuration
-
-### raw(htmlString) → HTMLElement | DocumentFragment
-Parses raw HTML string into native DOM nodes.
-
-### element(tag, ...args) → HTMLElement
-Generic element builder instantiating native HTML tags or custom Web Components.
-
-### canvas(props) → HTMLCanvasElement
-Factory creating canvas element with `.create2D()` and `.create3D()` context helpers.
-
-### config(options) → globalConfig
-Deep global engine configuration for rendering, state, styling, and performance budgets.
-
----
-
-## Framework Bridges
-
-### cairnToReact(Component) / cairn.toReact
-Converts Cairn component into a React component function.
-
-### cairnToVue(Component) / cairn.toVue
-Converts Cairn component into a Vue component object.
-
-### cairnToAngular(Component) / cairn.toAngular
-Converts Cairn component into an Angular directive factory.
-
-### cairnToSvelte(Component) / cairn.toSvelte
-Converts Cairn component into a Svelte action handler.
-
----
-
-## Visual Studio & AI Tools
-
-### studio
-Visual component builder & prototyping environment.
-- `.enable(opts)` — Activates embedded visual workspace.
-- `.canvas(config)` — Configures workspace canvas and device emulator.
-- `.createComponent(name, elements, propsSchema)` — Packages visual components.
-- `.style(el, styles)` — Modifies CSS properties live.
-- `.prototype(interaction)` — Registers screen navigation flows.
-- `.mock(config)` / `.api(config)` — Simulates API data endpoints.
-- `.export(options)` — Generates Cairn, React, Vue, Svelte, or HTML code.
-- `.version.save(name)` / `.restore(versionId)` — Version control manager.
-
-### ai
-Agentic AI layout & component generator (`.generateComponent()`, `.generateLayout()`).
-
-### figmaToCairn(figmaNode)
-Converts Figma JSON node structures into Cairn element component code.
 
