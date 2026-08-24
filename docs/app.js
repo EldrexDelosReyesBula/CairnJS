@@ -110,6 +110,18 @@ const docsSidebar = [
         items: [
             { id: 'api', title: 'Full API Reference', file: 'content/reference/api.md' }
         ]
+    },
+    {
+        title: 'Community & Legal',
+        icon: 'fa-solid fa-scale-balanced',
+        items: [
+            { id: 'contributing', title: 'Contributing Guidelines', file: 'content/community/contributing.md' },
+            { id: 'code-of-conduct', title: 'Code of Conduct', file: 'content/community/code-of-conduct.md' },
+            { id: 'security', title: 'Security Policy', file: 'content/community/security.md' },
+            { id: 'governance', title: 'Project Governance', file: 'content/community/governance.md' },
+            { id: 'attributions', title: 'Tool & Library Attributions', file: 'content/community/attributions.md' },
+            { id: 'license', title: 'MIT License & Terms', file: 'content/community/license.md' }
+        ]
     }
 ];
 
@@ -915,12 +927,29 @@ const MobileTocDrawer = component(() => {
 
 // VitePress Hero Landing Page Component
 const LandingHero = component(() => {
+    const copiedInstall = state(false);
+
     return div({ class: 'cairn-hero-section' },
         div({ class: 'cairn-hero-glow' }),
 
-        // Floating Hero Logo with Radiant Glow (No Box Container)
-        div({ class: 'cairn-hero-badge', style: { marginBottom: '1.75rem' } },
-            LogoImage(96)
+        // Version Badge Pill
+        a({
+            href: '#',
+            class: 'cairn-version-badge',
+            onclick: (e) => {
+                e.preventDefault();
+                navigateTo('getting-started');
+            }
+        },
+            span({ class: 'cairn-badge-dot' }),
+            span('CairnJS v1.2.0 is Live'),
+            span('•'),
+            span({ style: { color: 'var(--accent)', fontWeight: '700' } }, 'Explore What\'s New →')
+        ),
+
+        // Solid Grounded Hero Logo (No Floating / Bobbing)
+        div({ class: 'cairn-hero-badge' },
+            LogoImage(104)
         ),
 
         // Main Title
@@ -931,31 +960,68 @@ const LandingHero = component(() => {
 
         // Subtitle
         p({ class: 'cairn-hero-subtitle' },
-            'Zero-dependency, high-performance UI framework with complete motion suite, fine-grained state signals, form validation schemas, accessible overlays, and Rust WASM acceleration.'
+            'Zero-dependency, high-performance UI framework with complete motion suite, fine-grained state signals, 2D & 3D WebGL graphics engine, form validation schemas, accessible overlays, and Rust WASM acceleration.'
+        ),
+
+        // Quick Install Box
+        div({ class: 'cairn-install-box' },
+            span({ class: 'cairn-install-prompt' }, '$'),
+            code({ style: { fontFamily: 'var(--font-mono, monospace)', fontWeight: '600' } }, 'npm install @eldrex/cairnjs'),
+            button({
+                class: 'cairn-copy-btn',
+                onclick: () => {
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText('npm install @eldrex/cairnjs');
+                        copiedInstall.value = true;
+                        setTimeout(() => { copiedInstall.value = false; }, 2000);
+                    }
+                }
+            }, () => copiedInstall.value ? 'Copied ✓' : 'Copy')
         ),
 
         // CTA Buttons
-        div({ style: { display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '4rem', flexWrap: 'wrap' } },
+        div({ class: 'cairn-hero-actions' },
             button({
                 class: 'cairn-btn-primary',
                 onclick: () => navigateTo('getting-started')
             }, fa('fa-solid fa-bolt', { marginRight: '0.5rem' }), 'Get Started'),
             a({
                 href: './playground.html',
-                class: 'cairn-btn-secondary',
-                style: { textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }
+                class: 'cairn-btn-secondary'
             }, fa('fa-solid fa-code', { marginRight: '0.5rem', color: '#38bdf8' }), 'Live Playground'),
             button({
                 class: 'cairn-btn-secondary',
                 onclick: () => navigateTo('component-library')
-            }, fa('fa-solid fa-cubes', { marginRight: '0.5rem' }), 'Explore Components'),
-            button({
-                class: 'cairn-btn-secondary',
-                onclick: () => navigateTo('form-validation')
-            }, fa('fa-solid fa-check-double', { marginRight: '0.5rem' }), 'Form Schemas')
+            }, fa('fa-solid fa-cubes', { marginRight: '0.5rem' }), 'Component Library'),
+            a({
+                href: 'https://github.com/EldrexDelosReyesBula/CairnJS',
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                class: 'cairn-btn-secondary'
+            }, fa('fa-brands fa-github', { marginRight: '0.5rem' }), 'GitHub')
         ),
 
-        // 4-Card Feature Grid
+        // Stats Highlights Bar
+        div({ class: 'cairn-stats-bar' },
+            div({ class: 'cairn-stat-item' },
+                div({ class: 'cairn-stat-val' }, '0kb'),
+                div({ class: 'cairn-stat-lbl' }, 'External Node Dependencies')
+            ),
+            div({ class: 'cairn-stat-item' },
+                div({ class: 'cairn-stat-val' }, '60fps'),
+                div({ class: 'cairn-stat-lbl' }, 'Hardware Spring Physics')
+            ),
+            div({ class: 'cairn-stat-item' },
+                div({ class: 'cairn-stat-val' }, '3D WebGL'),
+                div({ class: 'cairn-stat-lbl' }, 'Zero-Dependency Scene Graph')
+            ),
+            div({ class: 'cairn-stat-item' },
+                div({ class: 'cairn-stat-val' }, 'Rust WASM'),
+                div({ class: 'cairn-stat-lbl' }, 'Zero-Traffic Memory Engine')
+            )
+        ),
+
+        // 6-Card Feature Grid
         div({ class: 'cairn-feature-grid' },
             div({ class: 'cairn-feature-card' },
                 div({ class: 'cairn-feature-icon' }, fa('fa-solid fa-feather-pointed')),
@@ -963,14 +1029,24 @@ const LandingHero = component(() => {
                 p('Pure native JavaScript & WASM engine. Zero external node_modules dependencies, zero polyfills, and zero third-party lock-in.')
             ),
             div({ class: 'cairn-feature-card' },
-                div({ class: 'cairn-feature-icon' }, fa('fa-solid fa-microchip')),
-                h3('Zero-Traffic WASM Engine'),
-                p('Shared memory state buffers and direct DOM pointer bindings eliminate JS↔WASM boundary crossing traffic entirely.')
-            ),
-            div({ class: 'cairn-feature-card' },
                 div({ class: 'cairn-feature-icon' }, fa('fa-solid fa-bolt')),
                 h3('Fine-Grained Reactivity'),
                 p('Signals update individual DOM text nodes and CSS properties directly without Virtual DOM diffing overhead.')
+            ),
+            div({ class: 'cairn-feature-card' },
+                div({ class: 'cairn-feature-icon' }, fa('fa-solid fa-cube')),
+                h3('2D & 3D WebGL Engine'),
+                p('Pure zero-dependency WebGL 3D meshes, orbital cameras, lighting presets, and 2D hardware-accelerated particle kinematics.')
+            ),
+            div({ class: 'cairn-feature-card' },
+                div({ class: 'cairn-feature-icon' }, fa('fa-solid fa-wand-magic-sparkles')),
+                h3('Complete Motion Suite'),
+                p('60fps spring physics solver, flippable CSS 3D perspective cards, drag swipe kinematics, and fluid layout view transitions.')
+            ),
+            div({ class: 'cairn-feature-card' },
+                div({ class: 'cairn-feature-icon' }, fa('fa-solid fa-microchip')),
+                h3('Zero-Traffic WASM Engine'),
+                p('Shared memory state buffers and direct DOM pointer bindings eliminate JS↔WASM boundary crossing traffic entirely.')
             ),
             div({ class: 'cairn-feature-card' },
                 div({ class: 'cairn-feature-icon' }, fa('fa-solid fa-shield-halved')),
@@ -1302,391 +1378,6 @@ const SearchModal = component(() => {
     );
 });
 
-// --- DYNAMIC GAMIFIED RIVER & CAIRNS ANIMATED BACKGROUND ---
-let globalZenScore = 0;
-
-const RiverCairnCanvas = () => {
-    const canvas = document.createElement('canvas');
-    canvas.id = 'cairn-river-canvas';
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100vw';
-    canvas.style.height = '100vh';
-    canvas.style.pointerEvents = 'auto'; // Enable game clicks
-    canvas.style.zIndex = '0';
-    canvas.style.opacity = '0.85';
-    canvas.style.cursor = 'crosshair';
-    canvas.style.transition = 'opacity 0.5s ease';
-
-    if (typeof window === 'undefined') return canvas;
-
-    const ctx = canvas.getContext('2d', { alpha: true });
-    let width = 0, height = 0, dpr = 1;
-    let animId = null;
-    let time = 0;
-    let isActive = true;
-
-    // Time-based environment
-    const getTimePhase = () => {
-        const h = new Date().getHours();
-        const isDark = currentTheme.value === 'dark';
-        if (!isDark) {
-            if (h >= 5 && h < 9) return 'dawn';
-            if (h >= 17 && h < 20) return 'dusk';
-            return 'day';
-        } else {
-            if (h >= 17 && h < 21) return 'dusk';
-            if (h >= 5 && h < 7) return 'dawn';
-            return 'night';
-        }
-    };
-
-    // Nature particles (leaves, petals, fireflies)
-    const particleCount = window.innerWidth < 768 ? 16 : 28;
-    const particles = Array.from({ length: particleCount }, () => ({
-        x: Math.random(),
-        y: 0.35 + Math.random() * 0.6,
-        size: 3 + Math.random() * 4,
-        speedX: 0.0003 + Math.random() * 0.0006,
-        speedY: 0.0001 + Math.random() * 0.0002,
-        rot: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.02,
-        colorType: Math.floor(Math.random() * 3),
-        phase: Math.random() * Math.PI * 2
-    }));
-
-    // Game Physics Collections
-    const ripples = [];
-    const droppedPebbles = [];
-    const splashDroplets = [];
-    const floatingTexts = [];
-    const stackedPebbles = []; // Pebbles successfully balanced by user
-
-    const addRipple = (x, y, maxR = 60) => {
-        if (ripples.length > 15) ripples.shift();
-        ripples.push({ x, y, radius: 3, maxRadius: maxR, alpha: 0.7 });
-    };
-
-    // Click to Drop Pebble & Play
-    canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        // Check if user clicked a floating firefly/leaf
-        let clickedNature = false;
-        for (let p of particles) {
-            const px = p.x * width;
-            const py = p.y * height;
-            if (Math.hypot(x - px, y - py) < p.size * 6) {
-                clickedNature = true;
-                globalZenScore += 5;
-                // Spark burst
-                for (let s = 0; s < 8; s++) {
-                    const ang = Math.random() * Math.PI * 2;
-                    const sp = 1.5 + Math.random() * 2.5;
-                    splashDroplets.push({
-                        x: px, y: py,
-                        vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
-                        radius: 2.5, alpha: 1,
-                        color: currentTheme.value === 'dark' ? '#38bdf8' : '#f59e0b'
-                    });
-                }
-                floatingTexts.push({ x: px, y: py - 15, text: '+5 Sparkle ✨', alpha: 1, vy: -1.2 });
-                p.x = -0.05; // Respawn
-                break;
-            }
-        }
-
-        if (!clickedNature) {
-            // Drop a new stone pebble
-            droppedPebbles.push({
-                x, y,
-                vx: (Math.random() - 0.5) * 1.5,
-                vy: -1.5,
-                gravity: 0.28,
-                rx: 12 + Math.random() * 6,
-                ry: 7 + Math.random() * 4,
-                col1: currentTheme.value === 'dark' ? '#38bdf8' : '#0284c7',
-                col2: currentTheme.value === 'dark' ? '#0f172a' : '#0369a1'
-            });
-        }
-    });
-
-    const resize = () => {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = Math.floor(width * dpr);
-        canvas.height = Math.floor(height * dpr);
-        ctx.scale(dpr, dpr);
-    };
-
-    resize();
-    window.addEventListener('resize', resize, { passive: true });
-
-    // Draw single pebble
-    const drawPebble = (cx, cy, rx, ry, colGrad, highlightCol) => {
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fillStyle = colGrad;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.ellipse(cx - rx * 0.1, cy - ry * 0.25, rx * 0.7, ry * 0.45, 0, 0, Math.PI * 2);
-        ctx.fillStyle = highlightCol;
-        ctx.fill();
-        ctx.restore();
-    };
-
-    // Draw balanced cairn stack
-    const drawCairnStack = (baseX, baseY, scale) => {
-        const isDark = currentTheme.value === 'dark';
-
-        // 1. Water Ripple at Base
-        const ripplePhase = time * 1.5 + baseX * 0.01;
-        ctx.save();
-        ctx.lineWidth = 1.2;
-        for (let r = 0; r < 3; r++) {
-            const rRad = (scale * 35) + ((ripplePhase + r * 15) % 45);
-            const rAlpha = Math.max(0, 1 - (rRad / (scale * 80))) * (isDark ? 0.25 : 0.4);
-            ctx.beginPath();
-            ctx.ellipse(baseX, baseY + 6 * scale, rRad, rRad * 0.28, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = isDark ? `rgba(56, 189, 248, ${rAlpha})` : `rgba(2, 132, 199, ${rAlpha})`;
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        // 2. Base Shadow
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(baseX, baseY + 4 * scale, 34 * scale, 10 * scale, 0, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? 'rgba(5, 8, 17, 0.45)' : 'rgba(15, 23, 42, 0.12)';
-        ctx.fill();
-        ctx.restore();
-
-        // 3. Stack Stones
-        const stones = [
-            { dy: 0, rx: 38 * scale, ry: 13 * scale, col1: isDark ? '#1e293b' : '#64748b', col2: isDark ? '#0f172a' : '#475569' },
-            { dy: -18 * scale, rx: 30 * scale, ry: 11 * scale, col1: isDark ? '#334155' : '#94a3b8', col2: isDark ? '#1e293b' : '#64748b' },
-            { dy: -34 * scale, rx: 22 * scale, ry: 9 * scale, col1: isDark ? '#475569' : '#cbd5e1', col2: isDark ? '#334155' : '#94a3b8' },
-            { dy: -47 * scale, rx: 14 * scale, ry: 7 * scale, col1: isDark ? '#38bdf8' : '#0284c7', col2: isDark ? '#0284c7' : '#0369a1' }
-        ];
-
-        stones.forEach((st, idx) => {
-            const stoneY = baseY + st.dy;
-            const grad = ctx.createLinearGradient(baseX - st.rx, stoneY - st.ry, baseX + st.rx, stoneY + st.ry);
-            grad.addColorStop(0, st.col1);
-            grad.addColorStop(1, st.col2);
-            const highlight = isDark
-                ? (idx === 3 ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.08)')
-                : (idx === 3 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.35)');
-            drawPebble(baseX, stoneY, st.rx, st.ry, grad, highlight);
-        });
-    };
-
-    // Main animation loop
-    const render = () => {
-        if (!isActive || document.hidden) {
-            animId = requestAnimationFrame(render);
-            return;
-        }
-
-        time += 0.015;
-        const isDark = currentTheme.value === 'dark';
-
-        ctx.clearRect(0, 0, width, height);
-
-        // River Surface
-        const riverTopY = height * 0.45;
-        const riverHeight = height - riverTopY;
-
-        // Flowing River Waves
-        ctx.save();
-        ctx.lineWidth = 1;
-        const waveCount = isDark ? 4 : 5;
-        for (let w = 0; w < waveCount; w++) {
-            const currentY = riverTopY + (riverHeight * (0.2 + w * 0.18));
-            ctx.beginPath();
-            ctx.moveTo(0, currentY);
-            for (let x = 0; x <= width; x += 30) {
-                const yOff = Math.sin(x * 0.004 + time * (0.7 + w * 0.2) + w) * (5 + w * 2);
-                ctx.lineTo(x, currentY + yOff);
-            }
-            ctx.strokeStyle = isDark
-                ? `rgba(56, 189, 248, ${0.04 + w * 0.02})`
-                : `rgba(2, 132, 199, ${0.06 + w * 0.03})`;
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        // Balanced Cairns in River
-        const cairn1X = width * 0.12, cairn1Y = height * 0.65;
-        const cairn2X = width * 0.88, cairn2Y = height * 0.78;
-        drawCairnStack(cairn1X, cairn1Y, Math.min(width / 1200, 1) * 0.65);
-        drawCairnStack(cairn2X, cairn2Y, Math.min(width / 1200, 1) * 0.85);
-
-        // Draw User-Stacked Balanced Pebbles on Cairn 2
-        stackedPebbles.forEach((st, idx) => {
-            const grad = ctx.createLinearGradient(st.x - st.rx, st.y - st.ry, st.x + st.rx, st.y + st.ry);
-            grad.addColorStop(0, st.col1);
-            grad.addColorStop(1, st.col2);
-            drawPebble(st.x, st.y, st.rx, st.ry, grad, 'rgba(255, 255, 255, 0.4)');
-        });
-
-        // Update & Render Dropped Pebbles (Physics)
-        for (let i = droppedPebbles.length - 1; i >= 0; i--) {
-            const p = droppedPebbles[i];
-            p.vy += p.gravity;
-            p.x += p.vx;
-            p.y += p.vy;
-
-            // Check collision with Cairn 2 top
-            const targetY = cairn2Y - 55 - (stackedPebbles.length * 12);
-            if (Math.abs(p.x - cairn2X) < 40 && Math.abs(p.y - targetY) < 15) {
-                // Balanced on Cairn!
-                globalZenScore += 10;
-                stackedPebbles.push({
-                    x: cairn2X + (Math.random() - 0.5) * 4,
-                    y: targetY,
-                    rx: p.rx * 0.85,
-                    ry: p.ry * 0.85,
-                    col1: p.col1,
-                    col2: p.col2
-                });
-                addRipple(cairn2X, cairn2Y, 70);
-                floatingTexts.push({ x: cairn2X, y: targetY - 20, text: '🪨 Balanced! +10 Zen', alpha: 1, vy: -1.5 });
-                droppedPebbles.splice(i, 1);
-                continue;
-            }
-
-            // Check river surface splash
-            const splashLevel = riverTopY + (height - riverTopY) * 0.45;
-            if (p.y >= splashLevel) {
-                globalZenScore += 2;
-                addRipple(p.x, p.y, 50);
-                // Create Splash Droplets
-                for (let d = 0; d < 6; d++) {
-                    const ang = -Math.PI * 0.2 - Math.random() * Math.PI * 0.6;
-                    const sp = 2 + Math.random() * 3.5;
-                    splashDroplets.push({
-                        x: p.x, y: p.y,
-                        vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
-                        radius: 2, alpha: 1,
-                        color: isDark ? '#38bdf8' : '#0284c7'
-                    });
-                }
-                floatingTexts.push({ x: p.x, y: p.y - 15, text: '🌊 Splash +2', alpha: 1, vy: -1.2 });
-                droppedPebbles.splice(i, 1);
-                continue;
-            }
-
-            // Draw in-flight pebble
-            const pGrad = ctx.createLinearGradient(p.x - p.rx, p.y - p.ry, p.x + p.rx, p.y + p.ry);
-            pGrad.addColorStop(0, p.col1);
-            pGrad.addColorStop(1, p.col2);
-            drawPebble(p.x, p.y, p.rx, p.ry, pGrad, 'rgba(255, 255, 255, 0.4)');
-        }
-
-        // Update Splash Droplets
-        for (let i = splashDroplets.length - 1; i >= 0; i--) {
-            const d = splashDroplets[i];
-            d.vy += 0.25;
-            d.x += d.vx;
-            d.y += d.vy;
-            d.alpha *= 0.94;
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
-            ctx.fillStyle = d.color;
-            ctx.globalAlpha = d.alpha;
-            ctx.fill();
-            ctx.restore();
-            if (d.alpha < 0.05 || d.y > height) splashDroplets.splice(i, 1);
-        }
-
-        // Draw Expanding Ripples
-        for (let i = ripples.length - 1; i >= 0; i--) {
-            const rip = ripples[i];
-            rip.radius += 1.1;
-            rip.alpha *= 0.96;
-            ctx.save();
-            ctx.beginPath();
-            ctx.ellipse(rip.x, rip.y, rip.radius, rip.radius * 0.35, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = isDark
-                ? `rgba(56, 189, 248, ${rip.alpha * 0.4})`
-                : `rgba(2, 132, 199, ${rip.alpha * 0.45})`;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.restore();
-            if (rip.alpha < 0.02 || rip.radius > rip.maxRadius) ripples.splice(i, 1);
-        }
-
-        // Floating Nature Particles
-        particles.forEach(p => {
-            p.x += p.speedX;
-            p.y += Math.sin(time + p.phase) * 0.0003;
-            p.rot += p.rotSpeed;
-            if (p.x > 1.05) p.x = -0.05;
-
-            const px = p.x * width;
-            const py = p.y * height;
-
-            ctx.save();
-            ctx.translate(px, py);
-            ctx.rotate(p.rot);
-
-            if (isDark) {
-                const pulse = 0.3 + 0.7 * Math.sin(time * 2 + p.phase);
-                const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size * 2.5);
-                glowGrad.addColorStop(0, `rgba(56, 189, 248, ${pulse * 0.8})`);
-                glowGrad.addColorStop(0.5, `rgba(129, 140, 248, ${pulse * 0.4})`);
-                glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                ctx.fillStyle = glowGrad;
-                ctx.beginPath();
-                ctx.arc(0, 0, p.size * 2.5, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.fillStyle = p.colorType === 0 ? 'rgba(34, 197, 94, 0.45)' : p.colorType === 1 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.45)';
-                ctx.beginPath();
-                ctx.ellipse(0, 0, p.size * 1.6, p.size * 0.8, 0, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        });
-
-        // Floating Game Score Text Particles
-        for (let i = floatingTexts.length - 1; i >= 0; i--) {
-            const ft = floatingTexts[i];
-            ft.y += ft.vy;
-            ft.alpha *= 0.95;
-            ctx.save();
-            ctx.font = '700 13px system-ui, sans-serif';
-            ctx.fillStyle = isDark ? `rgba(56, 189, 248, ${ft.alpha})` : `rgba(2, 132, 199, ${ft.alpha})`;
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowBlur = 4;
-            ctx.fillText(ft.text, ft.x - 20, ft.y);
-            ctx.restore();
-            if (ft.alpha < 0.05) floatingTexts.splice(i, 1);
-        }
-
-        // Gamified Zen HUD (Bottom Right on Landing Page)
-        ctx.save();
-        ctx.font = '600 13px var(--font-mono, monospace)';
-        ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
-        ctx.fillText(`🌊 Zen Score: ${globalZenScore}  •  Tap to Balance Stones`, 20, height - 20);
-        ctx.restore();
-
-        animId = requestAnimationFrame(render);
-    };
-
-    animId = requestAnimationFrame(render);
-
-    return canvas;
-};
-
 // VitePress Footer Component
 const Footer = component(() => {
     return footer({
@@ -1727,8 +1418,6 @@ const App = component(() => {
         id: 'cairn-docs-app',
         style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }
     },
-        // Gamified River & Cairns Background ONLY on Landing Page
-        () => activeView.value === 'home' ? RiverCairnCanvas() : null,
         a({ href: '#main-content', class: 'skip-link' }, 'Skip to content'),
         HeaderBar(),
         MobileSubHeader(),
