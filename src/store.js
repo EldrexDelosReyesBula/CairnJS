@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Global Reactive Store
+ * @eldrex/cairnjs - Global Reactive Store
  * Pinia-style createStore() with reactive state, computed getters, and actions.
  * Zero dependencies — built entirely on Cairn's fine-grained reactivity primitives.
  */

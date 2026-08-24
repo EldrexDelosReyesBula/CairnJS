@@ -37,7 +37,7 @@ Save this as `index.html` on your phone, or paste it into an online mobile edito
 
     <!-- ES Module CDN Import: Works directly in all modern mobile browsers -->
     <script type="module">
-        import { state, computed, div, h2, p, button, mount } from 'https://esm.sh/@eldrex/cairn@1.0.0';
+        import { state, computed, div, h2, p, button, mount } from 'https://esm.sh/@eldrex/cairnjs@1.0.0';
 
         const count = state(0);
         const double = computed(() => count.value * 2);
@@ -122,7 +122,7 @@ npm -v
 mkdir my-mobile-app
 cd my-mobile-app
 npm init -y
-npm install @eldrex/cairn
+npm install @eldrex/cairnjs
 ```
 
 ### Step 4: Create your App Code
@@ -133,7 +133,7 @@ Create `index.html`:
 <body>
     <div id="app"></div>
     <script type="module">
-        import { state, div, h1, button, mount } from './node_modules/@eldrex/cairn/src/index.js';
+        import { state, div, h1, button, mount } from './node_modules/@eldrex/cairnjs/src/index.js';
 
         const count = state(0);
         mount('#app', div(
@@ -159,8 +159,8 @@ Now open your mobile browser (Chrome) and navigate to:
 
 If you don't want to install anything locally, use free cloud-based development environments:
 
-- **StackBlitz**: Visit [stackblitz.com](https://stackblitz.com) on your mobile browser, start a Vanilla JS project, and install `@eldrex/cairn`.
-- **CodePen / JSFiddle**: Create a new pen, add `https://cdn.jsdelivr.net/npm/@eldrex/cairn@1.0.0/dist/cairn.min.js` under JS Settings, and start coding.
+- **StackBlitz**: Visit [stackblitz.com](https://stackblitz.com) on your mobile browser, start a Vanilla JS project, and install `@eldrex/cairnjs`.
+- **CodePen / JSFiddle**: Create a new pen, add `https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.0.0/dist/cairn.min.js` under JS Settings, and start coding.
 - **GitHub Codespaces**: Open any repository on GitHub and press `.` on your keyboard to open full VS Code in your mobile browser.
 
 ---
@@ -177,13 +177,13 @@ cd my-cairn-app
 
 ### Step 2: Install Cairn
 ```bash
-npm install @eldrex/cairn
+npm install @eldrex/cairnjs
 ```
 
 ### Step 3: Write your Main Component (`main.js`)
 ```javascript
 import './style.css';
-import { state, computed, div, h1, button, mount } from '@eldrex/cairn';
+import { state, computed, div, h1, button, mount } from '@eldrex/cairnjs';
 
 const count = state(0);
 const double = computed(() => count.value * 2);
@@ -212,9 +212,9 @@ Open `http://localhost:5173` in your browser. Changes you make in your code edit
 
 | CDN Provider | Format | URL | Best For |
 | :--- | :--- | :--- | :--- |
-| **esm.sh** | ES Module | `https://esm.sh/@eldrex/cairn@1.0.0` | Native `<script type="module">` with tree-shaking |
-| **jsDelivr** | UMD / Global | `https://cdn.jsdelivr.net/npm/@eldrex/cairn@1.0.0/dist/cairn.min.js` | Traditional `<script>` tags (`window.cairn`) |
-| **unpkg** | UMD / Global | `https://unpkg.com/@eldrex/cairn@1.0.0/dist/cairn.min.js` | Direct unpkg fallback |
+| **esm.sh** | ES Module | `https://esm.sh/@eldrex/cairnjs@1.0.0` | Native `<script type="module">` with tree-shaking |
+| **jsDelivr** | UMD / Global | `https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.0.0/dist/cairn.min.js` | Traditional `<script>` tags (`window.cairn`) |
+| **unpkg** | UMD / Global | `https://unpkg.com/@eldrex/cairnjs@1.0.0/dist/cairn.min.js` | Direct unpkg fallback |
 
 ---
 

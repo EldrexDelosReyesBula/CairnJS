@@ -20,7 +20,7 @@ Import Cairn directly via ES Modules in your HTML script tag:
     <div id="app"></div>
 
     <script type="module">
-        import { state, computed, div, button, mount } from 'https://esm.sh/@eldrex/cairn@1.0.0';
+        import { state, computed, div, button, mount } from 'https://esm.sh/@eldrex/cairnjs@1.0.0';
 
         const count = state(0);
         const double = computed(() => count.value * 2);
@@ -59,8 +59,8 @@ Include the global UMD bundle which exposes `window.cairn`:
 <!-- unpkg UMD (@latest) -->
 <script src="https://unpkg.com/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
 
-<!-- Pinned Release (@1.1.0) -->
-<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.1.0/dist/cairn.min.js"></script>
+<!-- Pinned Release (@1.2.0) -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.2.0/dist/cairn.min.js"></script>
 ```
 
 ```html
@@ -75,11 +75,11 @@ Include the global UMD bundle which exposes `window.cairn`:
 Install the package via npm:
 
 ```bash
-npm install @eldrex/cairn
+npm install @eldrex/cairnjs
 ```
 
 ```js
-import { state, button, div, mount, component } from '@eldrex/cairn';
+import { state, button, div, mount, component } from '@eldrex/cairnjs';
 
 const App = component(() => {
     let count = state(0);
@@ -119,7 +119,7 @@ Mount Cairn components inside a React `ref`:
 
 ```jsx
 import React, { useEffect, useRef } from 'react';
-import { mount, cairn } from '@eldrex/cairn';
+import { mount, cairn } from '@eldrex/cairnjs';
 
 export function ReactHost() {
     const containerRef = useRef(null);
@@ -150,7 +150,7 @@ Mount Cairn components inside a Vue `ref`:
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { mount, cairn } from '@eldrex/cairn';
+import { mount, cairn } from '@eldrex/cairnjs';
 
 const cairnTarget = ref(null);
 

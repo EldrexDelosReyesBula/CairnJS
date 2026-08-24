@@ -7,7 +7,7 @@ Cairn ships a comprehensive utility toolbox covering color manipulation, clipboa
 ## Color
 
 ```js
-import { color } from '@eldrex/cairn';
+import { color } from '@eldrex/cairnjs';
 ```
 
 ### color.hexToRgb(hex)
@@ -72,7 +72,7 @@ color.gradient('135deg', '#38bdf8', '#a78bfa');
 ## Clipboard
 
 ```js
-import { clipboard } from '@eldrex/cairn';
+import { clipboard } from '@eldrex/cairnjs';
 ```
 
 ### clipboard.copy(text)
@@ -96,7 +96,7 @@ const text = await clipboard.read();
 ## Storage (Reactive localStorage)
 
 ```js
-import { storage } from '@eldrex/cairn';
+import { storage } from '@eldrex/cairnjs';
 ```
 
 ### storage.get(key, defaultValue?)
@@ -128,7 +128,7 @@ storage.remove('theme');
 Creates a **reactive signal backed by localStorage**. Every write to `.value` automatically persists to localStorage.
 
 ```js
-import { storage, effect } from '@eldrex/cairn';
+import { storage, effect } from '@eldrex/cairnjs';
 
 const theme = storage.reactive('theme', 'dark');
 
@@ -146,7 +146,7 @@ effect(() => {
 ## Fullscreen
 
 ```js
-import { fullscreen } from '@eldrex/cairn';
+import { fullscreen } from '@eldrex/cairnjs';
 ```
 
 ### fullscreen.enter(el?)
@@ -192,7 +192,7 @@ effect(() => {
 Creates a reactive boolean signal that becomes `true` when the element enters the viewport (via `IntersectionObserver`).
 
 ```js
-import { onVisible, effect } from '@eldrex/cairn';
+import { onVisible, effect } from '@eldrex/cairnjs';
 
 const card = document.querySelector('.card');
 const isVisible = onVisible(card, { threshold: 0.2 });
@@ -217,7 +217,7 @@ effect(() => {
 Creates a reactive `{ width, height }` signal that updates via `ResizeObserver` whenever the element's size changes.
 
 ```js
-import { useResize, effect } from '@eldrex/cairn';
+import { useResize, effect } from '@eldrex/cairnjs';
 
 const panel = document.querySelector('#panel');
 const size = useResize(panel);
@@ -234,7 +234,7 @@ effect(() => {
 Returns a debounced version of `fn`. Only fires after `delay` ms of silence.
 
 ```js
-import { debounce } from '@eldrex/cairn';
+import { debounce } from '@eldrex/cairnjs';
 
 const search = debounce((query) => fetchResults(query), 300);
 input.addEventListener('input', (e) => search(e.target.value));
@@ -247,7 +247,7 @@ input.addEventListener('input', (e) => search(e.target.value));
 Returns a throttled version of `fn`. Fires at most once every `limit` ms.
 
 ```js
-import { throttle } from '@eldrex/cairn';
+import { throttle } from '@eldrex/cairnjs';
 
 const onScroll = throttle(() => updateNav(), 100);
 window.addEventListener('scroll', onScroll);
@@ -260,7 +260,7 @@ window.addEventListener('scroll', onScroll);
 Generates a UUID v4 string using `crypto.randomUUID()` when available, with a fallback implementation.
 
 ```js
-import { uuid } from '@eldrex/cairn';
+import { uuid } from '@eldrex/cairnjs';
 
 const id = uuid(); // 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 ```
@@ -272,7 +272,7 @@ const id = uuid(); // 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 Returns a `Promise` that resolves after `ms` milliseconds. Useful for async delays.
 
 ```js
-import { sleep } from '@eldrex/cairn';
+import { sleep } from '@eldrex/cairnjs';
 
 async function animate() {
   showLoader();

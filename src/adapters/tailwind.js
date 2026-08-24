@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/adapters - Tailwind CSS Adapter
+ * @eldrex/cairnjs/adapters - Tailwind CSS Adapter
  * Integrates Tailwind CSS utility classes into Cairn component rendering pipeline.
  * Supports `tailwind: 'px-4 py-2 bg-blue-500'`, arrays of classes, and conditional objects.
  */

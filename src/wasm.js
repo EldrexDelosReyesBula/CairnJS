@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - WASM Core Engine Interop & Zero-Traffic Architecture
+ * @eldrex/cairnjs - WASM Core Engine Interop & Zero-Traffic Architecture
  * High-performance WASM acceleration layer with zero-cost fallback to JS.
  */
 
@@ -151,6 +151,30 @@ export const perf = {
             lazy: true,
             virtualize: true,
             batch: true
+        };
+    },
+
+    measure(fn) {
+        let domUpdates = 0;
+        const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        
+        let result;
+        try {
+            result = fn();
+        } catch (e) {
+            console.error('[Cairn Perf Measure Error]:', e);
+        }
+
+        const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const duration = Math.max(0.01, endTime - startTime);
+        const fps = Math.min(60, Math.max(1, fpsCounter));
+        
+        return {
+            result,
+            time: `${duration.toFixed(1)}ms`,
+            timeMs: Number(duration.toFixed(2)),
+            domUpdates: wasmEngine.flushDomUpdates ? wasmEngine.flushDomUpdates() : 0,
+            fps
         };
     }
 };

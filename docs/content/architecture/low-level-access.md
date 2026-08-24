@@ -1,6 +1,6 @@
 # Low-Level DOM Access & Framework Interoperability
 
-Cairn (`@eldrex/cairn`) is designed without artificial abstraction barriers. Every component built with Cairn produces standard native `HTMLElement` instances, allowing full access to browser Web APIs, raw HTML parsing, Web Components, and seamless integration with existing JavaScript frameworks.
+Cairn (`@eldrex/cairnjs`) is designed without artificial abstraction barriers. Every component built with Cairn produces standard native `HTMLElement` instances, allowing full access to browser Web APIs, raw HTML parsing, Web Components, and seamless integration with existing JavaScript frameworks.
 
 ---
 
@@ -9,7 +9,7 @@ Cairn (`@eldrex/cairn`) is designed without artificial abstraction barriers. Eve
 Cairn elements are standard `HTMLElement` nodes. There are no synthetic wrapper objects or hidden proxy layers obscuring standard browser APIs.
 
 ```javascript
-import { cairn } from '@eldrex/cairn';
+import { cairn } from '@eldrex/cairnjs';
 
 const buttonElement = cairn.button("Click Me");
 
@@ -101,7 +101,7 @@ Bridge Cairn components to React, Vue 3, Angular, and Svelte:
 ### React Adapter (`cairnToReact` / `cairn.toReact`)
 ```javascript
 import React from 'react';
-import { cairnToReact } from '@eldrex/cairn/framework-bridges';
+import { cairnToReact } from '@eldrex/cairnjs/framework-bridges';
 
 const CairnButton = ({ label, onClick }) => 
     cairn.button(label, { onclick: onClick, class: 'cairn-btn' });
@@ -111,14 +111,14 @@ export const ReactButton = cairnToReact(CairnButton);
 
 ### Vue 3 Adapter (`cairnToVue` / `cairn.toVue`)
 ```javascript
-import { cairnToVue } from '@eldrex/cairn/framework-bridges';
+import { cairnToVue } from '@eldrex/cairnjs/framework-bridges';
 
 export const VueButton = cairnToVue(CairnButton);
 ```
 
 ### Angular & Svelte Adapters (`cairnToAngular` / `cairnToSvelte`)
 ```javascript
-import { cairnToAngular, cairnToSvelte } from '@eldrex/cairn/framework-bridges';
+import { cairnToAngular, cairnToSvelte } from '@eldrex/cairnjs/framework-bridges';
 
 export const AngularButtonComponent = cairnToAngular(CairnButton);
 export const svelteButtonAction = cairnToSvelte(CairnButton);

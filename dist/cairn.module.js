@@ -1,14 +1,14 @@
 /**
- * Cairn v1.0.0 — Complete Motion System Release
+ * Cairn v1.2.0 — Complete Fine-Grained Reactive Framework Release
  * (c) Eldrex Bula & Cairn Contributors. MIT License.
  */
 
 /**
- * @eldrex/cairn - Developer Experience & Debugging System
+ * @eldrex/cairnjs - Developer Experience & Debugging System
  * Auto-logging, state mutation tracking, DOM timing, and helpful CSS warnings.
  */
 
-export let isDebugEnabled = false;
+let isDebugEnabled = false;
 
 /**
  * Enables or disables developer debug mode.
@@ -43,7 +43,1082 @@ function warnInvalidCss(prop) {
 }
 
 /**
- * @eldrex/cairn - Extensibility & Middleware Architecture
+ * @eldrex/cairnjs - Reactive Engine
+ * Lightweight, fine-grained state, computed, effect, collection, resource, and memory primitives.
+ */
+
+
+
+
+
+let activeEffect = null;
+const effectStack = [];
+let _activePropertyTrack = null;
+
+// Memory Configuration & Object Pools
+const memoryConfig = {
+    autoDispose: true,
+    weakRefs: typeof WeakRef !== 'undefined',
+    pooling: true,
+    gcHints: true,
+    maxMemory: 100 // MB
+};
+
+const _stateRegistry = new Set();
+const _objectPool = new Map();
+
+/**
+ * Configure memory management for CairnJS.
+ * @param {object} options
+ * @returns {object} Current memory configuration and metrics
+ */
+function memory(options = {}) {
+    Object.assign(memoryConfig, options);
+    return {
+        ...memoryConfig,
+        activeStates: _stateRegistry.size,
+        poolSize: _objectPool.size,
+        getMemoryUsage() {
+            if (typeof performance !== 'undefined' && performance.memory) {
+                return {
+                    usedJSHeapSizeMB: (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(2),
+                    totalJSHeapSizeMB: (performance.memory.totalJSHeapSize / (1024 * 1024)).toFixed(2)
+                };
+            }
+            return { usedJSHeapSizeMB: 'N/A', totalJSHeapSizeMB: 'N/A' };
+        }
+    };
+}
+
+/**
+ * Creates a fine-grained reactive state primitive.
+ * Supports primitive values as well as proxy-wrapped objects for surgical per-property reactivity.
+ * 
+ * @param {*} initialValue Initial value of the state or getter function
+ * @returns {object} Reactive state instance with history & fine-grained reactivity
+ */
+function state(initialValue) {
+    if (typeof initialValue === 'function') {
+        return computed(initialValue);
+    }
+
+    let _val = initialValue;
+    let _queuedNext = undefined;
+    let _hasQueuedNext = false;
+    const history = [];
+    const subscribers = new Set();
+    const propSubscribers = new Map();
+
+    const notify = (property = null) => {
+        const toNotify = new Set(subscribers);
+
+        if (property && propSubscribers.has(property)) {
+            const pSubs = propSubscribers.get(property);
+            pSubs.forEach(sub => {
+                if (sub._isDisposed) pSubs.delete(sub);
+                else toNotify.add(sub);
+            });
+        }
+
+        toNotify.forEach((sub) => {
+            if (sub._isDisposed) {
+                subscribers.delete(sub);
+                return;
+            }
+            if (_queueEffect(sub)) return;
+            try {
+                sub(_val);
+            } catch (err) {
+                console.error('[Cairn Reactivity Error]:', err);
+            }
+        });
+    };
+
+    const recordHistory = (oldVal) => {
+        if (history.length > 50) history.shift();
+        history.push(JSON.parse(JSON.stringify(oldVal !== undefined ? oldVal : null)));
+    };
+
+    // Proxy wrapper for granular object property reactivity
+    const createObjectProxy = (obj) => {
+        return new Proxy(obj, {
+            get(target, prop, receiver) {
+                if (prop === '_isCairnState') return true;
+                if (prop === 'value') return target;
+                if (prop === 'peek') return () => target;
+                if (prop === 'subscribe') return (fn, specificProp = null) => stateSignal.subscribe(fn, specificProp);
+                if (prop === 'next') return (val) => stateSignal.next(val);
+                if (prop === 'commit') return () => stateSignal.commit();
+                if (prop === 'rollback') return () => stateSignal.rollback();
+                if (prop === 'snapshot') return () => stateSignal.snapshot();
+                if (prop === 'restore') return (snap) => stateSignal.restore(snap);
+
+                if (activeEffect) {
+                    if (!propSubscribers.has(prop)) {
+                        propSubscribers.set(prop, new Set());
+                    }
+                    propSubscribers.get(prop).add(activeEffect);
+                }
+
+                const res = Reflect.get(target, prop, receiver);
+                if (typeof res === 'object' && res !== null && !res._isCairnState) {
+                    return createObjectProxy(res);
+                }
+                return res;
+            },
+            set(target, prop, newVal, receiver) {
+                if (prop === 'value' && typeof newVal === 'object' && newVal !== null) {
+                    recordHistory(_val);
+                    Object.keys(target).forEach(k => delete target[k]);
+                    Object.assign(target, newVal);
+                    logStateChange('signal.value', _val, newVal);
+                    middlewareEngine.afterStateChange('state.value', _val, newVal);
+                    notify();
+                    return true;
+                }
+                const oldVal = target[prop];
+                if (Object.is(oldVal, newVal)) return true;
+                recordHistory(_val);
+                const res = Reflect.set(target, prop, newVal, receiver);
+                logStateChange(`signal.${String(prop)}`, oldVal, newVal);
+                middlewareEngine.afterStateChange(`state.${String(prop)}`, oldVal, newVal);
+                notify(prop);
+                return res;
+            }
+        });
+    };
+
+    let proxyInstance = null;
+    const isObjectTarget = _val !== null && typeof _val === 'object' && !Array.isArray(_val) && !_val._isCairnState;
+
+    const stateSignal = {
+        _isCairnState: true,
+        get value() {
+            if (activeEffect) {
+                subscribers.add(activeEffect);
+            }
+            return _val;
+        },
+        set value(newValue) {
+            if (Object.is(_val, newValue)) return;
+            const oldVal = _val;
+            recordHistory(oldVal);
+            _val = newValue;
+            logStateChange('signal', oldVal, newValue);
+            middlewareEngine.afterStateChange('state', oldVal, newValue);
+            notify();
+        },
+        peek() {
+            return _val;
+        },
+        subscribe(fn, propName = null) {
+            if (propName) {
+                if (!propSubscribers.has(propName)) {
+                    propSubscribers.set(propName, new Set());
+                }
+                propSubscribers.get(propName).add(fn);
+                return () => propSubscribers.get(propName).delete(fn);
+            }
+            subscribers.add(fn);
+            return () => subscribers.delete(fn);
+        },
+        // State predictability & time-travel
+        next(value) {
+            _queuedNext = value;
+            _hasQueuedNext = true;
+            return this;
+        },
+        commit() {
+            if (_hasQueuedNext) {
+                this.value = _queuedNext;
+                _queuedNext = undefined;
+                _hasQueuedNext = false;
+            }
+            return this;
+        },
+        rollback() {
+            if (history.length > 0) {
+                const prev = history.pop();
+                _val = prev;
+                notify();
+            }
+            return this;
+        },
+        snapshot() {
+            return JSON.parse(JSON.stringify(_val));
+        },
+        restore(snapshotData) {
+            recordHistory(_val);
+            _val = JSON.parse(JSON.stringify(snapshotData));
+            notify();
+            return this;
+        },
+        toString() {
+            return String(this.value);
+        },
+        valueOf() {
+            return this.value;
+        }
+    };
+
+    if (isObjectTarget) {
+        proxyInstance = createObjectProxy(_val);
+        _stateRegistry.add(proxyInstance);
+        return proxyInstance;
+    }
+
+    _stateRegistry.add(stateSignal);
+    return stateSignal;
+}
+
+/**
+ * Creates a reactive collection proxy for arrays or objects with granular mutation tracking.
+ * @param {Array|Object} initialData 
+ * @returns {Proxy} Reactive collection proxy
+ */
+function collection(initialData = []) {
+    const rawSignal = state(initialData);
+
+    const makeReactiveProxy = (target) => {
+        if (!target || typeof target !== 'object') return target;
+
+        return new Proxy(target, {
+            get(obj, prop, receiver) {
+                if (prop === '_isCairnCollection') return true;
+                if (prop === 'rawSignal') return rawSignal;
+                if (prop === 'value') return rawSignal.value;
+
+                if (prop === 'remove' && typeof obj.filter === 'function') {
+                    return (item) => {
+                        const updated = obj.filter(i => i !== item);
+                        obj.length = 0;
+                        updated.forEach(i => obj.push(i));
+                        rawSignal.value = obj;
+                    };
+                }
+
+                const val = Reflect.get(obj, prop, receiver);
+                if (typeof val === 'function') {
+                    return function (...args) {
+                        const res = Array.prototype[prop].apply(obj, args);
+                        rawSignal.value = Array.isArray(obj) ? [...obj] : { ...obj };
+                        return res;
+                    };
+                }
+                if (typeof val === 'object' && val !== null) {
+                    return makeReactiveProxy(val);
+                }
+                return val;
+            },
+            set(obj, prop, val, receiver) {
+                const res = Reflect.set(obj, prop, val, receiver);
+                rawSignal.value = Array.isArray(obj) ? [...obj] : { ...obj };
+                return res;
+            }
+        });
+    };
+
+    return makeReactiveProxy(initialData);
+}
+
+/**
+ * Creates an async resource signal for API calls and async data loading.
+ * Includes auto-polling, caching, and manual refetch capabilities.
+ * 
+ * @param {Function} fetcher Async fetch function
+ * @returns {object} Resource object { data, value, loading, error, refetch, refresh, poll, cache }
+ */
+function resource(fetcher) {
+    const data = state(null);
+    const loading = state(true);
+    const error = state(null);
+
+    let lastFetchTime = 0;
+    let cacheTTL = 0;
+    let pollIntervalId = null;
+
+    const refetch = async () => {
+        const now = Date.now();
+        if (cacheTTL > 0 && data.value !== null && (now - lastFetchTime) < cacheTTL) {
+            loading.value = false;
+            return;
+        }
+
+        loading.value = true;
+        error.value = null;
+        try {
+            const result = await fetcher();
+            data.value = result;
+            lastFetchTime = Date.now();
+        } catch (err) {
+            error.value = err;
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    refetch();
+
+    const resourceObj = {
+        data,
+        get value() { return data.value; },
+        loading,
+        error,
+        refetch,
+        refresh: refetch,
+        poll(intervalMs = 5000) {
+            if (pollIntervalId) clearInterval(pollIntervalId);
+            if (typeof setInterval !== 'undefined') {
+                pollIntervalId = setInterval(refetch, intervalMs);
+            }
+            return () => {
+                if (pollIntervalId) clearInterval(pollIntervalId);
+            };
+        },
+        cache(options = {}) {
+            if (options.ttl) {
+                cacheTTL = options.ttl * 1000;
+            }
+            return resourceObj;
+        }
+    };
+
+    return resourceObj;
+}
+
+/**
+ * Creates a derived reactive computed property.
+ * @param {Function} getter Computation function
+ * @returns Computed state signal with `.value` getter
+ */
+function computed(getter) {
+    let _cachedValue;
+    let _isDirty = true;
+    const subscribers = new Set();
+
+    const notifySubscribers = () => {
+        const toNotify = Array.from(subscribers);
+        toNotify.forEach((sub) => {
+            try {
+                sub(_cachedValue);
+            } catch (err) {
+                console.error('[Cairn Computed Error]:', err);
+            }
+        });
+    };
+
+    const reevaluate = () => {
+        if (!_isDirty) {
+            _isDirty = true;
+            notifySubscribers();
+        }
+    };
+
+    const computedSignal = {
+        _isCairnState: true,
+        _isCairnComputed: true,
+        get value() {
+            if (_isDirty) {
+                effectStack.push(reevaluate);
+                activeEffect = reevaluate;
+                try {
+                    _cachedValue = getter();
+                } finally {
+                    effectStack.pop();
+                    activeEffect = effectStack[effectStack.length - 1] || null;
+                }
+                _isDirty = false;
+            }
+            if (activeEffect) {
+                subscribers.add(activeEffect);
+            }
+            return _cachedValue;
+        },
+        peek() {
+            return _cachedValue;
+        },
+        subscribe(fn) {
+            subscribers.add(fn);
+            return () => subscribers.delete(fn);
+        },
+        toString() {
+            return String(this.value);
+        },
+        valueOf() {
+            return this.value;
+        }
+    };
+
+    return computedSignal;
+}
+
+/**
+ * Runs a side-effect function that automatically re-executes whenever dependent states change.
+ * Supports auto-cleanup if the effect function returns a cleanup callback.
+ * 
+ * @param {Function} fn Function containing state accesses. May return a cleanup callback.
+ * @returns {Function} Unsubscribe / stop effect function
+ */
+function effect(fn) {
+    let cleanupFn = null;
+    let isStopped = false;
+
+    const runEffect = () => {
+        if (isStopped || runEffect._isDisposed) return;
+
+        if (typeof cleanupFn === 'function') {
+            try {
+                cleanupFn();
+            } catch (err) {
+                console.error('[Cairn Effect Cleanup Error]:', err);
+            }
+            cleanupFn = null;
+        }
+
+        effectStack.push(runEffect);
+        activeEffect = runEffect;
+        try {
+            cleanupFn = fn();
+        } catch (err) {
+            console.error('[Cairn Effect Execution Error]:', err);
+        } finally {
+            effectStack.pop();
+            activeEffect = effectStack[effectStack.length - 1] || null;
+        }
+    };
+
+    runEffect._isDisposed = false;
+    runEffect();
+
+    const dispose = () => {
+        isStopped = true;
+        runEffect._isDisposed = true;
+        if (typeof cleanupFn === 'function') {
+            try {
+                cleanupFn();
+            } catch (err) {
+                console.error('[Cairn Effect Cleanup Error]:', err);
+            }
+            cleanupFn = null;
+        }
+    };
+
+    return dispose;
+}
+
+/**
+ * @eldrex/cairnjs - Virtual DOM Reconciler & Key-Based List Engine
+ * Efficient, keyed list reconciliation that surgically patches the DOM
+ * instead of destroying and recreating entire node trees.
+ * Preserves input focus, scroll positions, and CSS transitions during array mutations.
+ */
+
+
+
+/**
+ * Reconciles a DOM parent's children against a new list of virtual nodes.
+ * Uses key-based diffing to reorder, add, and remove nodes surgically.
+ *
+ * @param {HTMLElement} parent Parent DOM container
+ * @param {Array} oldItems Previous item array (with keys)
+ * @param {Array} newItems New item array (with keys)
+ * @param {Function} renderItem (item, index) => HTMLElement
+ * @param {Function} getKey (item, index) => string|number unique key extractor
+ */
+function reconcile(parent, oldItems, newItems, renderItem, getKey = (item, i) => item?.id ?? item?.key ?? i) {
+    if (!parent) return;
+
+    const oldKeyMap = new Map();
+    oldItems.forEach((item, i) => {
+        const key = getKey(item, i);
+        oldKeyMap.set(key, { item, index: i, node: parent.children[i] });
+    });
+
+    const newKeyMap = new Map();
+    newItems.forEach((item, i) => {
+        newKeyMap.set(getKey(item, i), item);
+    });
+
+    // Remove nodes no longer in new list
+    oldItems.forEach((item, i) => {
+        const key = getKey(item, i);
+        if (!newKeyMap.has(key)) {
+            const entry = oldKeyMap.get(key);
+            if (entry && entry.node && entry.node.parentNode === parent) {
+                parent.removeChild(entry.node);
+            }
+        }
+    });
+
+    // Insert / reorder nodes for new items
+    newItems.forEach((item, newIdx) => {
+        const key = getKey(item, newIdx);
+        const existing = oldKeyMap.get(key);
+
+        if (!existing) {
+            // New item — create and insert
+            let newNode;
+            try { newNode = renderItem(item, newIdx); } catch (e) {
+                console.error('[Cairn Reconciler] renderItem error:', e);
+                return;
+            }
+            if (!newNode) return;
+
+            const refNode = parent.children[newIdx] || null;
+            parent.insertBefore(newNode, refNode);
+        } else {
+            // Existing item — ensure position is correct
+            const currentNode = existing.node;
+            if (!currentNode) return;
+
+            const nodeAtPos = parent.children[newIdx];
+            if (nodeAtPos !== currentNode) {
+                parent.insertBefore(currentNode, nodeAtPos || null);
+            }
+        }
+    });
+}
+
+/**
+ * Creates a reactive keyed list descriptor for declarative template rendering.
+ *
+ * @example
+ * // Usage in Cairn DOM builders:
+ * ul(
+ *   each(todos, (todo) => todo.id, (todo) => li(todo.title))
+ * )
+ *
+ * @param {Array|object|Function} listSource Cairn state signal, array, or getter function
+ * @param {Function} [keyOrRender] Key selector function or render function if 2 arguments passed
+ * @param {Function} [maybeRender] Render function (item, index) => HTMLElement
+ * @returns {object} Cairn Each Descriptor
+ */
+function each(listSource, keyOrRender, maybeRender) {
+    let getKey;
+    let renderItem;
+
+    if (typeof maybeRender === 'function') {
+        getKey = typeof keyOrRender === 'function' ? keyOrRender : (item, i) => item?.id ?? item?.key ?? i;
+        renderItem = maybeRender;
+    } else if (typeof keyOrRender === 'function') {
+        getKey = (item, i) => item?.id ?? item?.key ?? i;
+        renderItem = keyOrRender;
+    } else {
+        getKey = (item, i) => item?.id ?? item?.key ?? i;
+        renderItem = (item) => item;
+    }
+
+    return {
+        _isCairnEach: true,
+        listSource,
+        getKey,
+        renderItem
+    };
+}
+
+/**
+ * Declarative component wrapper for keyed list iteration.
+ *
+ * @example
+ * For({
+ *   each: todosSignal,
+ *   key: (todo) => todo.id,
+ *   children: (todo, index) => li(todo.text)
+ * })
+ *
+ * @param {object} props
+ * @param {Array|object|Function} props.each Source array or signal
+ * @param {Function} [props.key] Key extraction function
+ * @param {Function} props.children Render function
+ * @returns {object} Cairn Each Descriptor
+ */
+function For(props = {}) {
+    const listSource = props.each || props.items || [];
+    const getKey = props.key || ((item, i) => item?.id ?? item?.key ?? i);
+    const renderItem = props.children || props.render || ((item) => item);
+    return each(listSource, getKey, renderItem);
+}
+
+/**
+ * Creates a managed reactive list that auto-reconciles on signal change.
+ *
+ * @param {HTMLElement} parent Container element
+ * @param {object} listSignal Cairn state signal (array)
+ * @param {Function} renderItem (item, index) => HTMLElement
+ * @param {Function} getKey Key extractor function
+ * @returns {Function} Unsubscribe function
+ */
+function createList(parent, listSignal, renderItem, getKey = (item, i) => item?.id ?? item?.key ?? i) {
+    let prevItems = [];
+
+    return effect(() => {
+        const newItems = Array.isArray(listSignal.value) ? listSignal.value : [];
+        reconcile(parent, prevItems, newItems, renderItem, getKey);
+        prevItems = [...newItems];
+    });
+}
+
+/**
+ * Patches a single DOM node's attributes based on a diff of old/new props.
+ * Only modifies attributes that actually changed.
+ *
+ * @param {HTMLElement} el Target element
+ * @param {object} oldProps Previous props
+ * @param {object} newProps New props
+ */
+function patchProps(el, oldProps = {}, newProps = {}) {
+    if (!el || !el.setAttribute) return;
+
+    const allKeys = new Set([...Object.keys(oldProps), ...Object.keys(newProps)]);
+    allKeys.forEach(key => {
+        if (key.startsWith('on')) return; // Skip event listeners (not patchable easily)
+
+        const oldVal = oldProps[key];
+        const newVal = newProps[key];
+
+        if (oldVal === newVal) return;
+
+        if (newVal === undefined || newVal === null) {
+            el.removeAttribute(key);
+        } else if (key === 'style' && typeof newVal === 'object') {
+            Object.entries(newVal).forEach(([sk, sv]) => {
+                if (el.style && el.style[sk] !== sv) el.style[sk] = sv;
+            });
+        } else if (key === 'className' || key === 'class') {
+            if (el.className !== newVal) el.className = newVal;
+        } else {
+            el.setAttribute(key, String(newVal));
+        }
+    });
+}
+
+const reconciler = { reconcile, each, For, createList, patchProps };
+
+
+
+/**
+ * @eldrex/cairnjs - Styling & Design System Engine
+ * Design tokens, CSS Custom Properties Theme Engine, keyframe injection,
+ * scoped CSS styling, glassmorphism, gradients, and reactive media/darkMode listeners.
+ */
+
+
+
+// Default design tokens
+const defaultTokens = {
+    colors: {
+        primary: {
+            50: '#eff6ff',
+            100: '#dbeafe',
+            500: '#3b82f6',
+            600: '#2563eb',
+            950: '#172554'
+        },
+        gray: {
+            50: '#f8fafc',
+            100: '#f1f5f9',
+            800: '#1e293b',
+            900: '#0f172a'
+        },
+        success: { 500: '#22c55e' },
+        danger: { 500: '#ef4444' },
+        warning: { 500: '#f59e0b' },
+        info: { 500: '#38bdf8' }
+    },
+    spacing: {
+        0: '0px',
+        1: '4px',
+        2: '8px',
+        3: '12px',
+        4: '16px',
+        5: '24px',
+        6: '32px',
+        8: '48px',
+        10: '64px',
+        12: '96px',
+        xs: '4px',
+        sm: '8px',
+        md: '16px',
+        lg: '24px',
+        xl: '32px'
+    },
+    radius: {
+        none: '0',
+        sm: '4px',
+        md: '8px',
+        lg: '16px',
+        xl: '24px',
+        full: '9999px'
+    },
+    typography: {
+        fontFamily: {
+            display: "'Cairn', system-ui, sans-serif",
+            brand: "'Cairn', system-ui, sans-serif",
+            sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+        },
+        fontSize: {
+            xs: '12px',
+            sm: '14px',
+            base: '16px',
+            lg: '18px',
+            xl: '20px',
+            '2xl': '24px',
+            '4xl': '36px',
+            '6xl': '60px'
+        }
+    },
+    shadows: {
+        sm: '0 1px 2px rgba(0,0,0,0.05)',
+        md: '0 4px 6px rgba(0,0,0,0.1)',
+        lg: '0 10px 15px rgba(0,0,0,0.1)',
+        xl: '0 20px 25px rgba(0,0,0,0.15)',
+        glow: '0 0 20px rgba(56, 189, 248, 0.35)'
+    },
+    glass: {
+        sm: {
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+        },
+        md: {
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+        },
+        dark: {
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)'
+        }
+    },
+    zIndex: {
+        hide: -1,
+        base: 0,
+        docked: 10,
+        dropdown: 1000,
+        sticky: 1100,
+        banner: 1200,
+        overlay: 1300,
+        modal: 1400,
+        popover: 1500,
+        toast: 1600,
+        tooltip: 1700
+    },
+    gradients: {
+        sky: 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
+        sunset: 'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)',
+        emerald: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        aurora: 'linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #38bdf8 100%)',
+        cyberpunk: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)'
+    }
+};
+
+function createTokens(custom = {}) {
+    return {
+        ...defaultTokens,
+        ...custom,
+        colors: { ...defaultTokens.colors, ...(custom.colors || {}) },
+        spacing: { ...defaultTokens.spacing, ...(custom.spacing || {}) },
+        radius: { ...defaultTokens.radius, ...(custom.radius || {}) },
+        typography: { ...defaultTokens.typography, ...(custom.typography || {}) },
+        shadows: { ...defaultTokens.shadows, ...(custom.shadows || {}) },
+        glass: { ...defaultTokens.glass, ...(custom.glass || {}) },
+        zIndex: { ...defaultTokens.zIndex, ...(custom.zIndex || {}) },
+        gradients: { ...defaultTokens.gradients, ...(custom.gradients || {}) }
+    };
+}
+
+const tokens = createTokens();
+
+// Theme Registry & Active Theme Signal
+const _themeRegistry = new Map();
+const activeTheme = state('default');
+
+/**
+ * Creates and registers a theme with CSS Custom Properties injection.
+ * @param {string} name Theme name (e.g. 'dark', 'cyberpunk')
+ * @param {object} customTokens Custom token overrides
+ */
+function createTheme(name, customTokens = {}) {
+    const mergedTokens = createTokens(customTokens);
+    _themeRegistry.set(name, mergedTokens);
+
+    if (typeof document !== 'undefined') {
+        const styleId = `cairn-theme-${name}`;
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = styleId;
+            document.head.appendChild(styleEl);
+        }
+
+        const selector = name === 'default' ? ':root' : `[data-theme="${name}"]`;
+        let cssVars = '';
+
+        // Flatten colors
+        Object.entries(mergedTokens.colors).forEach(([cKey, cVal]) => {
+            if (typeof cVal === 'object') {
+                Object.entries(cVal).forEach(([k, v]) => {
+                    cssVars += `--cairn-color-${cKey}-${k}: ${v}; `;
+                });
+            } else {
+                cssVars += `--cairn-color-${cKey}: ${cVal}; `;
+            }
+        });
+
+        // Flatten radius & shadows
+        Object.entries(mergedTokens.radius).forEach(([rKey, rVal]) => {
+            cssVars += `--cairn-radius-${rKey}: ${rVal}; `;
+        });
+
+        styleEl.textContent = `${selector} { ${cssVars}}`;
+    }
+
+    return mergedTokens;
+}
+
+// Register default theme
+createTheme('default', defaultTokens);
+
+/**
+ * Sets the active theme on document root.
+ * @param {string} name Theme name
+ */
+function setTheme(name) {
+    if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', name);
+    }
+    activeTheme.value = name;
+    return name;
+}
+
+/**
+ * Master theme function / namespace
+ * Accepts a dictionary of themes e.g. { light: {...}, dark: {...} } or acts as theme manager
+ */
+function theme(themesMapOrName) {
+    if (typeof themesMapOrName === 'string') {
+        return setTheme(themesMapOrName);
+    }
+    if (typeof themesMapOrName === 'object' && themesMapOrName !== null) {
+        Object.entries(themesMapOrName).forEach(([themeName, themeConfig]) => {
+            createTheme(themeName, themeConfig);
+        });
+        return themesMapOrName;
+    }
+    return activeTheme.value;
+}
+
+Object.assign(theme, {
+    createTheme,
+    setTheme,
+    activeTheme,
+    createTokens,
+    tokens,
+    get: (name) => _themeRegistry.get(name)
+});
+
+/**
+ * Calculates a fluid clamp() CSS value for typography and spacing.
+ * @param {number} minPx Minimum value in pixels
+ * @param {number} maxPx Maximum value in pixels
+ * @param {number} minVw Minimum viewport width in pixels (default: 375)
+ * @param {number} maxVw Maximum viewport width in pixels (default: 1200)
+ * @returns {string} CSS clamp() string
+ */
+function fluid(minPx, maxPx, minVw = 375, maxVw = 1200) {
+    const slope = (maxPx - minPx) / (maxVw - minVw);
+    const yAxisIntersection = -minVw * slope + minPx;
+    return `clamp(${minPx}px, ${yAxisIntersection.toFixed(2)}px + ${(slope * 100).toFixed(2)}vw, ${maxPx}px)`;
+}
+
+let keyframeIdCounter = 0;
+
+/**
+ * Dynamically injects @keyframes animation and returns generated animation name.
+ */
+function keyframes(rulesObj) {
+    keyframeIdCounter++;
+    const animName = `cairn-anim-${keyframeIdCounter}`;
+
+    if (typeof document !== 'undefined') {
+        let cssRules = '';
+        Object.entries(rulesObj).forEach(([step, styles]) => {
+            let styleStr = '';
+            Object.entries(styles).forEach(([prop, val]) => {
+                const kebabProp = prop.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+                styleStr += `${kebabProp}: ${val}; `;
+            });
+            cssRules += `${step} { ${styleStr}} `;
+        });
+
+        const styleEl = document.createElement('style');
+        styleEl.setAttribute('data-cairn-keyframe', animName);
+        styleEl.textContent = `@keyframes ${animName} { ${cssRules}}`;
+        document.head.appendChild(styleEl);
+    }
+
+    return animName;
+}
+
+let coatClassCounter = 0;
+
+/**
+ * Native Coat Styling System
+ * @param {object|Function} rules Style object with selectors/media queries, or dynamic resolver function
+ * @returns {string|Function} Scoped class name or reactive resolver
+ */
+function coat(rules) {
+    if (typeof rules === 'function') {
+        return rules;
+    }
+    if (!rules || typeof rules !== 'object') return '';
+
+    coatClassCounter++;
+    const className = `cairn-coat-${coatClassCounter}`;
+
+    if (typeof document !== 'undefined') {
+        let mainStyles = '';
+        let nestedStyles = '';
+
+        Object.entries(rules).forEach(([key, val]) => {
+            if (typeof val === 'object' && val !== null) {
+                let subStr = '';
+                Object.entries(val).forEach(([p, v]) => {
+                    const kebab = p.startsWith('--') ? p : p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+                    subStr += `${kebab}: ${v}; `;
+                });
+                if (key.startsWith('&') || key.startsWith(':') || key.startsWith('[') || key.startsWith('.')) {
+                    const selector = key.startsWith('&') ? key.replace('&', `.${className}`) : `.${className}${key}`;
+                    nestedStyles += `${selector} { ${subStr}} `;
+                } else if (key.startsWith('@')) {
+                    nestedStyles += `${key} { .${className} { ${subStr}} } `;
+                } else {
+                    nestedStyles += `.${className} ${key} { ${subStr}} `;
+                }
+            } else if (val !== undefined && val !== null) {
+                const kebab = key.startsWith('--') ? key : key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+                mainStyles += `${kebab}: ${val}; `;
+            }
+        });
+
+        const styleEl = document.createElement('style');
+        styleEl.setAttribute('data-cairn-coat', className);
+        styleEl.textContent = `.${className} { ${mainStyles}} ${nestedStyles}`;
+        document.head.appendChild(styleEl);
+    }
+
+    return className;
+}
+
+Object.assign(coat, {
+    variants(config = {}) {
+        return (selectedVariant) => {
+            const v = (selectedVariant && selectedVariant.value !== undefined) ? selectedVariant.value : selectedVariant;
+            return config[v] || config.default || {};
+        };
+    },
+    compose(...coats) {
+        return coats.reduce((acc, c) => {
+            if (typeof c === 'object' && c !== null) {
+                return { ...acc, ...c };
+            }
+            return acc;
+        }, {});
+    }
+});
+
+const css = coat;
+
+function media(query) {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+        return state(false);
+    }
+
+    const mql = window.matchMedia(query);
+    const mediaSignal = state(mql.matches);
+
+    const onChange = (e) => {
+        mediaSignal.value = e.matches;
+    };
+
+    if (mql.addEventListener) {
+        mql.addEventListener('change', onChange);
+    } else if (mql.addListener) {
+        mql.addListener(onChange);
+    }
+
+    return mediaSignal;
+}
+
+const styleHelper = {
+    media(query, rulesObj) {
+        const isMatch = media(query);
+        return () => (isMatch.value ? rulesObj.mobile || rulesObj.match || rulesObj : rulesObj.desktop || {});
+    },
+    container(minWidth, rulesObj) {
+        const query = `(min-width: ${typeof minWidth === 'number' ? minWidth + 'px' : minWidth})`;
+        const isMatch = media(query);
+        return () => (isMatch.value ? rulesObj.large || rulesObj.match || rulesObj : rulesObj.small || {});
+    },
+    darkMode(configObj) {
+        const isDark = media('(prefers-color-scheme: dark)');
+        return () => (isDark.value ? configObj.dark : configObj.light);
+    }
+};
+
+/**
+ * Declarative component for responsive or conditional rendering.
+ * @param {object} props { when: boolean|Signal|string ('mobile'|'tablet'|'desktop'|mediaQuery), fallback: any }
+ * @param {...any} children Child components or elements
+ */
+const Show = (props = {}, ...children) => {
+    return () => {
+        let condition = props.when;
+        if (typeof condition === 'string') {
+            if (condition === 'mobile') condition = media('(max-width: 767px)').value;
+            else if (condition === 'tablet') condition = media('(min-width: 768px) and (max-width: 1023px)').value;
+            else if (condition === 'desktop') condition = media('(min-width: 1024px)').value;
+            else if (condition.startsWith('(')) condition = media(condition).value;
+        } else if (condition && condition._isCairnState) {
+            condition = condition.value;
+        } else if (typeof condition === 'function') {
+            condition = condition();
+        }
+        return condition ? (children.length === 1 ? children[0] : children) : (props.fallback || null);
+    };
+};
+
+/**
+ * Declarative component to hide content on specific media query / condition.
+ * @param {object} props { when: boolean|Signal|string ('mobile'|'tablet'|'desktop'|mediaQuery), fallback: any }
+ * @param {...any} children Child components or elements
+ */
+const Hide = (props = {}, ...children) => {
+    return () => {
+        let condition = props.when;
+        if (typeof condition === 'string') {
+            if (condition === 'mobile') condition = media('(max-width: 767px)').value;
+            else if (condition === 'tablet') condition = media('(min-width: 768px) and (max-width: 1023px)').value;
+            else if (condition === 'desktop') condition = media('(min-width: 1024px)').value;
+            else if (condition.startsWith('(')) condition = media(condition).value;
+        } else if (condition && condition._isCairnState) {
+            condition = condition.value;
+        } else if (typeof condition === 'function') {
+            condition = condition();
+        }
+        return !condition ? (children.length === 1 ? children[0] : children) : (props.fallback || null);
+    };
+};
+
+
+
+/**
+ * @eldrex/cairnjs - Extensibility & Middleware Architecture
  * Plugin System, Middleware Engine, Hook Lifecycles, Deep Configuration, and Engine Overrides.
  */
 
@@ -302,7 +1377,7 @@ function registerComponent(nameOrObj, componentFn, metadata) {
 }
 
 /**
- * @eldrex/cairn/adapters - Tailwind CSS Adapter
+ * @eldrex/cairnjs/adapters - Tailwind CSS Adapter
  * Integrates Tailwind CSS utility classes into Cairn component rendering pipeline.
  * Supports `tailwind: 'px-4 py-2 bg-blue-500'`, arrays of classes, and conditional objects.
  */
@@ -335,7 +1410,186 @@ const tailwind = {
 
 
 /**
- * @eldrex/cairn/adapters - Extensible Multi-Styling Adapters Architecture
+ * @eldrex/cairnjs/adapters - CSS Modules Adapter
+ * Resolves scoped class names from CSS Modules stylesheet objects.
+ * Supports `modules: styles` or `cssModule: styles.card`.
+ */
+
+const cssModules = {
+    name: 'css-modules',
+    transform(props = {}) {
+        const resolved = { ...props };
+
+        if (resolved.modules && typeof resolved.modules === 'object') {
+            const modObj = resolved.modules;
+            if (resolved.class) {
+                const classList = String(resolved.class).split(' ').filter(Boolean);
+                const mapped = classList.map(c => modObj[c] || c).join(' ');
+                resolved.class = mapped;
+            }
+            delete resolved.modules;
+        }
+
+        if (resolved.cssModule) {
+            resolved.class = resolved.class ? `${resolved.class} ${resolved.cssModule}` : String(resolved.cssModule);
+            delete resolved.cssModule;
+        }
+
+        return resolved;
+    }
+};
+
+
+
+/**
+ * @eldrex/cairnjs/adapters - Styled / CSS-in-JS Adapter
+ * Resolves `css: { ... }` or `styled: { ... }` object styles, supporting nested properties.
+ */
+
+const styled = {
+    name: 'styled',
+    transform(props = {}) {
+        const resolved = { ...props };
+        const rawStyleObj = resolved.css || resolved.styled;
+
+        if (rawStyleObj && typeof rawStyleObj === 'object') {
+            const baseStyles = {};
+
+            Object.entries(rawStyleObj).forEach(([k, v]) => {
+                if (typeof v === 'object' && v !== null) {
+                    // Nested selector / pseudo-class / media query
+                    // Can be handled or inlined
+                } else {
+                    baseStyles[k] = v;
+                }
+            });
+
+            resolved.style = { ...baseStyles, ...(resolved.style || {}) };
+            delete resolved.css;
+            delete resolved.styled;
+        }
+
+        return resolved;
+    }
+};
+
+
+
+/**
+ * @eldrex/cairnjs/adapters - UnoCSS Adapter
+ * Maps `uno: '...'` or `uno: [...]` tokens into element classes.
+ */
+
+const unocss = {
+    name: 'unocss',
+    transform(props = {}) {
+        const resolved = { ...props };
+
+        if (resolved.uno) {
+            const unoClasses = Array.isArray(resolved.uno) ? resolved.uno.filter(Boolean).join(' ') : String(resolved.uno);
+            resolved.class = resolved.class ? `${resolved.class} ${unoClasses}` : unoClasses;
+            delete resolved.uno;
+        }
+
+        return resolved;
+    }
+};
+
+
+
+/**
+ * @eldrex/cairnjs/adapters - Bootstrap 5 Adapter
+ * Maps `bs: '...'` or `bootstrap: '...'` classes directly into the class list.
+ */
+
+const bootstrap = {
+    name: 'bootstrap',
+    transform(props = {}) {
+        const resolved = { ...props };
+        const bsClasses = resolved.bs || resolved.bootstrap;
+
+        if (bsClasses) {
+            const classStr = Array.isArray(bsClasses) ? bsClasses.filter(Boolean).join(' ') : String(bsClasses);
+            resolved.class = resolved.class ? `${resolved.class} ${classStr}` : classStr;
+            delete resolved.bs;
+            delete resolved.bootstrap;
+        }
+
+        return resolved;
+    }
+};
+
+
+
+/**
+ * @eldrex/cairnjs/adapters - Framer / Motion Adapter
+ * Maps `motion: { animate, duration, delay, easing }` into Cairn animation properties.
+ */
+
+const motion = {
+    name: 'motion',
+    transform(props = {}) {
+        const resolved = { ...props };
+        const motionConfig = resolved.motion || resolved.framer;
+
+        if (motionConfig && typeof motionConfig === 'object') {
+            if (motionConfig.animate) resolved.animate = motionConfig.animate;
+            if (motionConfig.duration) resolved.duration = motionConfig.duration;
+            if (motionConfig.delay) resolved.delay = motionConfig.delay;
+            if (motionConfig.easing) resolved.easing = motionConfig.easing;
+            if (motionConfig.gestures) resolved.gestures = motionConfig.gestures;
+
+            delete resolved.motion;
+            delete resolved.framer;
+        }
+
+        return resolved;
+    }
+};
+
+
+
+/**
+ * @eldrex/cairnjs/adapters - Design Tokens Adapter
+ * Maps `tokens: { color, size, variant, radius }` to CSS variables and inline styles.
+ */
+
+const tokensAdapter = {
+    name: 'tokens',
+    transform(props = {}) {
+        const resolved = { ...props };
+
+        if (resolved.tokens && typeof resolved.tokens === 'object') {
+            const { color, size, variant, radius } = resolved.tokens;
+            const tokenStyles = {};
+
+            if (color) tokenStyles.color = `var(--cairn-color-${color}, ${color})`;
+            if (size === 'sm') tokenStyles.padding = '6px 12px';
+            else if (size === 'lg') tokenStyles.padding = '16px 32px';
+            else if (size === 'md') tokenStyles.padding = '10px 20px';
+
+            if (radius === 'sm') tokenStyles.borderRadius = '4px';
+            else if (radius === 'md') tokenStyles.borderRadius = '8px';
+            else if (radius === 'lg') tokenStyles.borderRadius = '16px';
+            else if (radius === 'full') tokenStyles.borderRadius = '9999px';
+
+            resolved.style = { ...tokenStyles, ...(resolved.style || {}) };
+            delete resolved.tokens;
+        }
+
+        if (resolved.component) {
+            resolved['data-cairn-component'] = typeof resolved.component === 'string' ? resolved.component : resolved.component.name || 'custom';
+            delete resolved.component;
+        }
+
+        return resolved;
+    }
+};
+
+
+
+/**
+ * @eldrex/cairnjs/adapters - Extensible Multi-Styling Adapters Architecture
  * Supports Tailwind CSS, CSS Modules, Styled Components, Emotion, UnoCSS, Bootstrap,
  * Motion, Design Tokens, and custom 3rd-party adapters.
  */
@@ -352,7 +1606,7 @@ class AdapterRegistry {
     constructor() {
         this._adapters = new Map();
         // Register built-in adapters by default
-        this.register(tokens);
+        this.register(tokensAdapter);
         this.register(tailwind);
         this.register(cssModules);
         this.register(styled);
@@ -480,308 +1734,14 @@ const adapters = {
     unocss,
     bootstrap,
     motion,
-    tokens
+    tokens: tokensAdapter,
+    tokensAdapter
 };
 
 
 
 /**
- * @eldrex/cairn - Reactive Engine
- * Lightweight, fine-grained state, computed, effect, collection, and resource primitives.
- */
-
-
-
-
-
-let activeEffect = null;
-const effectStack = [];
-
-/**
- * Creates a reactive state primitive.
- * @param {*} initialValue Initial value of the state or getter function
- * @returns Object with `.value` getter/setter, `.peek()`, and `.subscribe()`
- */
-function state(initialValue) {
-    if (typeof initialValue === 'function') {
-        return computed(initialValue);
-    }
-    let _val = initialValue;
-    const subscribers = new Set();
-
-    const stateSignal = {
-        _isCairnState: true,
-        get value() {
-            if (activeEffect) {
-                subscribers.add(activeEffect);
-            }
-            return _val;
-        },
-        set value(newValue) {
-            if (Object.is(_val, newValue)) return;
-            const oldVal = _val;
-            _val = newValue;
-            logStateChange('signal', oldVal, newValue);
-            middlewareEngine.afterStateChange('state', oldVal, newValue);
-
-            const toNotify = Array.from(subscribers);
-            toNotify.forEach((sub) => {
-                if (_queueEffect(sub)) return;
-                try {
-                    sub(_val);
-                } catch (err) {
-                    console.error('[Cairn Reactivity Error]:', err);
-                }
-            });
-        },
-        peek() {
-            return _val;
-        },
-        subscribe(fn) {
-            subscribers.add(fn);
-            return () => subscribers.delete(fn);
-        },
-        toString() {
-            return String(this.value);
-        },
-        valueOf() {
-            return this.value;
-        }
-    };
-
-    return stateSignal;
-}
-
-/**
- * Creates a reactive collection proxy for arrays or objects with granular mutation tracking.
- * @param {Array|Object} initialData 
- * @returns {Proxy} Reactive collection proxy
- */
-function collection(initialData = []) {
-    const rawSignal = state(initialData);
-
-    const makeReactiveProxy = (target) => {
-        if (!target || typeof target !== 'object') return target;
-
-        return new Proxy(target, {
-            get(obj, prop, receiver) {
-                if (prop === '_isCairnCollection') return true;
-                if (prop === 'rawSignal') return rawSignal;
-                if (prop === 'value') return rawSignal.value;
-
-                if (prop === 'remove' && typeof obj.filter === 'function') {
-                    return (item) => {
-                        const updated = obj.filter(i => i !== item);
-                        obj.length = 0;
-                        updated.forEach(i => obj.push(i));
-                        rawSignal.value = obj;
-                    };
-                }
-
-                const val = Reflect.get(obj, prop, receiver);
-                if (typeof val === 'function') {
-                    return function (...args) {
-                        const res = Array.prototype[prop].apply(obj, args);
-                        rawSignal.value = Array.isArray(obj) ? [...obj] : { ...obj };
-                        return res;
-                    };
-                }
-                if (typeof val === 'object' && val !== null) {
-                    return makeReactiveProxy(val);
-                }
-                return val;
-            },
-            set(obj, prop, val, receiver) {
-                const res = Reflect.set(obj, prop, val, receiver);
-                rawSignal.value = Array.isArray(obj) ? [...obj] : { ...obj };
-                return res;
-            }
-        });
-    };
-
-    return makeReactiveProxy(initialData);
-}
-
-/**
- * Creates an async resource signal for API calls and async data loading.
- * Includes auto-polling, caching, and manual refetch capabilities.
- * 
- * @param {Function} fetcher Async fetch function
- * @returns {object} Resource object { data, value, loading, error, refetch, refresh, poll, cache }
- */
-function resource(fetcher) {
-    const data = state(null);
-    const loading = state(true);
-    const error = state(null);
-
-    let lastFetchTime = 0;
-    let cacheTTL = 0;
-    let pollIntervalId = null;
-
-    const refetch = async () => {
-        const now = Date.now();
-        if (cacheTTL > 0 && data.value !== null && (now - lastFetchTime) < cacheTTL) {
-            loading.value = false;
-            return;
-        }
-
-        loading.value = true;
-        error.value = null;
-        try {
-            const result = await fetcher();
-            data.value = result;
-            lastFetchTime = Date.now();
-        } catch (err) {
-            error.value = err;
-        } finally {
-            loading.value = false;
-        }
-    };
-
-    refetch();
-
-    const resourceObj = {
-        data,
-        get value() { return data.value; },
-        loading,
-        error,
-        refetch,
-        refresh: refetch,
-        poll(intervalMs = 5000) {
-            if (pollIntervalId) clearInterval(pollIntervalId);
-            if (typeof setInterval !== 'undefined') {
-                pollIntervalId = setInterval(refetch, intervalMs);
-            }
-            return () => {
-                if (pollIntervalId) clearInterval(pollIntervalId);
-            };
-        },
-        cache(options = {}) {
-            if (options.ttl) {
-                cacheTTL = options.ttl * 1000;
-            }
-            return resourceObj;
-        }
-    };
-
-    return resourceObj;
-}
-
-/**
- * Creates a derived reactive computed property.
- * @param {Function} getter Computation function
- * @returns Computed state signal with `.value` getter
- */
-function computed(getter) {
-    let _cachedValue;
-    let _isDirty = true;
-    const subscribers = new Set();
-
-    const notifySubscribers = () => {
-        const toNotify = Array.from(subscribers);
-        toNotify.forEach((sub) => {
-            try {
-                sub(_cachedValue);
-            } catch (err) {
-                console.error('[Cairn Computed Error]:', err);
-            }
-        });
-    };
-
-    const reevaluate = () => {
-        if (!_isDirty) {
-            _isDirty = true;
-            notifySubscribers();
-        }
-    };
-
-    const computedSignal = {
-        _isCairnState: true,
-        _isCairnComputed: true,
-        get value() {
-            if (_isDirty) {
-                effectStack.push(reevaluate);
-                activeEffect = reevaluate;
-                try {
-                    _cachedValue = getter();
-                } finally {
-                    effectStack.pop();
-                    activeEffect = effectStack[effectStack.length - 1] || null;
-                }
-                _isDirty = false;
-            }
-            if (activeEffect) {
-                subscribers.add(activeEffect);
-            }
-            return _cachedValue;
-        },
-        peek() {
-            return _cachedValue;
-        },
-        subscribe(fn) {
-            subscribers.add(fn);
-            return () => subscribers.delete(fn);
-        },
-        toString() {
-            return String(this.value);
-        },
-        valueOf() {
-            return this.value;
-        }
-    };
-
-    return computedSignal;
-}
-
-/**
- * Runs a side-effect function that automatically re-executes whenever dependent states change.
- * @param {Function} fn Function containing state accesses. May return a cleanup callback.
- * @returns {Function} Unsubscribe / stop effect function
- */
-function effect(fn) {
-    let cleanupFn = null;
-    let isStopped = false;
-
-    const runEffect = () => {
-        if (isStopped) return;
-
-        if (typeof cleanupFn === 'function') {
-            try {
-                cleanupFn();
-            } catch (err) {
-                console.error('[Cairn Effect Cleanup Error]:', err);
-            }
-            cleanupFn = null;
-        }
-
-        effectStack.push(runEffect);
-        activeEffect = runEffect;
-        try {
-            cleanupFn = fn();
-        } catch (err) {
-            console.error('[Cairn Effect Execution Error]:', err);
-        } finally {
-            effectStack.pop();
-            activeEffect = effectStack[effectStack.length - 1] || null;
-        }
-    };
-
-    runEffect();
-
-    return () => {
-        isStopped = true;
-        if (typeof cleanupFn === 'function') {
-            try {
-                cleanupFn();
-            } catch (err) {
-                console.error('[Cairn Effect Cleanup Error]:', err);
-            }
-        }
-    };
-}
-
-/**
- * @eldrex/cairn - Animation & Motion System
+ * @eldrex/cairnjs - Animation & Motion System
  * Spring physics solver, DOM transitions, gesture handlers, page transitions,
  * scroll progress/parallax, particle systems, timeline sequencing, and one-line element animate prop handling.
  */
@@ -795,16 +1755,128 @@ if (typeof document !== 'undefined') {
         style.textContent = `
             @keyframes cairn-fade-in { from { opacity: 0; } to { opacity: 1; } }
             @keyframes cairn-fade-out { from { opacity: 1; } to { opacity: 0; } }
+            @keyframes cairn-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes cairn-fade-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes cairn-fade-left { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-fade-right { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-zoom-in { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+            @keyframes cairn-zoom-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.8); } }
             @keyframes cairn-slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes cairn-slide-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-            @keyframes cairn-scale-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+            @keyframes cairn-slide-left { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-slide-right { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-slide-out-up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
+            @keyframes cairn-slide-out-down { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+            @keyframes cairn-flip-in { from { opacity: 0; transform: perspective(400px) rotateY(90deg); } to { opacity: 1; transform: perspective(400px) rotateY(0deg); } }
+            @keyframes cairn-scale-in { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+            @keyframes cairn-rotate-in { from { opacity: 0; transform: rotate(-180deg) scale(0.7); } to { opacity: 1; transform: rotate(0deg) scale(1); } }
+            @keyframes cairn-bounce-in { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+            @keyframes cairn-elastic-in { 0% { transform: scale(0); } 55% { transform: scale(1.15); } 75% { transform: scale(0.95); } 100% { transform: scale(1); } }
+            @keyframes cairn-collapse { from { max-height: 500px; opacity: 1; } to { max-height: 0; opacity: 0; } }
             @keyframes cairn-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             @keyframes cairn-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+            @keyframes cairn-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+            @keyframes cairn-wobble { 0%, 100% { transform: translateX(0) rotate(0); } 15% { transform: translateX(-15px) rotate(-4deg); } 30% { transform: translateX(12px) rotate(3deg); } 45% { transform: translateX(-8px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(1deg); } 75% { transform: translateX(-2px) rotate(-1deg); } }
+            @keyframes cairn-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-16px); } 60% { transform: translateY(-8px); } }
+            @keyframes cairn-flash { 0%, 50%, 100% { opacity: 1; } 25%, 75% { opacity: 0.2; } }
+            @keyframes cairn-ping { 75%, 100% { transform: scale(1.6); opacity: 0; } }
             @keyframes cairn-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
             @keyframes cairn-typing { from { width: 0; } to { width: 100%; } }
             .cairn-animated { will-change: transform, opacity; }
         `;
         document.head.appendChild(style);
+    }
+}
+
+const _customAnimations = new Map();
+
+/**
+ * Define and register a custom animation by name using Web Animations API or CSS keyframes.
+ * @param {string} name
+ * @param {Array|object} keyframesDef
+ */
+function define(name, keyframesDef) {
+    _customAnimations.set(name, keyframesDef);
+    return keyframesDef;
+}
+
+const defineAnimation = define;
+
+/**
+ * Applies animate prop configuration to an element.
+ */
+function applyAnimateProp(el, animateProp, duration = 400, delay = 0, easing = 'cubic-bezier(0.16, 1, 0.3, 1)') {
+    if (!el || !el.style) return;
+
+    if (accessibility.reducedMotion) return;
+
+    if (typeof animateProp === 'string') {
+        const animName = animateProp.replace(/^cairn-/, '');
+        if (_customAnimations.has(animName) && typeof el.animate === 'function') {
+            const def = _customAnimations.get(animName);
+            el.animate(def, { duration, delay, easing, fill: 'forwards' });
+            return;
+        }
+        el.style.animation = `cairn-${animName} ${duration}ms ${easing} ${delay}ms both`;
+        if (el.classList) {
+            el.classList.add('cairn-animated');
+        } else if (el.className !== undefined) {
+            el.className = (el.className + ' cairn-animated').trim();
+        }
+    } else if (typeof animateProp === 'object' && animateProp !== null) {
+        const { type, hover, tap, focus, scroll: isScroll, animation = 'fade-up', threshold = 0.1, once = true } = animateProp;
+
+        if (type === 'stagger') {
+            const staggerDelay = animateProp.delay || 100;
+            const staggerDuration = animateProp.duration || 400;
+            if (el.children) {
+                Array.from(el.children).forEach((child, idx) => {
+                    applyAnimateProp(child, animateProp.animation || 'fade-up', staggerDuration, idx * staggerDelay, easing);
+                });
+            }
+            return;
+        }
+
+        if (type === 'scroll' || isScroll) {
+            if (typeof IntersectionObserver !== 'undefined') {
+                el.style.opacity = '0';
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            applyAnimateProp(el, animation, duration, delay, easing);
+                            if (once !== false) observer.unobserve(el);
+                        }
+                    });
+                }, { threshold });
+                observer.observe(el);
+            }
+            return;
+        }
+
+        if (hover && el.addEventListener) {
+            el.style.transition = `transform ${duration}ms ${easing}, opacity ${duration}ms ${easing}`;
+            el.addEventListener('mouseenter', () => {
+                if (typeof hover === 'string') {
+                    if (hover.includes('scale')) el.style.transform = 'scale(1.05)';
+                    if (hover.includes('lift')) el.style.transform = 'translateY(-4px)';
+                } else if (typeof hover === 'object') {
+                    if (hover.scale) el.style.transform = `scale(${hover.scale})`;
+                    if (hover.lift) el.style.transform = `translateY(${hover.lift}px)`;
+                }
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'none';
+            });
+        }
+
+        if (tap && el.addEventListener) {
+            el.addEventListener('mousedown', () => {
+                el.style.transform = 'scale(0.95)';
+            });
+            el.addEventListener('mouseup', () => {
+                el.style.transform = 'none';
+            });
+        }
     }
 }
 
@@ -820,10 +1892,23 @@ const accessibility = {
     }
 };
 
+const springPresets = {
+    gentle: { stiffness: 120, damping: 14, mass: 1 },
+    default: { stiffness: 170, damping: 26, mass: 1 },
+    bouncy: { stiffness: 200, damping: 10, mass: 1 },
+    stiff: { stiffness: 300, damping: 20, mass: 1 }
+};
+
 /**
  * Animates a target value using spring physics logic.
+ * @param {string|object} options
  */
 function spring(options = {}) {
+    let resolvedOpts = options;
+    if (typeof options === 'string') {
+        resolvedOpts = springPresets[options] || springPresets.default;
+    }
+
     const {
         from = 0,
         to = 1,
@@ -832,7 +1917,7 @@ function spring(options = {}) {
         mass = 1,
         onUpdate = () => {},
         onComplete = () => {}
-    } = options;
+    } = resolvedOpts;
 
     let position = from;
     let velocity = 0;
@@ -881,6 +1966,14 @@ function spring(options = {}) {
         }
     };
 }
+
+Object.assign(spring, {
+    gentle: (opts = {}) => spring({ ...springPresets.gentle, ...opts }),
+    default: (opts = {}) => spring({ ...springPresets.default, ...opts }),
+    bouncy: (opts = {}) => spring({ ...springPresets.bouncy, ...opts }),
+    stiff: (opts = {}) => spring({ ...springPresets.stiff, ...opts }),
+    presets: springPresets
+});
 
 // Spring physics presets for effortless zero-boilerplate motion
 spring.bouncy = (options = {}) => spring({ stiffness: 220, damping: 10, mass: 1, ...options });
@@ -960,66 +2053,6 @@ function gesture(el, handlers = {}) {
         el.removeEventListener('touchstart', handleTouchStart);
         el.removeEventListener('touchend', handleTouchEnd);
     };
-}
-
-/**
- * One-Line Animate Prop Handler for DOM Elements.
- */
-function applyAnimateProp(el, animateProp, duration = 400, delay = 0, easing = 'ease-out') {
-    if (!el || !el.style) return;
-
-    if (accessibility.reducedMotion) {
-        el.style.opacity = '1';
-        return;
-    }
-
-    if (typeof animateProp === 'string') {
-        const animName = `cairn-${animateProp.replace(/^fade-up$/, 'slide-up')}`;
-        el.style.animation = `${animName} ${duration}ms ${easing} ${delay}ms forwards`;
-    } else if (Array.isArray(animateProp)) {
-        const anims = animateProp.map(a => `cairn-${a.replace(/^fade-up$/, 'slide-up')}`).join(', ');
-        el.style.animation = `${anims} ${duration}ms ${easing} ${delay}ms forwards`;
-    } else if (typeof animateProp === 'object' && animateProp !== null) {
-        const { hover, tap, focus, scroll } = animateProp;
-
-        if (hover && el.addEventListener) {
-            el.style.transition = `transform ${duration}ms ${easing}, opacity ${duration}ms ${easing}`;
-            el.addEventListener('mouseenter', () => {
-                if (typeof hover === 'string') {
-                    if (hover.includes('scale')) el.style.transform = 'scale(1.05)';
-                    if (hover.includes('lift')) el.style.transform = 'translateY(-4px)';
-                } else if (typeof hover === 'object') {
-                    if (hover.scale) el.style.transform = `scale(${hover.scale})`;
-                    if (hover.lift) el.style.transform = `translateY(${hover.lift}px)`;
-                }
-            });
-            el.addEventListener('mouseleave', () => {
-                el.style.transform = 'none';
-            });
-        }
-
-        if (tap && el.addEventListener) {
-            el.addEventListener('mousedown', () => {
-                el.style.transform = 'scale(0.95)';
-            });
-            el.addEventListener('mouseup', () => {
-                el.style.transform = 'none';
-            });
-        }
-
-        if (scroll && typeof IntersectionObserver !== 'undefined') {
-            el.style.opacity = '0';
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        el.style.animation = `cairn-slide-up ${duration}ms ${easing} ${delay}ms forwards`;
-                        if (animateProp.once !== false) observer.unobserve(el);
-                    }
-                });
-            }, { threshold: animateProp.threshold || 0.1 });
-            observer.observe(el);
-        }
-    }
 }
 
 /**
@@ -1235,21 +2268,148 @@ const particles = Object.assign(
  * Timeline Sequencing Engine
  */
 function timeline() {
-    const queue = [];
-    return {
-        add(element, animation, delay = 0, duration = 400) {
+    let queue = [];
+    let isPlaying = false;
+    let isPaused = false;
+    let playbackRate = 1;
+    let timeouts = [];
+    let completeCallbacks = [];
+    let updateCallbacks = [];
+
+    const self = {
+        add(element, animation, offset = 0, duration = 400) {
+            let delay = 0;
+            if (typeof offset === 'string') {
+                const prev = queue[queue.length - 1];
+                const prevEnd = prev ? (prev.delay + prev.duration) : 0;
+                if (offset.startsWith('+=')) {
+                    delay = prevEnd + (parseFloat(offset.slice(2)) || 0);
+                } else if (offset.startsWith('-=')) {
+                    delay = Math.max(0, prevEnd - (parseFloat(offset.slice(2)) || 0));
+                } else {
+                    delay = parseFloat(offset) || 0;
+                }
+            } else if (typeof offset === 'number') {
+                delay = offset;
+            }
             queue.push({ element, animation, delay, duration });
-            return this;
+            return self;
         },
         play() {
+            isPlaying = true;
+            isPaused = false;
+            timeouts.forEach(clearTimeout);
+            timeouts = [];
+            const totalDuration = queue.reduce((max, item) => Math.max(max, item.delay + item.duration), 0);
+
             queue.forEach(item => {
-                setTimeout(() => {
-                    applyAnimateProp(item.element, item.animation, item.duration);
-                }, item.delay);
+                const timer = setTimeout(() => {
+                    if (isPlaying && !isPaused) {
+                        applyAnimateProp(item.element, item.animation, item.duration / playbackRate);
+                        updateCallbacks.forEach(cb => cb({ item, progress: (item.delay + item.duration) / (totalDuration || 1) }));
+                    }
+                }, item.delay / playbackRate);
+                timeouts.push(timer);
             });
+
+            if (totalDuration > 0) {
+                const endTimer = setTimeout(() => {
+                    completeCallbacks.forEach(cb => cb());
+                }, totalDuration / playbackRate);
+                timeouts.push(endTimer);
+            } else {
+                completeCallbacks.forEach(cb => cb());
+            }
+            return self;
+        },
+        pause() {
+            isPaused = true;
+            return self;
+        },
+        resume() {
+            isPaused = false;
+            return self;
+        },
+        reverse() {
+            queue.reverse();
+            return self.play();
+        },
+        seek(timeMs) {
+            queue.forEach(item => {
+                if (item.delay <= timeMs) {
+                    applyAnimateProp(item.element, item.animation, item.duration);
+                }
+            });
+            return self;
+        },
+        speed(rate = 1) {
+            playbackRate = rate;
+            return self;
+        },
+        onComplete(cb) {
+            if (typeof cb === 'function') completeCallbacks.push(cb);
+            return self;
+        },
+        onUpdate(cb) {
+            if (typeof cb === 'function') updateCallbacks.push(cb);
+            return self;
+        }
+    };
+    return self;
+}
+
+/**
+ * View Transitions API Controller
+ */
+function viewTransition(config = {}) {
+    return {
+        enabled: config.enabled !== false,
+        type: config.type || 'fade',
+        enter: config.enter,
+        exit: config.exit,
+        fallback: config.fallback || 'css',
+        duration: config.duration || 300,
+        start(updateFn) {
+            return viewTransition.start(updateFn);
         }
     };
 }
+
+viewTransition.start = function(updateFn) {
+    if (typeof document !== 'undefined' && typeof document.startViewTransition === 'function') {
+        return document.startViewTransition(updateFn);
+    }
+    if (typeof updateFn === 'function') {
+        const res = updateFn();
+        return Promise.resolve(res);
+    }
+    return Promise.resolve();
+};
+
+/**
+ * Animation Optimization and Accessibility Engine
+ */
+const animation = {
+    optimize(opts = {}) {
+        return {
+            gpuProperties: opts.gpuProperties || ['transform', 'opacity', 'filter'],
+            batchLayout: opts.batchLayout !== false,
+            compositor: opts.compositor !== false,
+            promoteLayers: opts.promoteLayers !== false
+        };
+    },
+    accessibility(opts = {}) {
+        return {
+            reducedMotion: opts.reducedMotion || 'auto',
+            fallback: opts.fallback || { fade: true, duration: 100, transform: false },
+            detect: opts.detect !== false,
+            override: opts.override || { essential: true, decorative: false }
+        };
+    },
+    spring(presetOrConfig) {
+        return spring(presetOrConfig);
+    }
+};
 
 function sequence(items = []) {
     let delayAcc = 0;
@@ -1274,9 +2434,10 @@ function loop({ animation = 'pulse', duration = 1000 } = {}) {
 
 
 /**
- * @eldrex/cairn - DOM Builder Engine
+ * @eldrex/cairnjs - DOM Builder Engine
  * Declarative, reactive HTML element builders with zero dependencies, automatic accessibility, and helpful error warnings.
  */
+
 
 
 
@@ -1303,18 +2464,53 @@ function h(tag, ...args) {
     const mockAttrs = {};
     const mockChildren = [];
     const mockStyle = {};
+    const mockClassList = {
+        _classes: new Set(),
+        add(...cls) { cls.forEach(c => c && this._classes.add(String(c))); this._sync(); },
+        remove(...cls) { cls.forEach(c => this._classes.delete(String(c))); this._sync(); },
+        contains(c) { return this._classes.has(String(c)); },
+        toggle(c, force) {
+            const has = this._classes.has(String(c));
+            const shouldHave = force !== undefined ? Boolean(force) : !has;
+            if (shouldHave) this._classes.add(String(c));
+            else this._classes.delete(String(c));
+            this._sync();
+            return shouldHave;
+        },
+        _sync() { mockAttrs['class'] = Array.from(this._classes).join(' '); }
+    };
     const el = doc ? doc.createElement(tag) : {
         tagName: tag.toUpperCase(),
         nodeType: 1,
         attributes: mockAttrs,
         style: mockStyle,
+        classList: mockClassList,
         childNodes: mockChildren,
         className: '',
-        setAttribute(k, v) { mockAttrs[k] = String(v); if (k === 'class' || k === 'className') this.className = String(v); },
+        setAttribute(k, v) {
+            mockAttrs[k] = String(v);
+            if (k === 'class' || k === 'className') {
+                this.className = String(v);
+                mockClassList._classes = new Set(String(v).split(/\s+/).filter(Boolean));
+            }
+        },
         getAttribute(k) { return mockAttrs[k] || (k === 'class' ? this.className : null); },
         hasAttribute(k) { return Boolean(mockAttrs[k]); },
+        removeAttribute(k) { delete mockAttrs[k]; },
         addEventListener() {},
-        appendChild(child) { mockChildren.push(child); }
+        removeEventListener() {},
+        appendChild(child) { mockChildren.push(child); return child; },
+        insertBefore(newNode, refNode) {
+            const idx = mockChildren.indexOf(refNode);
+            if (idx >= 0) mockChildren.splice(idx, 0, newNode);
+            else mockChildren.push(newNode);
+            return newNode;
+        },
+        removeChild(child) {
+            const idx = mockChildren.indexOf(child);
+            if (idx >= 0) mockChildren.splice(idx, 1);
+            return child;
+        }
     };
 
     let props = {};
@@ -1322,13 +2518,18 @@ function h(tag, ...args) {
 
     // Parse flexible arguments
     args.forEach((arg) => {
-        if (arg === null || arg === undefined) return;
+        if (arg === null || arg === undefined || typeof arg === 'boolean') return;
 
         if (Array.isArray(arg)) {
-            arg.forEach((child) => children.push(child));
+            arg.forEach((child) => {
+                if (child !== null && child !== undefined && typeof child !== 'boolean') {
+                    children.push(child);
+                }
+            });
         } else if (
             typeof arg === 'object' &&
             !arg._isCairnState &&
+            !arg._isCairnEach &&
             !(typeof Element !== 'undefined' && arg instanceof Element) &&
             !(arg.nodeType)
         ) {
@@ -1338,23 +2539,175 @@ function h(tag, ...args) {
         }
     });
 
+    // Polymorphic tag override: props.as
+    if (props.as && typeof props.as === 'string' && props.as !== tag) {
+        const asTag = props.as;
+        const nextProps = { ...props };
+        delete nextProps.as;
+        return h(asTag, nextProps, ...children);
+    }
+
     // Run middleware beforeCreate interceptor & adapter style resolvers
     props = middlewareEngine.beforeCreate(tag, props);
     props = resolveAdapters(props);
 
+    // Gestures Support
+    if (props.gestures && typeof props.gestures === 'object' && el.addEventListener) {
+        gesture(el, props.gestures);
+    }
+    if (props.drag && typeof props.drag === 'object' && el.addEventListener) {
+        gesture(el, { drag: true, ...props.drag });
+    }
+    if (props.swipe && typeof props.swipe === 'object' && el.addEventListener) {
+        gesture(el, { swipe: true, ...props.swipe });
+    }
+    if (props.pinch && typeof props.pinch === 'object' && el.addEventListener) {
+        gesture(el, { pinch: true, ...props.pinch });
+    }
+
+    // Native Coat Styling System Support
+    if (props.coat) {
+        if (typeof props.coat === 'function') {
+            effect(() => {
+                const resolved = props.coat();
+                if (typeof resolved === 'string') {
+                    if (el.classList) el.classList.add(resolved);
+                    else if (el.className !== undefined) el.className = (el.className + ' ' + resolved).trim();
+                } else if (typeof resolved === 'object' && resolved !== null) {
+                    const generatedClass = coat(resolved);
+                    if (el.classList) el.classList.add(generatedClass);
+                    else if (el.className !== undefined) el.className = (el.className + ' ' + generatedClass).trim();
+                }
+            });
+        } else if (typeof props.coat === 'object') {
+            const generatedClass = coat(props.coat);
+            if (el.classList) el.classList.add(generatedClass);
+            else if (el.className !== undefined) el.className = (el.className + ' ' + generatedClass).trim();
+        } else if (typeof props.coat === 'string') {
+            if (el.classList) el.classList.add(props.coat);
+            else if (el.className !== undefined) el.className = (el.className + ' ' + props.coat).trim();
+        }
+    }
+
+    // Declarative Animations & Transitions
+    if (props.animate !== undefined) {
+        if (typeof props.animate === 'function') {
+            effect(() => {
+                const animVal = props.animate();
+                if (animVal) {
+                    const duration = typeof animVal === 'object' && animVal.duration ? animVal.duration : (props.duration || 400);
+                    const delay = typeof animVal === 'object' && animVal.delay ? animVal.delay : (props.delay || 0);
+                    const easing = typeof animVal === 'object' && animVal.easing ? animVal.easing : (props.easing || 'cubic-bezier(0.16, 1, 0.3, 1)');
+                    applyAnimateProp(el, animVal, duration, delay, easing);
+                }
+            });
+        } else {
+            const duration = typeof props.animate === 'object' && props.animate.duration ? props.animate.duration : (props.duration || 400);
+            const delay = typeof props.animate === 'object' && props.animate.delay ? props.animate.delay : (props.delay || 0);
+            const easing = typeof props.animate === 'object' && props.animate.easing ? props.animate.easing : (props.easing || 'cubic-bezier(0.16, 1, 0.3, 1)');
+            applyAnimateProp(el, props.animate, duration, delay, easing);
+        }
+    }
+
+    if (props.transition !== undefined) {
+        const applyTrans = (tVal) => {
+            if (!el.style) return;
+            if (typeof tVal === 'string') {
+                el.style.transition = tVal;
+            } else if (typeof tVal === 'object' && tVal !== null) {
+                if (tVal.properties && typeof tVal.properties === 'object') {
+                    const parts = Object.entries(tVal.properties).map(([prop, conf]) => {
+                        const dur = conf.duration !== undefined ? `${conf.duration}ms` : '300ms';
+                        const tim = conf.timing || conf.easing || 'ease';
+                        const del = conf.delay ? `${conf.delay}ms` : '0ms';
+                        return `${prop} ${dur} ${tim} ${del}`;
+                    });
+                    el.style.transition = parts.join(', ');
+                } else {
+                    const prop = tVal.property || 'all';
+                    const dur = tVal.duration !== undefined ? `${tVal.duration}ms` : '300ms';
+                    const tim = tVal.timing || tVal.easing || 'ease';
+                    const del = tVal.delay ? `${tVal.delay}ms` : '0ms';
+                    el.style.transition = `${prop} ${dur} ${tim} ${del}`;
+                }
+            }
+        };
+
+        if (typeof props.transition === 'function') {
+            effect(() => {
+                applyTrans(props.transition());
+            });
+        } else {
+            applyTrans(props.transition);
+        }
+    }
+
     // Automatic ARIA & Accessibility Defaults
+    if (props.ariaLabel) {
+        props['aria-label'] = props.ariaLabel;
+    }
+    if (props.description && !props['aria-description']) {
+        props['aria-description'] = props.description;
+    }
+    if (props.keyboardShortcut && typeof window !== 'undefined') {
+        const key = props.keyboardShortcut.toLowerCase();
+        window.addEventListener('keydown', (e) => {
+            const hasCtrl = e.ctrlKey || e.metaKey;
+            if (key.includes('ctrl') && hasCtrl && e.key.toLowerCase() === key.replace('ctrl+', '').trim()) {
+                e.preventDefault();
+                if (props.onclick) props.onclick(e);
+            }
+        });
+    }
+
     if (tag === 'button' && el.setAttribute) {
         if (!props.role && !el.hasAttribute('role')) el.setAttribute('role', 'button');
         if (props.tabIndex === undefined && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
         
-        // Keyboard Enter / Space trigger execution
-        if (el.addEventListener) {
-            el.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (props.onclick) props.onclick(e);
-                }
-            });
+        // Apply default beautiful variants and sizes if not already custom classes
+        const variant = props.variant || 'default';
+        const size = props.size || 'md';
+
+        const sizeStyles = {
+            sm: 'padding: 6px 12px; font-size: 13px; border-radius: 6px;',
+            md: 'padding: 8px 16px; font-size: 14px; border-radius: 8px;',
+            lg: 'padding: 12px 24px; font-size: 16px; border-radius: 10px;'
+        };
+
+        const variantStyles = {
+            default: 'background: #ffffff; color: #1f2937; border: 1px solid #d1d5db; box-shadow: 0 1px 2px rgba(0,0,0,0.05);',
+            primary: 'background: #6366f1; color: #ffffff; border: 1px solid transparent; box-shadow: 0 2px 4px rgba(99,102,241,0.25); font-weight: 600;',
+            secondary: 'background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; font-weight: 500;',
+            ghost: 'background: transparent; color: #4b5563; border: 1px solid transparent;',
+            danger: 'background: #ef4444; color: #ffffff; border: 1px solid transparent; box-shadow: 0 2px 4px rgba(239,68,68,0.25); font-weight: 600;',
+            custom: ''
+        };
+
+        if (variant !== 'custom' && !props.style) {
+            const baseBtnStyle = `display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none; ${sizeStyles[size] || sizeStyles.md} ${variantStyles[variant] || variantStyles.default}`;
+            if (el.style) el.style.cssText = baseBtnStyle;
+        }
+
+        // Loading state
+        if (props.loading) {
+            if (el.setAttribute) el.setAttribute('disabled', 'true');
+            if (el.style) el.style.opacity = '0.75';
+            const spinner = doc ? doc.createElement('span') : null;
+            if (spinner) {
+                spinner.className = 'cairn-btn-spinner';
+                spinner.style.cssText = 'display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: cairn-spin 0.8s linear infinite;';
+                children.unshift(spinner);
+            }
+        }
+
+        // Icon handling
+        if (props.icon) {
+            const iconPos = props.iconPosition || 'left';
+            if (iconPos === 'right') {
+                children.push(props.icon);
+            } else {
+                children.unshift(props.icon);
+            }
         }
     }
 
@@ -1391,16 +2744,23 @@ function h(tag, ...args) {
                     }
                     if (startTime) logDomUpdate(tag, performance.now() - startTime);
                 });
+            } else if (val && val._isCairnState) {
+                effect(() => {
+                    if (el.style && typeof val.value === 'string') {
+                        el.style.cssText = val.value;
+                    } else if (el.style && typeof val.value === 'object' && val.value !== null) {
+                        Object.entries(val.value).forEach(([sKey, sVal]) => {
+                            el.style[sKey] = sVal;
+                        });
+                    }
+                });
             } else if (typeof val === 'object' && val !== null) {
                 Object.entries(val).forEach(([sKey, sVal]) => {
-                    if (typeof sVal === 'function') {
+                    const isReactive = typeof sVal === 'function' || (sVal && sVal._isCairnState);
+                    if (isReactive) {
                         effect(() => {
-                            const computedVal = sVal();
-                            if (el.style) el.style[sKey] = computedVal;
-                        });
-                    } else if (sVal && sVal._isCairnState) {
-                        effect(() => {
-                            if (el.style) el.style[sKey] = sVal.value;
+                            const computedVal = typeof sVal === 'function' ? sVal() : sVal.value;
+                            if (el.style) el.style[sKey] = (computedVal !== undefined && computedVal !== null) ? computedVal : '';
                         });
                     } else if (el.style) {
                         el.style[sKey] = sVal;
@@ -1410,27 +2770,37 @@ function h(tag, ...args) {
                 el.style.cssText = val;
             }
         } else if (key === 'className' || key === 'class') {
-            const formatClass = (c) => {
+            const resolveClass = (c) => {
                 if (!c) return '';
-                if (Array.isArray(c)) return c.filter(Boolean).join(' ');
-                if (typeof c === 'object') return Object.entries(c).filter(([, v]) => Boolean(v)).map(([k]) => k).join(' ');
-                return String(c);
+                if (typeof c === 'string' || typeof c === 'number') return String(c);
+                if (c && c._isCairnState) return resolveClass(c.value);
+                if (typeof c === 'function') return resolveClass(c());
+                if (Array.isArray(c)) {
+                    return c.map(resolveClass).filter(Boolean).join(' ');
+                }
+                if (typeof c === 'object') {
+                    return Object.entries(c)
+                        .filter(([, v]) => {
+                            let resolvedVal = v;
+                            if (typeof v === 'function') resolvedVal = v();
+                            else if (v && v._isCairnState) resolvedVal = v.value;
+                            return Boolean(resolvedVal);
+                        })
+                        .map(([k]) => k)
+                        .join(' ');
+                }
+                return '';
             };
 
-            if (typeof val === 'function') {
+            const hasReactivity = typeof val === 'function' || (val && val._isCairnState) || typeof val === 'object';
+            if (hasReactivity) {
                 effect(() => {
-                    const formatted = formatClass(val());
-                    if (el.className !== undefined) el.className = formatted;
-                    if (el.setAttribute) el.setAttribute('class', formatted);
-                });
-            } else if (val && val._isCairnState) {
-                effect(() => {
-                    const formatted = formatClass(val.value);
+                    const formatted = resolveClass(val);
                     if (el.className !== undefined) el.className = formatted;
                     if (el.setAttribute) el.setAttribute('class', formatted);
                 });
             } else if (el.className !== undefined) {
-                const formatted = formatClass(val);
+                const formatted = resolveClass(val);
                 el.className = formatted;
                 if (el.setAttribute) el.setAttribute('class', formatted);
             }
@@ -1457,12 +2827,22 @@ function h(tag, ...args) {
         } else if (typeof val === 'function') {
             effect(() => {
                 const computedVal = val();
-                if (el.setAttribute) el.setAttribute(key, computedVal);
+                if (key === 'innerHTML' || key === 'textContent') {
+                    if (key in el) el[key] = (computedVal !== undefined && computedVal !== null) ? computedVal : '';
+                } else if (el.setAttribute) {
+                    el.setAttribute(key, computedVal);
+                }
             });
         } else if (val && val._isCairnState) {
             effect(() => {
-                if (el.setAttribute) el.setAttribute(key, val.value);
+                if (key === 'innerHTML' || key === 'textContent') {
+                    if (key in el) el[key] = (val.value !== undefined && val.value !== null) ? val.value : '';
+                } else if (el.setAttribute) {
+                    el.setAttribute(key, val.value);
+                }
             });
+        } else if (key === 'innerHTML' || key === 'textContent') {
+            if (key in el) el[key] = val;
         } else if (el.setAttribute) {
             el.setAttribute(key, val);
         }
@@ -1478,9 +2858,80 @@ function h(tag, ...args) {
 
     // Append Children
     const appendChildNode = (childNode) => {
-        if (childNode === null || childNode === undefined) return;
+        if (childNode === null || childNode === undefined || typeof childNode === 'boolean') return;
         if (Array.isArray(childNode)) {
             childNode.forEach(appendChildNode);
+            return;
+        }
+
+        if (childNode && childNode._isCairnEach) {
+            if (doc) {
+                const endMarker = doc.createTextNode('');
+                if (el.appendChild) el.appendChild(endMarker);
+
+                let oldEntries = new Map();
+
+                effect(() => {
+                    const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
+                    let rawList = childNode.listSource;
+                    if (typeof rawList === 'function') rawList = rawList();
+                    else if (rawList && rawList._isCairnState) rawList = rawList.value;
+
+                    const newItems = Array.isArray(rawList) ? rawList : [];
+                    const newKeyMap = new Map();
+                    const newEntries = [];
+
+                    newItems.forEach((item, i) => {
+                        const key = childNode.getKey(item, i);
+                        newKeyMap.set(key, { item, index: i });
+                    });
+
+                    // Remove deleted nodes
+                    for (const [key, entry] of oldEntries) {
+                        if (!newKeyMap.has(key)) {
+                            if (entry.node && entry.node.parentNode) {
+                                entry.node.parentNode.removeChild(entry.node);
+                            }
+                        }
+                    }
+
+                    // Reconcile and reposition nodes in order
+                    let refNode = endMarker;
+                    for (let i = newItems.length - 1; i >= 0; i--) {
+                        const item = newItems[i];
+                        const key = childNode.getKey(item, i);
+                        let node;
+
+                        if (oldEntries.has(key)) {
+                            node = oldEntries.get(key).node;
+                        } else {
+                            const rendered = childNode.renderItem(item, i);
+                            if (rendered instanceof (typeof Element !== 'undefined' ? Element : Object) || rendered?.nodeType) {
+                                node = rendered;
+                            } else if (typeof rendered === 'string' || typeof rendered === 'number') {
+                                node = doc.createTextNode(String(rendered));
+                            } else {
+                                node = doc.createTextNode('');
+                            }
+                        }
+
+                        if (node) {
+                            if (node.nextSibling !== refNode || node.parentNode !== el) {
+                                if (el.insertBefore) {
+                                    el.insertBefore(node, refNode);
+                                }
+                            }
+                            refNode = node;
+                            newEntries.unshift({ key, item, index: i, node });
+                        }
+                    }
+
+                    oldEntries = new Map(newEntries.map(e => [e.key, e]));
+                    if (startTime) logDomUpdate(tag, performance.now() - startTime);
+                });
+            } else if (el.appendChild) {
+                el.appendChild(childNode);
+            }
             return;
         }
 
@@ -1501,10 +2952,11 @@ function h(tag, ...args) {
                     });
                     currentNodes = [];
 
-                    if (res === null || res === undefined) return;
+                    if (res === null || res === undefined || typeof res === 'boolean') return;
 
                     if (Array.isArray(res)) {
                         res.forEach(item => {
+                            if (item === null || item === undefined || typeof item === 'boolean') return;
                             let nodeToInsert = item;
                             if (typeof item === 'string' || typeof item === 'number') {
                                 nodeToInsert = doc.createTextNode(String(item));
@@ -1514,7 +2966,7 @@ function h(tag, ...args) {
                                 currentNodes.push(nodeToInsert);
                             }
                         });
-                    } else if (res instanceof (typeof Element !== 'undefined' ? Element : Object) || res.nodeType) {
+                    } else if (res instanceof (typeof Element !== 'undefined' ? Element : Object) || res?.nodeType) {
                         if (anchor.parentNode) {
                             anchor.parentNode.insertBefore(res, anchor);
                             currentNodes.push(res);
@@ -1533,7 +2985,8 @@ function h(tag, ...args) {
             if (doc) {
                 const textNode = doc.createTextNode('');
                 effect(() => {
-                    textNode.textContent = String(childNode.value);
+                    const val = childNode.value;
+                    textNode.textContent = (val === null || val === undefined || typeof val === 'boolean') ? '' : String(val);
                 });
                 if (el.appendChild) el.appendChild(textNode);
             }
@@ -1565,7 +3018,12 @@ const h5 = (...args) => h('h5', ...args);
 const h6 = (...args) => h('h6', ...args);
 const button = (...args) => h('button', ...args);
 const input = (props = {}) => h('input', props);
-const img = (src, props = {}) => h('img', { src, ...props });
+const img = (src, props = {}) => {
+    if (typeof src === 'object' && src !== null) {
+        return h('img', src);
+    }
+    return h('img', { src, ...props });
+};
 const a = (...args) => {
     if (typeof args[0] === 'string' && (args[0].startsWith('http') || args[0].startsWith('/') || args[0].startsWith('#'))) {
         const href = args[0];
@@ -1872,26 +3330,29 @@ function canvas(props = {}) {
 
 
 /**
- * @eldrex/cairn - Component Factory Engine
- * Advanced component declaration utility supporting function setup and object configs.
+ * @eldrex/cairnjs - Component Factory Engine
+ * Advanced component declaration utility supporting function setup, full lifecycle,
+ * state/computed/methods declaration, compound component attachments, and HOCs.
  */
+
 
 
 
 /**
  * Creates a component factory function.
- * Supports both function setup: `component((props) => ...)`
- * and object config: `component({ props, emits, slots, setup })`
+ * Supports:
+ * - Function setup: `component((props) => ...)`
+ * - Full object config: `component({ name, props, state, computed, methods, lifecycle, render, setup })`
  * 
  * @param {Function|object} config Component render function or declaration object
  * @returns {Function} Component factory accepting props
  */
 function component(config) {
     if (typeof config === 'function') {
-        const ComponentFactory = (props = {}) => {
+        const ComponentFactory = (props = {}, ...children) => {
             try {
-                const node = config(props);
-                if (node) {
+                const node = config(props, ...children);
+                if (node && typeof node === 'object') {
                     node._cairnComponent = true;
                 }
                 return node;
@@ -1901,64 +3362,197 @@ function component(config) {
             }
         };
         ComponentFactory._isCairnComponent = true;
+        ComponentFactory.attach = (subComponents) => {
+            Object.assign(ComponentFactory, subComponents);
+            return ComponentFactory;
+        };
         return ComponentFactory;
     }
 
     if (typeof config === 'object' && config !== null) {
-        const { props: declaredProps = {}, setup, studio } = config;
+        const {
+            name = 'AnonymousComponent',
+            props: declaredProps = {},
+            state: declaredState = {},
+            computed: declaredComputed = {},
+            methods: declaredMethods = {},
+            lifecycle = {},
+            render,
+            setup,
+            studio
+        } = config;
 
         const ComponentFactory = (passedProps = {}, ...children) => {
             const propsObj = {};
 
             // Normalize passed props vs declared props
-            Object.entries(declaredProps).forEach(([pKey, pDef]) => {
-                const rawVal = passedProps[pKey] !== undefined ? passedProps[pKey] : pDef.default;
-                propsObj[pKey] = state(rawVal);
-            });
-
-            // Extra props
-            Object.entries(passedProps).forEach(([pKey, pVal]) => {
-                if (!propsObj[pKey]) {
-                    propsObj[pKey] = state(pVal);
-                }
-            });
-
-            const emits = {};
-            const emit = (eventName, data) => {
-                const handlerKey = `on${eventName.charAt(0).toUpperCase()}${eventName.slice(1)}`;
-                if (typeof passedProps[handlerKey] === 'function') {
-                    passedProps[handlerKey](data);
-                }
-            };
-
-            const slots = {
-                default: () => children
-            };
-
-            if (passedProps.slots) {
-                Object.assign(slots, passedProps.slots);
+            if (Array.isArray(declaredProps)) {
+                declaredProps.forEach(pKey => {
+                    propsObj[pKey] = passedProps[pKey];
+                });
+            } else {
+                Object.entries(declaredProps).forEach(([pKey, pDef]) => {
+                    const rawVal = passedProps[pKey] !== undefined
+                        ? passedProps[pKey]
+                        : (pDef && typeof pDef === 'object' && pDef.default !== undefined ? pDef.default : undefined);
+                    propsObj[pKey] = rawVal;
+                });
             }
 
+            // Include any additional passed props
+            Object.entries(passedProps).forEach(([pKey, pVal]) => {
+                if (propsObj[pKey] === undefined) {
+                    propsObj[pKey] = pVal;
+                }
+            });
+
+            // Initialize component local reactive state
+            const localState = {};
+            if (typeof declaredState === 'function') {
+                Object.assign(localState, declaredState(propsObj));
+            } else if (typeof declaredState === 'object' && declaredState !== null) {
+                Object.entries(declaredState).forEach(([sKey, sVal]) => {
+                    localState[sKey] = sVal;
+                });
+            }
+            const reactiveState = createState(localState);
+
+            // Initialize computed properties
+            const computedObj = {};
+            Object.entries(declaredComputed).forEach(([cKey, cFn]) => {
+                if (typeof cFn === 'function') {
+                    computedObj[cKey] = createComputed(() => cFn(reactiveState, propsObj, computedObj)).value;
+                }
+            });
+
+            // Create context for methods
+            const ctx = {
+                props: propsObj,
+                state: reactiveState,
+                computed: computedObj,
+                methods: {}
+            };
+
+            Object.entries(declaredMethods).forEach(([mKey, mFn]) => {
+                if (typeof mFn === 'function') {
+                    ctx.methods[mKey] = (...args) => mFn.apply(ctx, args);
+                }
+            });
+
+            // Handle legacy setup if provided
             if (typeof setup === 'function') {
-                const res = setup({ ...propsObj, emit, slots });
-                const node = res.el || res;
-                if (node) node._cairnComponent = true;
+                const emits = {};
+                const emit = (eventName, data) => {
+                    const handlerKey = `on${eventName.charAt(0).toUpperCase()}${eventName.slice(1)}`;
+                    if (typeof passedProps[handlerKey] === 'function') {
+                        passedProps[handlerKey](data);
+                    }
+                };
+
+                const slots = {
+                    default: () => children
+                };
+                if (passedProps.slots) {
+                    Object.assign(slots, passedProps.slots);
+                }
+
+                const res = setup({ ...propsObj, emit, slots, state: reactiveState, computed: computedObj, methods: ctx.methods });
+                const node = res && res.el ? res.el : res;
+                if (node && typeof node === 'object') node._cairnComponent = true;
                 return node;
             }
+
+            // Execute component render
+            if (typeof render === 'function') {
+                try {
+                    const renderedNode = render.call(ctx, {
+                        props: propsObj,
+                        state: reactiveState,
+                        computed: computedObj,
+                        methods: ctx.methods,
+                        children
+                    });
+
+                    // Wire lifecycle hooks if present
+                    if (renderedNode && typeof renderedNode === 'object') {
+                        renderedNode._cairnComponent = true;
+                        if (typeof lifecycle.onMount === 'function') {
+                            addOnMount(renderedNode, () => lifecycle.onMount.call(ctx));
+                        }
+                        if (typeof lifecycle.onUpdate === 'function') {
+                            addOnUpdate(renderedNode, (prev) => lifecycle.onUpdate.call(ctx, prev));
+                        }
+                        if (typeof lifecycle.onUnmount === 'function') {
+                            addOnUnmount(renderedNode, () => lifecycle.onUnmount.call(ctx));
+                        }
+                    }
+
+                    return renderedNode;
+                } catch (err) {
+                    if (typeof lifecycle.onError === 'function') {
+                        return lifecycle.onError.call(ctx, err);
+                    }
+                    throw err;
+                }
+            }
+
+            throw new Error(`[Cairn Component]: Component '${name}' must define a render or setup method.`);
         };
 
         ComponentFactory._isCairnComponent = true;
+        ComponentFactory._componentName = name;
         ComponentFactory._studioConfig = studio;
+        ComponentFactory.attach = (subComponents) => {
+            Object.assign(ComponentFactory, subComponents);
+            return ComponentFactory;
+        };
+
         return ComponentFactory;
     }
 
     throw new TypeError('[Cairn Component Error]: Invalid component configuration.');
 }
 
+/**
+ * Higher-Order Component: withAuth
+ * Conditionally renders component based on auth state or redirects/shows fallback.
+ */
+function withAuth(ComponentToWrap, options = {}) {
+    const { fallback = null, isAuth = () => true } = typeof options === 'function' ? { isAuth: options } : options;
+
+    return component((props = {}, ...children) => {
+        const authorized = typeof isAuth === 'function' ? isAuth(props) : Boolean(isAuth);
+        if (!authorized) {
+            return typeof fallback === 'function' ? fallback(props) : fallback;
+        }
+        return ComponentToWrap(props, ...children);
+    });
+}
+
+/**
+ * Higher-Order Component: withLoading
+ * Displays loading spinner or fallback when props.loading or condition is true.
+ */
+function withLoading(ComponentToWrap, fallbackView = null) {
+    return component((props = {}, ...children) => {
+        if (props.loading) {
+            if (typeof fallbackView === 'function') return fallbackView(props);
+            if (fallbackView) return fallbackView;
+            if (typeof document !== 'undefined') {
+                const spinner = document.createElement('div');
+                spinner.className = 'cairn-spinner';
+                spinner.style.cssText = 'display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(0,0,0,0.1); border-top-color: #6366f1; border-radius: 50%; animation: cairn-spin 0.8s linear infinite;';
+                return spinner;
+            }
+        }
+        return ComponentToWrap(props, ...children);
+    });
+}
+
 
 
 /**
- * @eldrex/cairn - Mount System
+ * @eldrex/cairnjs - Mount System
  * Framework-agnostic mounting and lifecycle management.
  */
 
@@ -2038,375 +3632,7 @@ function mount(target, component) {
 
 
 /**
- * @eldrex/cairn - Styling & Design System Engine
- * Design tokens, CSS Custom Properties Theme Engine, keyframe injection,
- * scoped CSS styling, glassmorphism, gradients, and reactive media/darkMode listeners.
- */
-
-
-
-// Default design tokens
-const defaultTokens = {
-    colors: {
-        primary: {
-            50: '#eff6ff',
-            100: '#dbeafe',
-            500: '#3b82f6',
-            600: '#2563eb',
-            950: '#172554'
-        },
-        gray: {
-            50: '#f8fafc',
-            100: '#f1f5f9',
-            800: '#1e293b',
-            900: '#0f172a'
-        },
-        success: { 500: '#22c55e' },
-        danger: { 500: '#ef4444' },
-        warning: { 500: '#f59e0b' },
-        info: { 500: '#38bdf8' }
-    },
-    spacing: {
-        0: '0px',
-        1: '4px',
-        2: '8px',
-        3: '12px',
-        4: '16px',
-        5: '24px',
-        6: '32px',
-        8: '48px',
-        10: '64px',
-        12: '96px',
-        xs: '4px',
-        sm: '8px',
-        md: '16px',
-        lg: '24px',
-        xl: '32px'
-    },
-    radius: {
-        none: '0',
-        sm: '4px',
-        md: '8px',
-        lg: '16px',
-        xl: '24px',
-        full: '9999px'
-    },
-    typography: {
-        fontFamily: {
-            display: "'Cairn', system-ui, sans-serif",
-            brand: "'Cairn', system-ui, sans-serif",
-            sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-        },
-        fontSize: {
-            xs: '12px',
-            sm: '14px',
-            base: '16px',
-            lg: '18px',
-            xl: '20px',
-            '2xl': '24px',
-            '4xl': '36px',
-            '6xl': '60px'
-        }
-    },
-    shadows: {
-        sm: '0 1px 2px rgba(0,0,0,0.05)',
-        md: '0 4px 6px rgba(0,0,0,0.1)',
-        lg: '0 10px 15px rgba(0,0,0,0.1)',
-        xl: '0 20px 25px rgba(0,0,0,0.15)',
-        glow: '0 0 20px rgba(56, 189, 248, 0.35)'
-    },
-    glass: {
-        sm: {
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-        },
-        md: {
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)'
-        },
-        dark: {
-            background: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
-        }
-    },
-    zIndex: {
-        hide: -1,
-        base: 0,
-        docked: 10,
-        dropdown: 1000,
-        sticky: 1100,
-        banner: 1200,
-        overlay: 1300,
-        modal: 1400,
-        popover: 1500,
-        toast: 1600,
-        tooltip: 1700
-    },
-    gradients: {
-        sky: 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
-        sunset: 'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)',
-        emerald: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        aurora: 'linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #38bdf8 100%)',
-        cyberpunk: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)'
-    }
-};
-
-function createTokens(custom = {}) {
-    return {
-        ...defaultTokens,
-        ...custom,
-        colors: { ...defaultTokens.colors, ...(custom.colors || {}) },
-        spacing: { ...defaultTokens.spacing, ...(custom.spacing || {}) },
-        radius: { ...defaultTokens.radius, ...(custom.radius || {}) },
-        typography: { ...defaultTokens.typography, ...(custom.typography || {}) },
-        shadows: { ...defaultTokens.shadows, ...(custom.shadows || {}) },
-        glass: { ...defaultTokens.glass, ...(custom.glass || {}) },
-        zIndex: { ...defaultTokens.zIndex, ...(custom.zIndex || {}) },
-        gradients: { ...defaultTokens.gradients, ...(custom.gradients || {}) }
-    };
-}
-
-const tokens = createTokens();
-
-// Theme Registry & Active Theme Signal
-const _themeRegistry = new Map();
-const activeTheme = state('default');
-
-/**
- * Creates and registers a theme with CSS Custom Properties injection.
- * @param {string} name Theme name (e.g. 'dark', 'cyberpunk')
- * @param {object} customTokens Custom token overrides
- */
-function createTheme(name, customTokens = {}) {
-    const mergedTokens = createTokens(customTokens);
-    _themeRegistry.set(name, mergedTokens);
-
-    if (typeof document !== 'undefined') {
-        const styleId = `cairn-theme-${name}`;
-        let styleEl = document.getElementById(styleId);
-        if (!styleEl) {
-            styleEl = document.createElement('style');
-            styleEl.id = styleId;
-            document.head.appendChild(styleEl);
-        }
-
-        const selector = name === 'default' ? ':root' : `[data-theme="${name}"]`;
-        let cssVars = '';
-
-        // Flatten colors
-        Object.entries(mergedTokens.colors).forEach(([cKey, cVal]) => {
-            if (typeof cVal === 'object') {
-                Object.entries(cVal).forEach(([k, v]) => {
-                    cssVars += `--cairn-color-${cKey}-${k}: ${v}; `;
-                });
-            } else {
-                cssVars += `--cairn-color-${cKey}: ${cVal}; `;
-            }
-        });
-
-        // Flatten radius & shadows
-        Object.entries(mergedTokens.radius).forEach(([rKey, rVal]) => {
-            cssVars += `--cairn-radius-${rKey}: ${rVal}; `;
-        });
-
-        styleEl.textContent = `${selector} { ${cssVars}}`;
-    }
-
-    return mergedTokens;
-}
-
-// Register default theme
-createTheme('default', defaultTokens);
-
-/**
- * Sets the active theme on document root.
- * @param {string} name Theme name
- */
-function setTheme(name) {
-    if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-theme', name);
-    }
-    activeTheme.value = name;
-    return name;
-}
-
-/**
- * Calculates a fluid clamp() CSS value for typography and spacing.
- * @param {number} minPx Minimum value in pixels
- * @param {number} maxPx Maximum value in pixels
- * @param {number} minVw Minimum viewport width in pixels (default: 375)
- * @param {number} maxVw Maximum viewport width in pixels (default: 1200)
- * @returns {string} CSS clamp() string
- */
-function fluid(minPx, maxPx, minVw = 375, maxVw = 1200) {
-    const slope = (maxPx - minPx) / (maxVw - minVw);
-    const yAxisIntersection = -minVw * slope + minPx;
-    return `clamp(${minPx}px, ${yAxisIntersection.toFixed(2)}px + ${(slope * 100).toFixed(2)}vw, ${maxPx}px)`;
-}
-
-let keyframeIdCounter = 0;
-
-/**
- * Dynamically injects @keyframes animation and returns generated animation name.
- */
-function keyframes(rulesObj) {
-    keyframeIdCounter++;
-    const animName = `cairn-anim-${keyframeIdCounter}`;
-
-    if (typeof document !== 'undefined') {
-        let cssRules = '';
-        Object.entries(rulesObj).forEach(([step, styles]) => {
-            let styleStr = '';
-            Object.entries(styles).forEach(([prop, val]) => {
-                const kebabProp = prop.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-                styleStr += `${kebabProp}: ${val}; `;
-            });
-            cssRules += `${step} { ${styleStr}} `;
-        });
-
-        const styleEl = document.createElement('style');
-        styleEl.setAttribute('data-cairn-keyframe', animName);
-        styleEl.textContent = `@keyframes ${animName} { ${cssRules}}`;
-        document.head.appendChild(styleEl);
-    }
-
-    return animName;
-}
-
-let cssClassCounter = 0;
-
-/**
- * Programmatic scoped CSS style generator.
- * @param {object} rules CSS declarations including nested pseudo-selectors
- * @returns {string} Generated scoped class name
- */
-function css(rules) {
-    cssClassCounter++;
-    const className = `cairn-css-${cssClassCounter}`;
-
-    if (typeof document !== 'undefined') {
-        let mainStyles = '';
-        let nestedStyles = '';
-
-        Object.entries(rules).forEach(([key, val]) => {
-            if (typeof val === 'object') {
-                let subStr = '';
-                Object.entries(val).forEach(([p, v]) => {
-                    const kebab = p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-                    subStr += `${kebab}: ${v}; `;
-                });
-                if (key.startsWith('&') || key.startsWith(':')) {
-                    const selector = key.startsWith('&') ? key.replace('&', `.${className}`) : `.${className}${key}`;
-                    nestedStyles += `${selector} { ${subStr}} `;
-                } else if (key.startsWith('@')) {
-                    nestedStyles += `${key} { .${className} { ${subStr}} } `;
-                }
-            } else {
-                const kebab = key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-                mainStyles += `${kebab}: ${val}; `;
-            }
-        });
-
-        const styleEl = document.createElement('style');
-        styleEl.textContent = `.${className} { ${mainStyles}} ${nestedStyles}`;
-        document.head.appendChild(styleEl);
-    }
-
-    return className;
-}
-
-function media(query) {
-    if (typeof window === 'undefined' || !window.matchMedia) {
-        return state(false);
-    }
-
-    const mql = window.matchMedia(query);
-    const mediaSignal = state(mql.matches);
-
-    const onChange = (e) => {
-        mediaSignal.value = e.matches;
-    };
-
-    if (mql.addEventListener) {
-        mql.addEventListener('change', onChange);
-    } else if (mql.addListener) {
-        mql.addListener(onChange);
-    }
-
-    return mediaSignal;
-}
-
-const styleHelper = {
-    media(query, rulesObj) {
-        const isMatch = media(query);
-        return () => (isMatch.value ? rulesObj.mobile || rulesObj.match || rulesObj : rulesObj.desktop || {});
-    },
-    container(minWidth, rulesObj) {
-        const query = `(min-width: ${typeof minWidth === 'number' ? minWidth + 'px' : minWidth})`;
-        const isMatch = media(query);
-        return () => (isMatch.value ? rulesObj.large || rulesObj.match || rulesObj : rulesObj.small || {});
-    },
-    darkMode(configObj) {
-        const isDark = media('(prefers-color-scheme: dark)');
-        return () => (isDark.value ? configObj.dark : configObj.light);
-    }
-};
-
-/**
- * Declarative component for responsive or conditional rendering.
- * @param {object} props { when: boolean|Signal|string ('mobile'|'tablet'|'desktop'|mediaQuery), fallback: any }
- * @param {...any} children Child components or elements
- */
-const Show = (props = {}, ...children) => {
-    return () => {
-        let condition = props.when;
-        if (typeof condition === 'string') {
-            if (condition === 'mobile') condition = media('(max-width: 767px)').value;
-            else if (condition === 'tablet') condition = media('(min-width: 768px) and (max-width: 1023px)').value;
-            else if (condition === 'desktop') condition = media('(min-width: 1024px)').value;
-            else if (condition.startsWith('(')) condition = media(condition).value;
-        } else if (condition && condition._isCairnState) {
-            condition = condition.value;
-        } else if (typeof condition === 'function') {
-            condition = condition();
-        }
-        return condition ? (children.length === 1 ? children[0] : children) : (props.fallback || null);
-    };
-};
-
-/**
- * Declarative component to hide content on specific media query / condition.
- * @param {object} props { when: boolean|Signal|string ('mobile'|'tablet'|'desktop'|mediaQuery), fallback: any }
- * @param {...any} children Child components or elements
- */
-const Hide = (props = {}, ...children) => {
-    return () => {
-        let condition = props.when;
-        if (typeof condition === 'string') {
-            if (condition === 'mobile') condition = media('(max-width: 767px)').value;
-            else if (condition === 'tablet') condition = media('(min-width: 768px) and (max-width: 1023px)').value;
-            else if (condition === 'desktop') condition = media('(min-width: 1024px)').value;
-            else if (condition.startsWith('(')) condition = media(condition).value;
-        } else if (condition && condition._isCairnState) {
-            condition = condition.value;
-        } else if (typeof condition === 'function') {
-            condition = condition();
-        }
-        return !condition ? (children.length === 1 ? children[0] : children) : (props.fallback || null);
-    };
-};
-
-
-
-/**
- * @eldrex/cairn - WASM Core Engine Interop & Zero-Traffic Architecture
+ * @eldrex/cairnjs - WASM Core Engine Interop & Zero-Traffic Architecture
  * High-performance WASM acceleration layer with zero-cost fallback to JS.
  */
 
@@ -2559,6 +3785,30 @@ const perf = {
             virtualize: true,
             batch: true
         };
+    },
+
+    measure(fn) {
+        let domUpdates = 0;
+        const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        
+        let result;
+        try {
+            result = fn();
+        } catch (e) {
+            console.error('[Cairn Perf Measure Error]:', e);
+        }
+
+        const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const duration = Math.max(0.01, endTime - startTime);
+        const fps = Math.min(60, Math.max(1, fpsCounter));
+        
+        return {
+            result,
+            time: `${duration.toFixed(1)}ms`,
+            timeMs: Number(duration.toFixed(2)),
+            domUpdates: wasmEngine.flushDomUpdates ? wasmEngine.flushDomUpdates() : 0,
+            fps
+        };
     }
 };
 
@@ -2644,7 +3894,7 @@ const wasmEngine = {
 
 
 /**
- * @eldrex/cairn - Virtual List Component
+ * @eldrex/cairnjs - Virtual List Component
  * High-performance virtualized list rendering (100k+ items at 60fps) accelerated by WASM/JS engine.
  */
 
@@ -2719,7 +3969,7 @@ function VirtualList(props = {}) {
 
 
 /**
- * @eldrex/cairn - Built-in Physics Engine
+ * @eldrex/cairnjs - Built-in Physics Engine
  * High-performance Verlet & kinematic particle physics engine.
  */
 
@@ -2855,7 +4105,7 @@ const physics = {
 
 
 /**
- * @eldrex/cairn - Built-in Single Page App (SPA) Router
+ * @eldrex/cairnjs - Built-in Single Page App (SPA) Router
  * Zero-dependency, lightweight client-side router with dynamic route parameters (:id),
  * query string parsing, declarative Link component, and hash/history mode support.
  */
@@ -3042,9 +4292,10 @@ const Link = (props, ...children) => {
 
 
 /**
- * 🧱 @eldrex/cairn/ui - Production UI Primitives Suite (50+ Components)
+ * 🧱 @eldrex/cairnjs/ui - Production UI Primitives Suite (50+ Components)
  * Zero-dependency, framework-agnostic, accessible UI primitives for Cairn.
  */
+
 
 
 
@@ -4878,12 +6129,8 @@ const EmptyState = (props = {}) => Center({ minHeight: '150px' }, h3(props.title
 const Notification = (props = {}) => Alert(props);
 
 // --- ADVANCED COMPONENTS ---
-const VirtualList = (props = {}) => {
-    const data = props.data || [];
-    return div({ style: { maxHeight: '300px', overflowY: 'auto' } }, data.map(item => props.renderItem ? props.renderItem(item) : div(String(item))));
-};
 const DragDrop = (props = {}, ...children) => div({ style: { border: '2px dashed #475569', padding: '1rem', borderRadius: '0.5rem' } }, ...children);
-const Charts = {
+const UICharts = {
     Line: (props = {}) => div(`[Chart: ${props.type || 'Line'}]`, { style: { background: '#1e293b', padding: '2rem', borderRadius: '0.5rem', textAlign: 'center' } })
 };
 
@@ -4901,7 +6148,7 @@ const UI = {
     // Feedback & Overlay
     Modal, ConfirmDialog, Drawer, Toast, Alert, Progress, Skeleton, Spinner, EmptyState, Notification,
     // Advanced
-    VirtualList, DragDrop, Charts, CodeBlock,
+    VirtualList, DragDrop, Charts: UICharts, CodeBlock,
     // Aliases
     box: Box, container: Container, grid: Grid, stack: Stack, divider: Divider, spacer: Spacer, center: Center, cluster: Cluster, split: Split, aspectRatio: AspectRatio,
     button: (...args) => button(...args),
@@ -4909,7 +6156,6 @@ const UI = {
     navbar: Navbar, sidebar: Sidebar, menu: Menu, dropdown: Dropdown, breadcrumbs: Breadcrumbs, pagination: Pagination, tabs: Tabs, segmentedControl: SegmentedControl, stepper: Stepper, commandPalette: CommandPalette, contextMenu: ContextMenu,
     table: Table, dataTable: DataTable, dataGrid: DataGrid, list: List, card: Card, badge: Badge, avatar: Avatar, tag: Tag, tooltip: Tooltip, popover: Popover, accordion: Accordion, timeline: Timeline, tree: Tree, statistic: Statistic,
     modal: Modal, confirmDialog: ConfirmDialog, drawer: Drawer, toast: Toast, alert: Alert, progress: Progress, skeleton: Skeleton, spinner: Spinner, emptyState: EmptyState, notification: Notification,
-    virtualList: VirtualList, dragDrop: DragDrop, charts: Charts, codeBlock: CodeBlock
 };
 
 
@@ -5223,7 +6469,7 @@ const pings = ref(142);
 
         if (format === 'svelte') {
             return `<script lang="ts">
-  export let title = '${title}';
+  let title = '${title}';
   let pings = 142;
 </script>
 
@@ -5320,11 +6566,24 @@ const ${componentName} = component((props = {}) => {
     }
 }
 
-const studio = new StudioEngine();
+const studioEngine = new StudioEngine();
+
+function studio(options = {}) {
+    return studioEngine.enable(options);
+}
+
+Object.assign(studio, studioEngine);
+// Bind instance methods
+Object.getOwnPropertyNames(StudioEngine.prototype).forEach(method => {
+    if (method !== 'constructor' && typeof studioEngine[method] === 'function') {
+        studio[method] = studioEngine[method].bind(studioEngine);
+    }
+});
+
 
 
 /**
- * @eldrex/cairn/ai - Agentic AI Development & Predictive Intelligence System
+ * @eldrex/cairnjs/ai - Agentic AI Development & Predictive Intelligence System
  * AI component generation, intelligent code linter & auto-fixer, declarative spec-to-UI builder,
  * system prompt generation, automated test synthesis, and agent context introspection.
  */
@@ -5378,7 +6637,7 @@ function Counter() {
 
         if (format === 'json') {
             return {
-                framework: '@eldrex/cairn',
+                framework: '@eldrex/cairnjs',
                 rules,
                 systemInstruction: promptText
             };
@@ -5554,7 +6813,7 @@ function GeneratedCard({ title = '${prompt || 'AI Component'}' } = {}) {
             metadata: {
                 prompt,
                 synthesizedAt: new Date().toISOString(),
-                framework: '@eldrex/cairn'
+                framework: '@eldrex/cairnjs'
             }
         };
     },
@@ -5674,7 +6933,7 @@ console.log('✅ ${name} test suite passed');`;
         });
 
         return {
-            framework: '@eldrex/cairn',
+            framework: '@eldrex/cairnjs',
             version: '1.0.0',
             syntaxParadigm: 'Zero-JSX procedural builder functions with fine-grained signals',
             commonPatterns: [
@@ -5703,14 +6962,14 @@ console.log('✅ ${name} test suite passed');`;
 
 
 /**
- * @eldrex/cairn/figma - Design-to-Code Pipeline
+ * @eldrex/cairnjs/figma - Design-to-Code Pipeline
  * Figma plugin & design-to-code parser for Cairn.
  */
 
 
 
 
-export async function figmaToCairn(options = {}) {
+async function figmaToCairn(options = {}) {
     return {
         Button: component(({ label = 'Button', variant = 'primary' }) => button(label, {
             style: {
@@ -5729,7 +6988,7 @@ export async function figmaToCairn(options = {}) {
 
 
 /**
- * @eldrex/cairn - Shape Utilities: Rect
+ * @eldrex/cairnjs - Shape Utilities: Rect
  * Mathematical SVG rectangle & rounded rect path generator.
  */
 
@@ -5759,7 +7018,7 @@ function rect(props = {}) {
 }
 
 /**
- * @eldrex/cairn - Shape Utilities: Circle
+ * @eldrex/cairnjs - Shape Utilities: Circle
  * Mathematical SVG circle shape generator.
  */
 
@@ -5789,7 +7048,7 @@ function circle(props = {}) {
 }
 
 /**
- * @eldrex/cairn - Shape Utilities: Bezier Path Generator
+ * @eldrex/cairnjs - Shape Utilities: Bezier Path Generator
  * Generates custom SVG curves and Bezier path shapes.
  */
 
@@ -5833,7 +7092,285 @@ function bezier(props = {}) {
 }
 
 /**
- * @eldrex/cairn - Global Reactive Store
+ * @eldrex/cairnjs - SVG Shape Library (Expanded)
+ * Reactive SVG primitives: rect, circle, bezier, polygon, ellipse,
+ * line, path, text, group, arrow, star, and triangle.
+ */
+
+
+
+
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+const svgEl = (tag, attrs = {}) => {
+    if (typeof document === 'undefined') {
+        const mockAttrs = {};
+        const mockChildren = [];
+        Object.entries(attrs).forEach(([k, v]) => {
+            if (v !== undefined && v !== null) mockAttrs[k] = String(v);
+        });
+        return {
+            tagName: tag.toUpperCase(),
+            nodeType: 1,
+            attributes: mockAttrs,
+            childNodes: mockChildren,
+            setAttribute(k, v) { mockAttrs[k] = String(v); },
+            getAttribute(k) { return mockAttrs[k]; },
+            hasAttribute(k) { return Boolean(mockAttrs[k]); },
+            appendChild(c) { mockChildren.push(c); },
+            toString() {
+                const attrStr = Object.entries(mockAttrs).map(([k, v]) => ` ${k}="${v}"`).join('');
+                return `<${tag}${attrStr}>${mockChildren.map(c => (c && c.toString ? c.toString() : String(c))).join('')}</${tag}>`;
+            }
+        };
+    }
+    const el = document.createElementNS(SVG_NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) el.setAttribute(k, String(v));
+    });
+    return el;
+};
+
+/**
+ * Creates an SVG <svg> container element.
+ * @param {object} opts { width, height, viewBox, style }
+ * @param {...Element} children SVG child elements
+ */
+const svg = (opts = {}, ...children) => {
+    const el = svgEl('svg', {
+        xmlns: SVG_NS,
+        width: opts.width || 100,
+        height: opts.height || 100,
+        viewBox: opts.viewBox || `0 0 ${opts.width || 100} ${opts.height || 100}`,
+        fill: 'none',
+        ...opts
+    });
+    children.flat(Infinity).forEach(c => c && el.appendChild(c));
+    return el;
+};
+
+/**
+ * Creates an SVG <polygon> from an array of [x, y] coordinate pairs.
+ * @param {object} opts { points: [[x,y],...], fill, stroke, strokeWidth }
+ */
+const polygon = (opts = {}) => {
+    const pts = (opts.points || []).map(([x, y]) => `${x},${y}`).join(' ');
+    return svgEl('polygon', {
+        points: pts,
+        fill: opts.fill || 'currentColor',
+        stroke: opts.stroke,
+        'stroke-width': opts.strokeWidth
+    });
+};
+
+/**
+ * Creates an SVG <ellipse>.
+ * @param {object} opts { cx, cy, rx, ry, fill, stroke, strokeWidth }
+ */
+const ellipse = (opts = {}) => svgEl('ellipse', {
+    cx: opts.cx || 50,
+    cy: opts.cy || 50,
+    rx: opts.rx || 30,
+    ry: opts.ry || 20,
+    fill: opts.fill || 'currentColor',
+    stroke: opts.stroke,
+    'stroke-width': opts.strokeWidth
+});
+
+/**
+ * Creates an SVG <line>.
+ * @param {object} opts { x1, y1, x2, y2, stroke, strokeWidth, strokeLinecap }
+ */
+const line = (opts = {}) => svgEl('line', {
+    x1: opts.x1 || 0,
+    y1: opts.y1 || 0,
+    x2: opts.x2 || 100,
+    y2: opts.y2 || 100,
+    stroke: opts.stroke || 'currentColor',
+    'stroke-width': opts.strokeWidth || 2,
+    'stroke-linecap': opts.strokeLinecap || 'round'
+});
+
+/**
+ * Creates an SVG <path> from an SVG path data string.
+ * @param {object} opts { d, fill, stroke, strokeWidth, strokeLinejoin }
+ */
+const path = (opts = {}) => svgEl('path', {
+    d: opts.d || '',
+    fill: opts.fill || 'none',
+    stroke: opts.stroke || 'currentColor',
+    'stroke-width': opts.strokeWidth || 2,
+    'stroke-linejoin': opts.strokeLinejoin || 'round',
+    'stroke-linecap': opts.strokeLinecap || 'round'
+});
+
+/**
+ * Creates an SVG <text> element.
+ * @param {string} content Text content
+ * @param {object} opts { x, y, fill, fontSize, fontFamily, textAnchor, fontWeight }
+ */
+const svgText = (content = '', opts = {}) => {
+    const el = svgEl('text', {
+        x: opts.x || 0,
+        y: opts.y || 0,
+        fill: opts.fill || 'currentColor',
+        'font-size': opts.fontSize || 16,
+        'font-family': opts.fontFamily || 'system-ui, sans-serif',
+        'text-anchor': opts.textAnchor || 'start',
+        'font-weight': opts.fontWeight || 'normal',
+        'dominant-baseline': opts.baseline || 'auto'
+    });
+    el.textContent = content;
+    return el;
+};
+
+/**
+ * Creates an SVG <g> group element to contain and transform multiple shapes.
+ * @param {object} opts { transform, opacity }
+ * @param {...Element} children
+ */
+const group = (opts = {}, ...children) => {
+    const el = svgEl('g', {
+        transform: opts.transform,
+        opacity: opts.opacity
+    });
+    children.flat(Infinity).forEach(c => c && el.appendChild(c));
+    return el;
+};
+
+/**
+ * Creates an SVG defs element for reusable definitions (gradients, filters, etc).
+ * @param {...Element} children
+ */
+const defs = (...children) => {
+    const el = svgEl('defs');
+    children.flat(Infinity).forEach(c => c && el.appendChild(c));
+    return el;
+};
+
+/**
+ * Creates a linearGradient SVG definition.
+ * @param {object} opts { id, x1, y1, x2, y2, stops: [{offset, color}] }
+ */
+const linearGradient = (opts = {}) => {
+    const el = svgEl('linearGradient', {
+        id: opts.id || `gradient-${Math.random().toString(36).slice(2)}`,
+        x1: opts.x1 || '0%',
+        y1: opts.y1 || '0%',
+        x2: opts.x2 || '100%',
+        y2: opts.y2 || '0%'
+    });
+    (opts.stops || []).forEach(({ offset, color, opacity }) => {
+        const stop = svgEl('stop', {
+            offset,
+            'stop-color': color,
+            'stop-opacity': opacity
+        });
+        el.appendChild(stop);
+    });
+    return el;
+};
+
+/**
+ * Creates an SVG directional arrow indicator.
+ * @param {object} opts { from: [x,y], to: [x,y], stroke, strokeWidth, arrowSize }
+ */
+const arrow = (opts = {}) => {
+    const [x1, y1] = opts.from || [0, 0];
+    const [x2, y2] = opts.to || [100, 0];
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const size = opts.arrowSize || 10;
+    const stroke = opts.stroke || 'currentColor';
+    const strokeWidth = opts.strokeWidth || 2;
+
+    const headX1 = x2 - size * Math.cos(angle - Math.PI / 6);
+    const headY1 = y2 - size * Math.sin(angle - Math.PI / 6);
+    const headX2 = x2 - size * Math.cos(angle + Math.PI / 6);
+    const headY2 = y2 - size * Math.sin(angle + Math.PI / 6);
+
+    return group({},
+        line({ x1, y1, x2, y2, stroke, strokeWidth }),
+        path({ d: `M ${headX1} ${headY1} L ${x2} ${y2} L ${headX2} ${headY2}`, stroke, strokeWidth, fill: 'none' })
+    );
+};
+
+/**
+ * Creates an SVG 5-pointed star.
+ * @param {object} opts { cx, cy, spikes, outerRadius, innerRadius, fill, stroke }
+ */
+const star = (opts = {}) => {
+    const cx = opts.cx || 50;
+    const cy = opts.cy || 50;
+    const spikes = opts.spikes || 5;
+    const outerRadius = opts.outerRadius || 40;
+    const innerRadius = opts.innerRadius || 20;
+
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
+    const step = Math.PI / spikes;
+    const points = [];
+
+    for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        points.push([x, y]);
+        rot += step;
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        points.push([x, y]);
+        rot += step;
+    }
+
+    return polygon({ points, fill: opts.fill, stroke: opts.stroke, strokeWidth: opts.strokeWidth });
+};
+
+/**
+ * Creates an equilateral SVG triangle centered at (cx, cy).
+ * @param {object} opts { cx, cy, size, fill, stroke }
+ */
+const triangle = (opts = {}) => {
+    const cx = opts.cx || 50;
+    const cy = opts.cy || 50;
+    const s = opts.size || 40;
+    const h = s * Math.sqrt(3) / 2;
+
+    const points = [
+        [cx, cy - h / 2],
+        [cx - s / 2, cy + h / 2],
+        [cx + s / 2, cy + h / 2]
+    ];
+
+    return polygon({ points, fill: opts.fill, stroke: opts.stroke, strokeWidth: opts.strokeWidth });
+};
+
+const shapes = {
+    // Core (existing)
+    rect,
+    circle,
+    bezier,
+    // New SVG primitives
+    svg,
+    polygon,
+    ellipse,
+    line,
+    path,
+    text: svgText,
+    group,
+    defs,
+    linearGradient,
+    // Compound shapes
+    arrow,
+    star,
+    triangle
+};
+
+
+
+/**
+ * @eldrex/cairnjs - Global Reactive Store
  * Pinia-style createStore() with reactive state, computed getters, and actions.
  * Zero dependencies — built entirely on Cairn's fine-grained reactivity primitives.
  */
@@ -5947,7 +7484,7 @@ function listStores() {
 
 
 /**
- * @eldrex/cairn - Reactive Context / Dependency Injection
+ * @eldrex/cairnjs - Reactive Context / Dependency Injection
  * React Context-style provide/inject with scoped subtree providers for sharing values across component trees.
  * Zero external dependencies.
  */
@@ -6088,7 +7625,7 @@ function resetContexts() {
 
 
 /**
- * @eldrex/cairn - Lifecycle Hooks
+ * @eldrex/cairnjs - Lifecycle Hooks
  * onMount, onUnmount, onUpdate — component lifecycle hooks that fire
  * when DOM elements are inserted, removed, or reactively updated.
  */
@@ -6274,34 +7811,26 @@ function withLifecycle(setupFn) {
 
 
 /**
- * @eldrex/cairn - Batched Updates
+ * @eldrex/cairnjs - Batched Updates & Microtask Auto-Batching
  * Collects multiple reactive state writes and flushes them in a single
- * synchronous pass, preventing intermediate re-renders.
+ * pass, preventing intermediate re-renders.
  */
 
 let _isBatching = false;
+let _autoBatching = false;
+let _microtaskQueued = false;
 const _pendingEffects = new Set();
 
 /**
  * Batches multiple reactive state mutations, flushing all queued
  * effects in a single pass after the callback completes.
  *
- * Without batch(), each `.value =` write triggers a separate update cycle.
- * With batch(), all writes flush together — one render pass, zero intermediate states.
- *
- * @param {Function} fn Synchronous function containing state mutations
- *
- * @example
- * batch(() => {
- *   user.name.value = 'Eldrex';
- *   user.role.value = 'admin';
- *   user.active.value = true;
- * });
- * // Components update exactly once, not three times.
+ * @param {Function} fn Function containing state mutations
  */
 function batch(fn) {
+    if (typeof fn !== 'function') return;
+
     if (_isBatching) {
-        // Already inside a batch — just run
         fn();
         return;
     }
@@ -6311,13 +7840,31 @@ function batch(fn) {
         fn();
     } finally {
         _isBatching = false;
-        // Flush all queued effects
-        const toFlush = Array.from(_pendingEffects);
-        _pendingEffects.clear();
-        toFlush.forEach(effect => {
-            try { effect(); } catch (e) { console.error('[Cairn Batch Flush Error]:', e); }
-        });
+        flushBatch();
     }
+}
+
+/**
+ * Flush all currently pending batched effects.
+ */
+function flushBatch() {
+    const toFlush = Array.from(_pendingEffects);
+    _pendingEffects.clear();
+    toFlush.forEach(effect => {
+        try {
+            effect();
+        } catch (e) {
+            console.error('[Cairn Batch Flush Error]:', e);
+        }
+    });
+}
+
+/**
+ * Enable or disable automatic microtask batching across state writes.
+ * @param {boolean} enable
+ */
+function setAutoBatch(enable = true) {
+    _autoBatching = enable;
 }
 
 /**
@@ -6327,9 +7874,26 @@ function batch(fn) {
 function _queueEffect(effectFn) {
     if (_isBatching) {
         _pendingEffects.add(effectFn);
-        return true; // Signal is being batched
+        return true;
     }
-    return false; // Run immediately
+
+    if (_autoBatching) {
+        _pendingEffects.add(effectFn);
+        if (!_microtaskQueued) {
+            _microtaskQueued = true;
+            const schedule = typeof queueMicrotask === 'function'
+                ? queueMicrotask
+                : (cb) => Promise.resolve().then(cb);
+            
+            schedule(() => {
+                _microtaskQueued = false;
+                flushBatch();
+            });
+        }
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -6343,7 +7907,7 @@ function isBatching() {
 
 
 /**
- * @eldrex/cairn - Explicit Watcher
+ * @eldrex/cairnjs - Explicit Watcher
  * Vue-style watch() for explicitly observing state signal changes
  * with old/new value access, immediate execution, and deep comparison.
  */
@@ -6449,7 +8013,7 @@ function watchEffect(sources, handler, options = {}) {
 
 
 /**
- * @eldrex/cairn - DOM Portal
+ * @eldrex/cairnjs - DOM Portal
  * Renders Cairn component trees into any arbitrary DOM target,
  * outside the current component's DOM hierarchy.
  * Equivalent to React.createPortal().
@@ -6520,12 +8084,86 @@ function portal(target, ...children) {
 
 
 /**
- * @eldrex/cairn - Error Boundary
- * Catches render errors in component subtrees and renders a fallback UI.
- * Equivalent to React's ErrorBoundary / getDerivedStateFromError.
+ * @eldrex/cairnjs - Error Boundary & Global Error Handling
+ * Catches render errors in component subtrees, provides global crash handlers, and wraps safe components.
  */
 
 
+
+let globalErrorHandlers = {
+    onError: (err, context) => console.error('[Cairn Error]:', err, context),
+    onComponentError: null,
+    onRecover: null
+};
+
+/**
+ * Configure global error handling and recovery strategies.
+ * @param {object} handlers
+ */
+function error(handlers = {}) {
+    Object.assign(globalErrorHandlers, handlers);
+    return globalErrorHandlers;
+}
+
+/**
+ * Wraps a component factory in a safe boundary with fallback UI and retry support.
+ * 
+ * @param {Function} ComponentFn Base component factory
+ * @param {object} options Options { fallback, retry, log }
+ * @returns {Function} Safe wrapped component
+ */
+function safe(ComponentFn, options = {}) {
+    const {
+        fallback = (err) => {
+            if (typeof document !== 'undefined') {
+                const el = document.createElement('div');
+                el.className = 'cairn-safe-fallback';
+                el.textContent = `Something went wrong: ${err.message || 'Unknown error'}`;
+                el.style.cssText = 'padding: 12px 16px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; color: #ef4444; font-family: sans-serif; font-size: 14px;';
+                return el;
+            }
+            return null;
+        },
+        retry = true,
+        log = true
+    } = options;
+
+    return (props = {}, ...children) => {
+        let attempts = 0;
+        const renderAttempt = () => {
+            try {
+                return ComponentFn(props, ...children);
+            } catch (err) {
+                if (log) {
+                    console.error('[Cairn SafeComponent Error]:', err);
+                }
+                if (typeof globalErrorHandlers.onError === 'function') {
+                    try {
+                        globalErrorHandlers.onError(err, { component: ComponentFn.name || 'AnonymousComponent', props });
+                    } catch (_) {}
+                }
+                if (typeof globalErrorHandlers.onComponentError === 'function') {
+                    const degraded = globalErrorHandlers.onComponentError(err, ComponentFn);
+                    if (degraded) return degraded;
+                }
+                if (typeof fallback === 'function') {
+                    return fallback(err, {
+                        retry: () => {
+                            attempts++;
+                            if (typeof globalErrorHandlers.onRecover === 'function') {
+                                globalErrorHandlers.onRecover(ComponentFn);
+                            }
+                            return renderAttempt();
+                        }
+                    });
+                }
+                return fallback;
+            }
+        };
+
+        return renderAttempt();
+    };
+}
 
 /**
  * Wraps a component factory in an error boundary.
@@ -6536,13 +8174,6 @@ function portal(target, ...children) {
  * @param {Function|HTMLElement} config.fallback Fallback UI or factory receiving the error
  * @param {Function} config.onError Optional callback invoked with the caught error
  * @returns {HTMLElement} The rendered child or fallback
- *
- * @example
- * errorBoundary({
- *   children: () => BrokenComponent(),
- *   fallback: (err) => div('Something went wrong: ' + err.message),
- *   onError: (err) => console.error('Boundary caught:', err)
- * });
  */
 function errorBoundary(config = {}) {
     const {
@@ -6569,6 +8200,9 @@ function errorBoundary(config = {}) {
         if (typeof onError === 'function') {
             try { onError(err); } catch (_) {}
         }
+        if (typeof globalErrorHandlers.onError === 'function') {
+            try { globalErrorHandlers.onError(err, { component: 'errorBoundary' }); } catch (_) {}
+        }
 
         if (typeof fallback === 'function') {
             try {
@@ -6584,7 +8218,6 @@ function errorBoundary(config = {}) {
         } else if (fallback && fallback.nodeType) {
             node = fallback;
         } else {
-            // Default error UI
             if (typeof document !== 'undefined') {
                 node = document.createElement('div');
                 node.textContent = `Component Error: ${err.message}`;
@@ -6599,7 +8232,7 @@ function errorBoundary(config = {}) {
 
 
 /**
- * @eldrex/cairn - Suspense / Async Boundary
+ * @eldrex/cairnjs - Suspense / Async Boundary
  * Shows a loading fallback while async child resources are resolving.
  * Works natively with Cairn's resource() async signal primitive.
  */
@@ -6705,7 +8338,7 @@ function suspense(config = {}) {
 
 
 /**
- * @eldrex/cairn - Internationalization (i18n)
+ * @eldrex/cairnjs - Internationalization (i18n)
  * Reactive locale switching, nested key translations, pluralization, and interpolation.
  * Zero dependencies — works in browser and Node.js.
  */
@@ -6925,7 +8558,7 @@ function createI18n(config = {}) {
 
 
 /**
- * @eldrex/cairn - 2D Canvas Drawing API
+ * @eldrex/cairnjs - 2D Canvas Drawing API
  * Full reactive 2D Canvas drawing system.
  * Supports primitives, text, images, scene graph, and reactive redraw loops.
  * Zero dependencies — built on native Canvas 2D Context.
@@ -7329,7 +8962,7 @@ function createCanvas2D(target, options = {}) {
 
 
 /**
- * @eldrex/cairn - 3D WebGL Scene Graph
+ * @eldrex/cairnjs - 3D WebGL Scene Graph
  * Lightweight, dependency-free WebGL 3D engine built into Cairn.
  * Supports mesh, camera, lighting, materials, geometry, and an animation loop.
  * No Three.js required.
@@ -7715,7 +9348,7 @@ function createScene3D(target, options = {}) {
 
 
 /**
- * @eldrex/cairn - Native Canvas Chart Engine
+ * @eldrex/cairnjs - Native Canvas Chart Engine
  * Built-in bar, line, donut, and scatter charts rendered directly on HTML Canvas.
  * No external charting dependencies. Reactive redraw on signal change.
  */
@@ -7822,7 +9455,7 @@ function bar(target, data, opts = {}) {
 /**
  * Draws a line chart on an HTML Canvas element.
  */
-function line(target, data, opts = {}) {
+function lineChart(target, data, opts = {}) {
     const ctx = getCtx(target);
     if (!ctx) return;
     const canvas = ctx.canvas;
@@ -8031,7 +9664,7 @@ function scatter(target, data, opts = {}) {
  * @returns {Function} Unwatch stop function
  */
 function reactive(type, target, dataFn, opts = {}) {
-    const chartFns = { bar, line, donut, scatter };
+    const chartFns = { bar, line: lineChart, donut, scatter };
     const fn = chartFns[type] || bar;
     return effect(() => {
         const data = dataFn();
@@ -8039,11 +9672,11 @@ function reactive(type, target, dataFn, opts = {}) {
     });
 }
 
-const Charts = { bar, line, donut, scatter, reactive };
+const Charts = { bar, line: lineChart, donut, scatter, reactive };
 
 
 /**
- * @eldrex/cairn - Keyboard Shortcut Manager
+ * @eldrex/cairnjs - Keyboard Shortcut Manager
  * Global, composable keyboard shortcut registry with modifier key support.
  */
 
@@ -8142,7 +9775,7 @@ const keyboard = {
 
 
 /**
- * @eldrex/cairn - Utility Toolbox
+ * @eldrex/cairnjs - Utility Toolbox
  * Color, clipboard, localStorage (reactive), fullscreen, IntersectionObserver,
  * resize observer, debounce, throttle, and miscellaneous browser utilities.
  */
@@ -8628,100 +10261,23 @@ const utils = {
 
 
 /**
- * @eldrex/cairn - Server-Side Rendering (SSR)
- * renderToString() serializes Cairn component trees to HTML for Node.js.
- * hydrate() attaches event listeners to server-rendered HTML.
+ * @eldrex/cairnjs - Server-Side Rendering (SSR)
+ * renderToString() serializes Cairn component trees to HTML for Node.js, Deno, and Bun.
+ * hydrate() attaches event listeners to server-rendered HTML in browser environments.
  */
-
-/**
- * Recursively serializes a Cairn DOM node (or plain HTMLElement) to an HTML string.
- * Designed for Node.js environments using Cairn's h() / component() output.
- *
- * @param {HTMLElement|object} node Cairn DOM node or virtual element
- * @returns {string} HTML string
- *
- * @example
- * // Node.js SSR
- * 
- * 
- *
- * const html = renderToString(div({ class: 'hero' }, p('Hello SSR!')));
- * // '<div class="hero"><p>Hello SSR!</p></div>'
- */
-function renderToString(node) {
-    if (!node) return '';
-
-    // Native DOM Element (browser environment with JSDOM or similar)
-    if (typeof node.outerHTML === 'string') {
-        return node.outerHTML;
-    }
-
-    // Text node
-    if (node.nodeType === 3) {
-        return escapeHtml(node.textContent || '');
-    }
-
-    // Document fragment
-    if (node.nodeType === 11) {
-        return Array.from(node.childNodes || []).map(renderToString).join('');
-    }
-
-    // Virtual node (Cairn's SSR-safe object format)
-    if (node._isCairnVNode || typeof node.tagName === 'string') {
-        const tag = (node.tagName || 'div').toLowerCase();
-        const attrsObj = { ...(node.attributes || node._attrs || {}) };
-        if (node.className && !attrsObj.class && !attrsObj.className) {
-            attrsObj.class = node.className;
-        }
-        const attrs = serializeAttributes(attrsObj);
-        const children = serializeChildren(node.childNodes || node._children || []);
-
-        if (VOID_TAGS.has(tag)) {
-            return `<${tag}${attrs}>`;
-        }
-
-        return `<${tag}${attrs}>${children}</${tag}>`;
-    }
-
-    // String / number fallback
-    if (typeof node === 'string' || typeof node === 'number') {
-        return escapeHtml(String(node));
-    }
-
-    return '';
-}
 
 const VOID_TAGS = new Set([
     'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
     'link', 'meta', 'param', 'source', 'track', 'wbr'
 ]);
 
-function serializeAttributes(attrs) {
-    if (!attrs || typeof attrs !== 'object') return '';
-    let str = '';
-    const iterate = attrs.entries ? attrs.entries() : Object.entries(attrs);
-    for (const [k, v] of iterate) {
-        if (k.startsWith('on') || k === 'style' && typeof v === 'function') continue;
-        if (typeof v === 'boolean') {
-            if (v) str += ` ${k}`;
-        } else if (typeof v === 'object' && v !== null && k === 'style') {
-            const styleStr = Object.entries(v).map(([sk, sv]) => {
-                const kebab = sk.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
-                return `${kebab}: ${sv}`;
-            }).join('; ');
-            str += ` style="${escapeAttr(styleStr)}"`;
-        } else if (v !== null && v !== undefined) {
-            str += ` ${k}="${escapeAttr(String(v))}"`;
-        }
-    }
-    return str;
-}
-
-function serializeChildren(children) {
-    if (!children) return '';
-    const arr = Array.isArray(children) ? children : Array.from(children);
-    return arr.map(renderToString).join('');
-}
+const BOOLEAN_ATTRS = new Set([
+    'allowfullscreen', 'async', 'autofocus', 'autoplay', 'checked',
+    'controls', 'default', 'defer', 'disabled', 'formnovalidate',
+    'hidden', 'ismap', 'itemscope', 'loop', 'multiple', 'muted',
+    'nomodule', 'novalidate', 'open', 'playsinline', 'readonly',
+    'required', 'reversed', 'selected'
+]);
 
 function escapeHtml(str) {
     return String(str)
@@ -8733,24 +10289,185 @@ function escapeHtml(str) {
 }
 
 function escapeAttr(str) {
-    return String(str).replace(/"/g, '&quot;');
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;');
+}
+
+function resolveClassValue(c) {
+    if (!c) return '';
+    if (typeof c === 'string' || typeof c === 'number') return String(c);
+    if (c && c._isCairnState) return resolveClassValue(c.value);
+    if (typeof c === 'function') return resolveClassValue(c());
+    if (Array.isArray(c)) {
+        return c.map(resolveClassValue).filter(Boolean).join(' ');
+    }
+    if (typeof c === 'object') {
+        return Object.entries(c)
+            .filter(([, v]) => {
+                let resolved = v;
+                if (typeof v === 'function') resolved = v();
+                else if (v && v._isCairnState) resolved = v.value;
+                return Boolean(resolved);
+            })
+            .map(([k]) => k)
+            .join(' ');
+    }
+    return '';
+}
+
+function resolveStyleValue(styleObj) {
+    if (!styleObj) return '';
+    if (typeof styleObj === 'string') return styleObj;
+    if (styleObj && styleObj._isCairnState) return resolveStyleValue(styleObj.value);
+    if (typeof styleObj === 'function') return resolveStyleValue(styleObj());
+    if (typeof styleObj === 'object') {
+        return Object.entries(styleObj)
+            .map(([k, v]) => {
+                let resolved = v;
+                if (typeof v === 'function') resolved = v();
+                else if (v && v._isCairnState) resolved = v.value;
+                if (resolved === undefined || resolved === null || resolved === '') return null;
+                const kebab = k.replace(/([A-Z])/g, '-$1').toLowerCase();
+                return `${kebab}: ${resolved}`;
+            })
+            .filter(Boolean)
+            .join('; ');
+    }
+    return '';
+}
+
+function serializeAttributes(attrsObj) {
+    if (!attrsObj || typeof attrsObj !== 'object') return '';
+    let str = '';
+    const entries = attrsObj.entries ? Array.from(attrsObj.entries()) : Object.entries(attrsObj);
+
+    for (let [k, v] of entries) {
+        if (k.startsWith('on') || k === 'animate' || k === 'gestures' || k === 'duration' || k === 'delay' || k === 'easing') {
+            continue;
+        }
+
+        if (k === 'className' || k === 'class') {
+            const classStr = resolveClassValue(v);
+            if (classStr) str += ` class="${escapeAttr(classStr)}"`;
+            continue;
+        }
+
+        if (k === 'style') {
+            const styleStr = resolveStyleValue(v);
+            if (styleStr) str += ` style="${escapeAttr(styleStr)}"`;
+            continue;
+        }
+
+        let resolvedVal = v;
+        if (typeof v === 'function') resolvedVal = v();
+        else if (v && v._isCairnState) resolvedVal = v.value;
+
+        const lowerKey = k.toLowerCase();
+        if (BOOLEAN_ATTRS.has(lowerKey)) {
+            if (Boolean(resolvedVal)) str += ` ${lowerKey}`;
+        } else if (resolvedVal !== null && resolvedVal !== undefined && resolvedVal !== false) {
+            str += ` ${k}="${escapeAttr(String(resolvedVal))}"`;
+        }
+    }
+
+    return str;
+}
+
+/**
+ * Recursively serializes a Cairn DOM node, component tree, or descriptor to an HTML string.
+ * Designed for Node.js, Deno, and Bun environments without requiring a DOM polyfill.
+ *
+ * @param {HTMLElement|object|Function|string|number} node Cairn DOM node, component, or descriptor
+ * @returns {string} Serialized HTML string
+ *
+ * @example
+ * // Node.js SSR
+ * 
+ * 
+ *
+ * const todos = state([{ id: 1, text: 'Hello' }]);
+ * const html = renderToString(div({ class: 'app' }, h1('Todo List'), each(todos, (t) => t.text)));
+ */
+function renderToString(node) {
+    if (node === null || node === undefined || node === false) return '';
+
+    // Array of nodes
+    if (Array.isArray(node)) {
+        return node.map(renderToString).join('');
+    }
+
+    // Cairn Signal / State primitive
+    if (node && node._isCairnState) {
+        return renderToString(node.value);
+    }
+
+    // Function getter or factory
+    if (typeof node === 'function') {
+        return renderToString(node());
+    }
+
+    // Cairn Keyed List (each / For descriptor)
+    if (node && node._isCairnEach) {
+        let rawList = node.listSource;
+        if (typeof rawList === 'function') rawList = rawList();
+        else if (rawList && rawList._isCairnState) rawList = rawList.value;
+
+        if (!Array.isArray(rawList)) return '';
+        return rawList.map((item, i) => renderToString(node.renderItem(item, i))).join('');
+    }
+
+    // Native DOM Element with outerHTML
+    if (typeof node.outerHTML === 'string') {
+        return node.outerHTML;
+    }
+
+    // DOM Text node
+    if (node.nodeType === 3) {
+        return escapeHtml(node.textContent || '');
+    }
+
+    // Document fragment
+    if (node.nodeType === 11) {
+        return Array.from(node.childNodes || []).map(renderToString).join('');
+    }
+
+    // Cairn Virtual / Mock Node (from h() in Node.js)
+    if (node._isCairnVNode || typeof node.tagName === 'string') {
+        const tag = (node.tagName || 'div').toLowerCase();
+        const attrsObj = { ...(node.attributes || node._attrs || {}) };
+        if (node.className && !attrsObj.class && !attrsObj.className) {
+            attrsObj.class = node.className;
+        }
+        if (node.style && typeof node.style === 'object' && Object.keys(node.style).length > 0 && !attrsObj.style) {
+            attrsObj.style = node.style;
+        }
+
+        const attrs = serializeAttributes(attrsObj);
+        const children = (node.childNodes || node._children || []).map(renderToString).join('');
+
+        if (VOID_TAGS.has(tag)) {
+            return `<${tag}${attrs}>`;
+        }
+
+        return `<${tag}${attrs}>${children}</${tag}>`;
+    }
+
+    // String / Number primitive
+    if (typeof node === 'string' || typeof node === 'number') {
+        return escapeHtml(String(node));
+    }
+
+    return '';
 }
 
 /**
  * Hydrates a server-rendered HTML container by mounting a Cairn component
- * on top of existing markup. Attaches event listeners without re-rendering.
- *
- * In the current implementation, this performs a replace-hydration:
- * runs the component and replaces the container's children.
- * Full diffing hydration can be layered on top with the reconciler.
+ * on top of existing markup.
  *
  * @param {HTMLElement|string} container DOM element or CSS selector
  * @param {Function} componentFn Component factory returning a DOM node
  * @param {object} [props] Props to pass to the component
- *
- * @example
- * // Client-side hydration
- * hydrate('#app', MyApp, { initialData: window.__SSR_DATA__ });
  */
 function hydrate(container, componentFn, props = {}) {
     if (typeof document === 'undefined') {
@@ -8767,14 +10484,12 @@ function hydrate(container, componentFn, props = {}) {
         return;
     }
 
-    // Preserve existing HTML for SEO/no-flash
     targetEl.setAttribute('data-cairn-hydrating', '');
 
     try {
         const node = typeof componentFn === 'function' ? componentFn(props) : componentFn;
 
         if (node && node.nodeType) {
-            // Replace with live Cairn-managed node
             targetEl.innerHTML = '';
             targetEl.appendChild(node);
         }
@@ -8785,156 +10500,12 @@ function hydrate(container, componentFn, props = {}) {
     targetEl.removeAttribute('data-cairn-hydrating');
 }
 
-
-
-/**
- * @eldrex/cairn - Virtual DOM Reconciler / Key-Based Diffing
- * Efficient, keyed list reconciliation that surgically patches the DOM
- * instead of destroying and recreating entire node trees.
- * Dramatically improves performance for large reactive lists.
- */
+const ssr = { renderToString, hydrate };
 
 
 
 /**
- * Reconciles a DOM parent's children against a new list of virtual nodes.
- * Uses key-based diffing to reorder, add, and remove nodes surgically.
- *
- * @param {HTMLElement} parent Parent DOM container
- * @param {Array} oldItems Previous item array (with keys)
- * @param {Array} newItems New item array (with keys)
- * @param {Function} renderItem (item, index) => HTMLElement
- * @param {Function} getKey (item) => string|number unique key extractor
- *
- * @example
- * const items = state([{ id: 1, name: 'A' }, { id: 2, name: 'B' }]);
- * const container = div();
- * let prevItems = [];
- *
- * effect(() => {
- *   const newItems = items.value;
- *   reconcile(container, prevItems, newItems, (item) => div(item.name), (item) => item.id);
- *   prevItems = [...newItems];
- * });
- */
-function reconcile(parent, oldItems, newItems, renderItem, getKey = (item) => item.id ?? item) {
-    if (!parent) return;
-
-    const oldKeyMap = new Map();
-    oldItems.forEach((item, i) => {
-        const key = getKey(item);
-        oldKeyMap.set(key, { item, index: i, node: parent.children[i] });
-    });
-
-    const newKeyMap = new Map();
-    newItems.forEach((item, i) => {
-        newKeyMap.set(getKey(item), item);
-    });
-
-    // Remove nodes no longer in new list
-    oldItems.forEach((item) => {
-        const key = getKey(item);
-        if (!newKeyMap.has(key)) {
-            const entry = oldKeyMap.get(key);
-            if (entry && entry.node && entry.node.parentNode === parent) {
-                parent.removeChild(entry.node);
-            }
-        }
-    });
-
-    // Insert / reorder nodes for new items
-    newItems.forEach((item, newIdx) => {
-        const key = getKey(item);
-        const existing = oldKeyMap.get(key);
-
-        if (!existing) {
-            // New item — create and insert
-            let newNode;
-            try { newNode = renderItem(item, newIdx); } catch (e) {
-                console.error('[Cairn Reconciler] renderItem error:', e);
-                return;
-            }
-            if (!newNode) return;
-
-            const refNode = parent.children[newIdx] || null;
-            parent.insertBefore(newNode, refNode);
-        } else {
-            // Existing item — ensure position is correct
-            const currentNode = existing.node;
-            if (!currentNode) return;
-
-            const nodeAtPos = parent.children[newIdx];
-            if (nodeAtPos !== currentNode) {
-                parent.insertBefore(currentNode, nodeAtPos || null);
-            }
-        }
-    });
-}
-
-/**
- * Creates a managed reactive list that auto-reconciles on signal change.
- *
- * @param {HTMLElement} parent Container element
- * @param {object} listSignal Cairn state signal (array)
- * @param {Function} renderItem (item, index) => HTMLElement
- * @param {Function} getKey Key extractor function
- * @returns {Function} Unsubscribe function
- *
- * @example
- * const todos = state([{ id: 1, text: 'Buy milk' }]);
- * const list = div();
- *
- * const stop = createList(list, todos, (todo) => li(todo.text), (t) => t.id);
- */
-function createList(parent, listSignal, renderItem, getKey = item => item.id ?? item) {
-    let prevItems = [];
-
-    return effect(() => {
-        const newItems = Array.isArray(listSignal.value) ? listSignal.value : [];
-        reconcile(parent, prevItems, newItems, renderItem, getKey);
-        prevItems = [...newItems];
-    });
-}
-
-/**
- * Patches a single DOM node's attributes based on a diff of old/new props.
- * Only modifies attributes that actually changed.
- *
- * @param {HTMLElement} el Target element
- * @param {object} oldProps Previous props
- * @param {object} newProps New props
- */
-function patchProps(el, oldProps = {}, newProps = {}) {
-    if (!el || !el.setAttribute) return;
-
-    const allKeys = new Set([...Object.keys(oldProps), ...Object.keys(newProps)]);
-    allKeys.forEach(key => {
-        if (key.startsWith('on')) return; // Skip event listeners (not patchable easily)
-
-        const oldVal = oldProps[key];
-        const newVal = newProps[key];
-
-        if (oldVal === newVal) return;
-
-        if (newVal === undefined || newVal === null) {
-            el.removeAttribute(key);
-        } else if (key === 'style' && typeof newVal === 'object') {
-            Object.entries(newVal).forEach(([sk, sv]) => {
-                if (el.style[sk] !== sv) el.style[sk] = sv;
-            });
-        } else if (key === 'className' || key === 'class') {
-            if (el.className !== newVal) el.className = newVal;
-        } else {
-            el.setAttribute(key, String(newVal));
-        }
-    });
-}
-
-const reconciler = { reconcile, createList, patchProps };
-
-
-/**
- * @eldrex/cairn/mobile - Production Mobile & Touch-First Component System
+ * @eldrex/cairnjs/mobile - Production Mobile & Touch-First Component System
  * Real touch gesture calculations, drag-to-dismiss physics, viewport mocking, and haptic feedback.
  */
 
@@ -9174,7 +10745,7 @@ const mobile = {
 
 
 /**
- * @eldrex/cairn/three - WebGL 3D Component Integration Layer
+ * @eldrex/cairnjs/three - WebGL 3D Component Integration Layer
  * Production WebGL 3D rendering loop, perspective matrices, geometry mesh calculations, and reactive DOM integration.
  */
 
@@ -9310,7 +10881,7 @@ const three = {
 
 
 /**
- * @eldrex/cairn/docs - Component Documentation Generator & Themed CodeBlock Syntax Highlighter
+ * @eldrex/cairnjs/docs - Component Documentation Generator & Themed CodeBlock Syntax Highlighter
  * Generates standalone Markdown/HTML documentation and renders syntax-highlighted codeblocks
  * with themes like Dracula, One Dark, GitHub Dark, Tokyo Night, Monokai, and Cairn.
  */
@@ -9410,7 +10981,7 @@ const CODE_THEMES = {
 /**
  * Escapes HTML characters.
  */
-function escapeHtml(str) {
+function escapeDocsHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -9429,7 +11000,7 @@ function escapeHtml(str) {
  */
 function highlight(codeStr = '', lang = 'js', theme = 'dracula') {
     const t = typeof theme === 'string' ? (CODE_THEMES[theme] || CODE_THEMES.dracula) : theme;
-    let text = escapeHtml(codeStr);
+    let text = escapeDocsHtml(codeStr);
 
     // Comments (// ... and /* ... */)
     text = text.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g, `<span style="color: ${t.comment}; font-style: italic;">$1</span>`);
@@ -9754,10 +11325,123 @@ function createPlayground(config = {}) {
     );
 }
 
+const Heading = ({ level = 1, text }) => {
+    const Tag = level === 1 ? h1 : level === 2 ? h2 : h3;
+    return Tag(text, {
+        style: {
+            fontSize: level === 1 ? '2rem' : level === 2 ? '1.5rem' : '1.25rem',
+            fontWeight: 700,
+            color: '#0f172a',
+            margin: '1.5rem 0 0.75rem 0'
+        }
+    });
+};
+
+const Paragraph = ({ text }) => {
+    return p(text, {
+        style: {
+            fontSize: '1rem',
+            lineHeight: 1.7,
+            color: '#334155',
+            margin: '0.75rem 0'
+        }
+    });
+};
+
+const Code = ({ language = 'javascript', code: codeStr = '', theme = 'cairn' }) => {
+    return CodeBlock({ code: codeStr, lang: language, theme });
+};
+
+const Callout = ({ type = 'info', text }) => {
+    const bgColors = {
+        info: 'rgba(56, 189, 248, 0.1)',
+        success: 'rgba(34, 197, 94, 0.1)',
+        warning: 'rgba(234, 179, 8, 0.1)',
+        danger: 'rgba(239, 68, 68, 0.1)'
+    };
+    const borderColors = {
+        info: '#38bdf8',
+        success: '#22c55e',
+        warning: '#eab308',
+        danger: '#ef4444'
+    };
+
+    return div({
+        class: `cairn-callout cairn-callout-${type}`,
+        style: {
+            padding: '1rem 1.25rem',
+            borderRadius: '0.5rem',
+            background: bgColors[type] || bgColors.info,
+            borderLeft: `4px solid ${borderColors[type] || borderColors.info}`,
+            color: '#1e293b',
+            fontSize: '0.95rem',
+            margin: '1rem 0',
+            lineHeight: 1.5
+        }
+    }, text);
+};
+
+const Table = ({ headers = [], rows = [] }) => {
+    return div({
+        style: { width: '100%', overflowX: 'auto', margin: '1.5rem 0' }
+    },
+        div({
+            style: {
+                display: 'grid',
+                gridTemplateColumns: `repeat(${headers.length || 1}, 1fr)`,
+                borderBottom: '2px solid #e2e8f0',
+                paddingBottom: '0.5rem',
+                fontWeight: 600,
+                color: '#0f172a'
+            }
+        }, headers.map(h => span(h, { style: { padding: '0.5rem' } }))),
+        div(rows.map(row => div({
+            style: {
+                display: 'grid',
+                gridTemplateColumns: `repeat(${headers.length || 1}, 1fr)`,
+                borderBottom: '1px solid #f1f5f9',
+                padding: '0.5rem 0',
+                color: '#334155'
+            }
+        }, row.map(cell => span(cell, { style: { padding: '0.5rem' } })))))
+    );
+};
+
+const Example = ({ component: Comp, code: codeStr = '' }) => {
+    return div({
+        style: {
+            margin: '1.5rem 0',
+            border: '1px solid #e2e8f0',
+            borderRadius: '0.75rem',
+            overflow: 'hidden'
+        }
+    },
+        div({
+            style: {
+                padding: '1.5rem',
+                background: '#f8fafc',
+                display: 'grid',
+                placeItems: 'center'
+            }
+        }, typeof Comp === 'function' ? Comp() : Comp),
+        codeStr ? CodeBlock({ code: codeStr, lang: 'javascript', theme: 'one-dark' }) : null
+    );
+};
+
+Object.assign(docs, {
+    Heading,
+    Paragraph,
+    Code,
+    Callout,
+    Table,
+    Example,
+    createPlayground
+});
+
 
 
 /**
- * @eldrex/cairn/iteration - Rapid Iteration, Live Editing, A/B Testing & Versioning
+ * @eldrex/cairnjs/iteration - Rapid Iteration, Live Editing, A/B Testing & Versioning
  */
 
 const iteration = {
@@ -9821,7 +11505,7 @@ const iteration = {
 
 
 /**
- * @eldrex/cairn/framework-bridges - Universal Framework Integration Adapters
+ * @eldrex/cairnjs/framework-bridges - Universal Framework Integration Adapters
  * Converts Cairn components seamlessly into React, Vue, Angular, Svelte, or Web Component definitions.
  */
 
@@ -9920,18 +11604,64 @@ function cairnToVue(CairnComponent) {
 
 /**
  * Converts a Cairn component into a standard native Web Component (Custom Element).
+ * Supports Shadow DOM, reactive prop updates, property reflection, and custom events.
+ *
  * @param {Function|HTMLElement} CairnComponent Cairn component factory
- * @param {Array<string>} observedAttributes List of attribute names to observe
+ * @param {Array<string>|object} [options] List of observed attributes or options object
+ * @param {Array<string>} [options.observedAttributes] Attributes to watch for reactive updates
+ * @param {boolean|string} [options.shadow] Enable Shadow DOM ('open', 'closed', or true)
+ * @param {string} [options.styles] Inline CSS styles for Shadow DOM root
  * @returns {typeof HTMLElement} Custom Element Class
  */
-function cairnToCustomElement(CairnComponent, observedAttributes = []) {
+function cairnToCustomElement(CairnComponent, options = {}) {
+    const config = Array.isArray(options)
+        ? { observedAttributes: options, shadow: false }
+        : { observedAttributes: [], shadow: false, styles: '', ...options };
+
+    const observedAttrs = config.observedAttributes || [];
+    const shadowMode = config.shadow === true ? 'open' : (typeof config.shadow === 'string' ? config.shadow : false);
+
     if (typeof HTMLElement === 'undefined') {
-        return class MockCustomElement {};
+        return class MockCustomElement {
+            static get observedAttributes() {
+                return observedAttrs;
+            }
+        };
     }
 
     return class CairnCustomElement extends HTMLElement {
         static get observedAttributes() {
-            return observedAttributes;
+            return observedAttrs;
+        }
+
+        constructor() {
+            super();
+            this._unmount = null;
+            this._props = {};
+
+            if (shadowMode) {
+                this.attachShadow({ mode: shadowMode });
+            }
+
+            // Define property getters/setters for observed attributes
+            observedAttrs.forEach(attrName => {
+                const camelName = attrName.replace(/-([a-z])/g, (_, l) => l.toUpperCase());
+                if (!(camelName in this)) {
+                    Object.defineProperty(this, camelName, {
+                        get: () => this.getProps()[camelName],
+                        set: (val) => {
+                            if (typeof val === 'object') {
+                                this.setAttribute(attrName, JSON.stringify(val));
+                            } else if (typeof val === 'boolean') {
+                                if (val) this.setAttribute(attrName, '');
+                                else this.removeAttribute(attrName);
+                            } else {
+                                this.setAttribute(attrName, String(val));
+                            }
+                        }
+                    });
+                }
+            });
         }
 
         connectedCallback() {
@@ -9939,45 +11669,94 @@ function cairnToCustomElement(CairnComponent, observedAttributes = []) {
         }
 
         disconnectedCallback() {
-            if (this._unmount) this._unmount();
+            if (this._unmount) {
+                this._unmount();
+                this._unmount = null;
+            }
         }
 
         attributeChangedCallback(name, oldVal, newVal) {
-            if (this._unmount && oldVal !== newVal) {
+            if (oldVal !== newVal) {
                 this._renderComponent();
             }
         }
 
+        emit(eventName, detail = {}, options = {}) {
+            const event = new CustomEvent(eventName, {
+                bubbles: true,
+                composed: true,
+                detail,
+                ...options
+            });
+            this.dispatchEvent(event);
+            return event;
+        }
+
         getProps() {
-            const props = {};
+            const props = { ...this._props };
             if (this.attributes) {
                 for (let i = 0; i < this.attributes.length; i++) {
                     const attr = this.attributes[i];
-                    props[attr.name] = attr.value;
+                    const camelName = attr.name.replace(/-([a-z])/g, (_, l) => l.toUpperCase());
+                    let val = attr.value;
+                    if (val === '' && this.hasAttribute(attr.name)) {
+                        val = true;
+                    } else if (val === 'true') val = true;
+                    else if (val === 'false') val = false;
+                    else if (!isNaN(Number(val)) && val.trim() !== '') val = Number(val);
+                    else if ((val.startsWith('{') && val.endsWith('}')) || (val.startsWith('[') && val.endsWith(']'))) {
+                        try { val = JSON.parse(val); } catch {}
+                    }
+                    props[camelName] = val;
+                    props[attr.name] = val;
                 }
             }
+            props.$emit = (eventName, detail, opts) => this.emit(eventName, detail, opts);
+            props.$host = this;
             return props;
         }
 
         _renderComponent() {
-            if (this._unmount) this._unmount();
-            this.innerHTML = '';
-            const node = typeof CairnComponent === 'function' ? CairnComponent(this.getProps()) : CairnComponent;
-            this._unmount = mount(this, node);
+            if (this._unmount) {
+                this._unmount();
+                this._unmount = null;
+            }
+
+            const targetRoot = this.shadowRoot || this;
+            targetRoot.innerHTML = '';
+
+            if (this.shadowRoot && config.styles) {
+                const styleEl = document.createElement('style');
+                styleEl.textContent = config.styles;
+                targetRoot.appendChild(styleEl);
+            }
+
+            const props = this.getProps();
+            const node = typeof CairnComponent === 'function' ? CairnComponent(props) : CairnComponent;
+            if (node) {
+                this._unmount = mount(targetRoot, node);
+            }
         }
     };
 }
 
 /**
  * Registers a Cairn component as a standard Web Component (Custom Element).
- * @param {string} tagName Custom element tag name (e.g. 'cairn-counter')
+ *
+ * @param {string} tagName Custom element tag name (must contain a hyphen, e.g. 'cairn-card')
  * @param {Function|HTMLElement} CairnComponent Cairn component factory
- * @param {Array<string>} observedAttributes List of attribute names to watch
+ * @param {Array<string>|object} [options] List of observed attributes or options object
+ * @returns {typeof HTMLElement} Registered custom element constructor
  */
-function defineCustomElement(tagName, CairnComponent, observedAttributes = []) {
-    if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-        customElements.define(tagName, cairnToCustomElement(CairnComponent, observedAttributes));
+function defineCustomElement(tagName, CairnComponent, options = {}) {
+    if (typeof customElements !== 'undefined') {
+        const existing = customElements.get(tagName);
+        if (existing) return existing;
+        const CustomEl = cairnToCustomElement(CairnComponent, options);
+        customElements.define(tagName, CustomEl);
+        return CustomEl;
     }
+    return cairnToCustomElement(CairnComponent, options);
 }
 
 /**
@@ -10024,13 +11803,6 @@ function cairnToSvelte(CairnComponent) {
 
 
 
-const shapes = { rect, circle, bezier,
-    svg, polygon, ellipse, line, path, text: text,
-    group, defs, linearGradient, arrow, star, triangle
-};
-
-const utils = { color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep };
-
 const cairn = {
     state, computed, effect, collection, resource, component, mount, h, div, span, p, h1, h2, h3, h4, h5, h6, button, input, img, a, section, article, nav, footer, header, main, aside, pre, code, hr, br, strong, em, label, ul, ol, li, form, createForm, textarea, select, option, text, raw, element, canvas,
     spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility,
@@ -10040,8 +11812,9 @@ const cairn = {
     physics, router, debug, ui: UI, UI, studio, ai, figma: { figmaToCairn },
     use, config, register: (name, fn, meta) => componentsRegistry.register(name, fn, meta),
     components: componentsRegistry, utils: utilsRegistry, animations: animationRegistry, hooks: hooksBus, middleware: middlewareEngine,
-    mobile, three, docs, hmr: iteration.hmr, live: iteration.live, version: iteration.version, abTest: iteration.abTest,
-    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte,
+    mobile, three, docs,
+    hmr: iteration.hmr, live: iteration.live, version: iteration.version, abTest: iteration.abTest,
+    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement, defineCustomElement, useCairn,
     createStore, useStore, listStores,
     createContext, provideContext, useContext, removeContext,
     onMount, onUnmount, onUpdate, withLifecycle, attachLifecycle,
@@ -10049,7 +11822,8 @@ const cairn = {
     portal, errorBoundary, suspense, createI18n,
     createCanvas2D, createScene3D, Charts, keyboard,
     utils, color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep,
-    renderToString, hydrate, reconcile, createList, patchProps, reconciler
+    renderToString, hydrate, ssr: { renderToString, hydrate },
+    reconcile, each, For, createList, patchProps, reconciler
 };
 
 export {
@@ -10058,13 +11832,14 @@ export {
     shapes, tokens, keyframes, media, styleHelper,
     wasmEngine, isWasmSupported, engine, perf, SharedStateBuffer, DomRef, VirtualList, physics, router, debug, UI, studio, ai, figmaToCairn,
     use, config, componentsRegistry, utilsRegistry, animationRegistry, hooksBus, middlewareEngine, registerComponent, tailwind, resolveAdapters,
-    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte,
+    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement, defineCustomElement, useCairn,
     mobile, three, docs, iteration,
     createStore, useStore, listStores, createContext, provideContext, useContext, removeContext,
     onMount, onUnmount, onUpdate, withLifecycle, attachLifecycle, batch, isBatching, watch, watchEffect,
     portal, errorBoundary, suspense, createI18n, createCanvas2D, createScene3D, Charts, keyboard,
     utils, color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep,
-    renderToString, hydrate, reconcile, createList, patchProps, reconciler,
+    renderToString, hydrate, ssr,
+    reconcile, each, For, createList, patchProps, reconciler,
     cairn
 };
 export default cairn;

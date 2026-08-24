@@ -36,7 +36,7 @@ f5            → F5 key alone
 ## Basic Examples
 
 ```js
-import { keyboard } from '@eldrex/cairn';
+import { keyboard } from '@eldrex/cairnjs';
 
 // Open search on Ctrl+K
 const stopSearch = keyboard.on('ctrl+k', () => {
@@ -128,7 +128,7 @@ keyboard.on('ctrl+shift+d', () => {
 ### Per-Component Shortcuts (with cleanup)
 
 ```js
-import { onMount, onUnmount, keyboard } from '@eldrex/cairn';
+import { onMount, onUnmount, keyboard } from '@eldrex/cairnjs';
 
 const EditorComponent = component(() => {
   let stopSave;
@@ -158,7 +158,7 @@ Cairn includes a reactive internationalization system via `createI18n()`.
 Creates an i18n instance.
 
 ```js
-import { createI18n } from '@eldrex/cairn';
+import { createI18n } from '@eldrex/cairnjs';
 
 const i18n = createI18n({
   locale: 'en',
@@ -251,7 +251,7 @@ i18n.t('greeting', { name: 'Eldrex' }); // 'Bonjour, Eldrex!'
 Reactive state signal of the current locale. Subscribe to changes:
 
 ```js
-import { effect } from '@eldrex/cairn';
+import { effect } from '@eldrex/cairnjs';
 
 effect(() => {
   document.documentElement.lang = i18n.locale.value;
@@ -273,7 +273,7 @@ i18n.availableLocales; // ['en', 'fr', 'ja']
 ## Full Reactive UI Example
 
 ```js
-import { createI18n, state, div, p, button, select, option } from '@eldrex/cairn';
+import { createI18n, state, div, p, button, select, option } from '@eldrex/cairnjs';
 
 const i18n = createI18n({
   locale: 'en',

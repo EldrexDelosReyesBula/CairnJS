@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/iteration - Rapid Iteration, Live Editing, A/B Testing & Versioning
+ * @eldrex/cairnjs/iteration - Rapid Iteration, Live Editing, A/B Testing & Versioning
  */
 
 export const iteration = {

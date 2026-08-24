@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/build-plugins - Framework & Build Tool Integration Plugins
+ * @eldrex/cairnjs/build-plugins - Framework & Build Tool Integration Plugins
  * Real production plugins for Vite, Webpack, Rollup, esbuild, Next.js, Astro, and Svelte.
  */
 
@@ -17,7 +17,7 @@ export function cairnVite(options = {}) {
             if (id.endsWith('.cairn.js') || id.endsWith('.cairn.ts')) {
                 // Add reactive component export wrapper
                 return {
-                    code: `import { component, h, div, button, state } from '@eldrex/cairn';\n${code}`,
+                    code: `import { component, h, div, button, state } from '@eldrex/cairnjs';\n${code}`,
                     map: null
                 };
             }
@@ -58,13 +58,13 @@ export function cairnRollup(options = {}) {
     return {
         name: 'rollup-plugin-cairn',
         resolveId(source) {
-            if (source === '@eldrex/cairn') return null;
+            if (source === '@eldrex/cairnjs') return null;
             return null;
         },
         transform(code, id) {
             if (id.endsWith('.cairn.js')) {
                 return {
-                    code: `import { component } from '@eldrex/cairn';\n${code}`,
+                    code: `import { component } from '@eldrex/cairnjs';\n${code}`,
                     map: null
                 };
             }
@@ -111,13 +111,13 @@ export function cairnNext(nextConfig = {}) {
  */
 export function cairnAstro(options = {}) {
     return {
-        name: '@eldrex/cairn-astro',
+        name: '@eldrex/cairnjs-astro',
         hooks: {
             'astro:config:setup': ({ injectRenderer }) => {
                 injectRenderer({
-                    name: '@eldrex/cairn',
-                    serverEntrypoint: '@eldrex/cairn/ssr',
-                    clientEntrypoint: '@eldrex/cairn/mount'
+                    name: '@eldrex/cairnjs',
+                    serverEntrypoint: '@eldrex/cairnjs/ssr',
+                    clientEntrypoint: '@eldrex/cairnjs/mount'
                 });
             }
         }

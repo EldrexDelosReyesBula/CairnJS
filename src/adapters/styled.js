@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/adapters - Styled / CSS-in-JS Adapter
+ * @eldrex/cairnjs/adapters - Styled / CSS-in-JS Adapter
  * Resolves `css: { ... }` or `styled: { ... }` object styles, supporting nested properties.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - 2D Canvas Drawing API
+ * @eldrex/cairnjs - 2D Canvas Drawing API
  * Full reactive 2D Canvas drawing system.
  * Supports primitives, text, images, scene graph, and reactive redraw loops.
  * Zero dependencies — built on native Canvas 2D Context.

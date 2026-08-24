@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/mobile - Production Mobile & Touch-First Component System
+ * @eldrex/cairnjs/mobile - Production Mobile & Touch-First Component System
  * Real touch gesture calculations, drag-to-dismiss physics, viewport mocking, and haptic feedback.
  */
 

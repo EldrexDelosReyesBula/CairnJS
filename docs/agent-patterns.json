@@ -1,0 +1,14 @@
+{
+    "counter": {
+        "title": "Reactive Counter",
+        "code": "let count = state(0);\nbutton(() => `Count: ${count.value}`, { onclick: () => count.value++ });"
+    },
+    "todo": {
+        "title": "Todo List",
+        "code": "let todos = state([]);\nlet text = state('');\ndiv(\n    input({ oninput: e => text.value = e.target.value }),\n    button('Add', { onclick: () => { todos.value = [...todos.value, text.value]; text.value = ''; } }),\n    ul(() => todos.value.map(t => li(t)))\n);"
+    },
+    "form": {
+        "title": "Two-Way Bound Form",
+        "code": "let formState = state({ email: '', pass: '' });\nform({ onsubmit: e => { e.preventDefault(); } },\n    input({ oninput: e => formState.value = { ...formState.value, email: e.target.value } }),\n    button('Submit', { type: 'submit' })\n);"
+    }
+}

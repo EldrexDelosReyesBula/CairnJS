@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Mount System
+ * @eldrex/cairnjs - Mount System
  * Framework-agnostic mounting and lifecycle management.
  */
 

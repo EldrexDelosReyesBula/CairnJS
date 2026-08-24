@@ -1,0 +1,50 @@
+{
+    "name": "cairnjs",
+    "version": "1.2.0",
+    "type": "ui-component-builder",
+    "core": {
+        "state": {
+            "signature": "state(initialValue)",
+            "returns": "{ value: T }",
+            "read": ".value",
+            "update": ".value = newValue",
+            "description": "Creates reactive signal proxy"
+        },
+        "computed": {
+            "signature": "computed(fn)",
+            "returns": "{ value: T }",
+            "description": "Creates derived memoized state"
+        },
+        "effect": {
+            "signature": "effect(fn)",
+            "returns": "unsubscribeFn",
+            "description": "Runs side effect when referenced signals change"
+        },
+        "component": {
+            "signature": "component((props) => HTMLElement)",
+            "returns": "Function (props) => HTMLElement",
+            "description": "Defines reusable component"
+        },
+        "mount": {
+            "signature": "mount(target, element)",
+            "target": "CSS Selector string | HTMLElement",
+            "returns": "HTMLElement",
+            "description": "Mounts Cairn tree into DOM"
+        }
+    },
+    "elements": {
+        "tags": ["div", "span", "p", "h1", "h2", "h3", "h4", "h5", "h6", "button", "input", "img", "a", "ul", "li", "form", "textarea", "select", "canvas"],
+        "signature": "element(content?, props?) | element(props?, ...children)",
+        "props": {
+            "class": "string",
+            "style": "CSSProperties | () => CSSProperties",
+            "events": "lowercase e.g. onclick, oninput, onchange, onsubmit"
+        }
+    },
+    "rules": {
+        "state_update": "Always update state via .value property",
+        "reactive_values": "Wrap dynamic values in () => expression",
+        "style_properties": "Use camelCase property names in style object",
+        "event_names": "Use native lowercase event names"
+    }
+}

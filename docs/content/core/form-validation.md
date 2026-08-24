@@ -7,7 +7,7 @@ Cairn provides a type-safe, reactive form and validation schema engine designed 
 ## Quick Example
 
 ```javascript
-import { createForm, validators, div, mount } from '@eldrex/cairn';
+import { createForm, validators, div, mount } from '@eldrex/cairnjs';
 
 const loginForm = createForm({
     fields: {
@@ -80,7 +80,7 @@ myForm.reset();                         // resets all field signals and clears e
 For managing dynamic repeating rows (such as invoice line items, recipient tags, or multi-step lists), use `useFieldArray`:
 
 ```javascript
-import { useFieldArray, div, button, input, p, mount } from '@eldrex/cairn';
+import { useFieldArray, div, button, input, p, mount } from '@eldrex/cairnjs';
 
 const invoiceItems = useFieldArray([
     { name: 'Hosting', price: 29 },

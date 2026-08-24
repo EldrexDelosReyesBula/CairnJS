@@ -19,7 +19,7 @@ An interactive shopping cart and product catalog built with **computed price sig
 ## Core Reactive State Architecture
 
 ```javascript
-import { cairn, state, computed, spring, Toast, ConfirmDialog } from '@eldrex/cairn';
+import { cairn, state, computed, spring, Toast, ConfirmDialog } from '@eldrex/cairnjs';
 
 // Reactive Cart State
 const cart = state([

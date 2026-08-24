@@ -8,7 +8,7 @@ Cairn is engineered specifically for AI coding tools and design-to-code pipeline
 
 ### Natural Language Component Generation (ai.generate())
 ```js
-import { ai } from '@eldrex/cairn';
+import { ai } from '@eldrex/cairnjs';
 
 const PricingCard = await ai.generate({
     prompt: "Create a pricing card with a gradient background, hover lift animation, and Get Started button"
@@ -48,7 +48,7 @@ const testScript = await ai.generateTests({
 Convert Figma design frames and layers directly into production-ready Cairn components:
 
 ```js
-import { figmaToCairn } from '@eldrex/cairn';
+import { figmaToCairn } from '@eldrex/cairnjs';
 
 const { Button, Card } = await figmaToCairn({
     file: 'https://figma.com/file/...',

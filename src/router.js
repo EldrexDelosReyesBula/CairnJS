@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Built-in Single Page App (SPA) Router
+ * @eldrex/cairnjs - Built-in Single Page App (SPA) Router
  * Zero-dependency, lightweight client-side router with dynamic route parameters (:id),
  * query string parsing, declarative Link component, and hash/history mode support.
  */

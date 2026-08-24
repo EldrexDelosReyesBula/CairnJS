@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/ai - Agentic AI Development & Predictive Intelligence System
+ * @eldrex/cairnjs/ai - Agentic AI Development & Predictive Intelligence System
  * AI component generation, intelligent code linter & auto-fixer, declarative spec-to-UI builder,
  * system prompt generation, automated test synthesis, and agent context introspection.
  */
@@ -38,7 +38,7 @@ ${rules.join('\n\n')}
 
 ## Code Example:
 \`\`\`javascript
-import { div, h2, p, button, state } from '@eldrex/cairn';
+import { div, h2, p, button, state } from '@eldrex/cairnjs';
 
 export function Counter() {
     const count = state(0);
@@ -53,7 +53,7 @@ export function Counter() {
 
         if (format === 'json') {
             return {
-                framework: '@eldrex/cairn',
+                framework: '@eldrex/cairnjs',
                 rules,
                 systemInstruction: promptText
             };
@@ -130,7 +130,7 @@ export function Counter() {
         let componentFn = null;
 
         if (pLower.includes('counter')) {
-            generatedCode = `import { div, h3, p, button, state } from '@eldrex/cairn';
+            generatedCode = `import { div, h3, p, button, state } from '@eldrex/cairnjs';
 
 export function CounterComponent({ initial = 0 } = {}) {
     const count = state(initial);
@@ -149,7 +149,7 @@ export function CounterComponent({ initial = 0 } = {}) {
                 );
             });
         } else if (pLower.includes('modal') || pLower.includes('dialog')) {
-            generatedCode = `import { div, h3, p, button, state } from '@eldrex/cairn';
+            generatedCode = `import { div, h3, p, button, state } from '@eldrex/cairnjs';
 
 export function ModalComponent({ title = 'Dialog Title', message = 'Modal description...' } = {}) {
     const isOpen = state(false);
@@ -179,7 +179,7 @@ export function ModalComponent({ title = 'Dialog Title', message = 'Modal descri
             });
         } else {
             // Universal Card / Widget
-            generatedCode = `import { div, h3, p, button, state } from '@eldrex/cairn';
+            generatedCode = `import { div, h3, p, button, state } from '@eldrex/cairnjs';
 
 export function GeneratedCard({ title = '${prompt || 'AI Component'}' } = {}) {
     const hovered = state(false);
@@ -229,7 +229,7 @@ export function GeneratedCard({ title = '${prompt || 'AI Component'}' } = {}) {
             metadata: {
                 prompt,
                 synthesizedAt: new Date().toISOString(),
-                framework: '@eldrex/cairn'
+                framework: '@eldrex/cairnjs'
             }
         };
     },
@@ -312,7 +312,7 @@ test.describe('${name} Component Tests', () => {
         }
 
         return `import assert from 'node:assert';
-import { mount, state } from '@eldrex/cairn';
+import { mount, state } from '@eldrex/cairnjs';
 import { ${name} } from './${name}.js';
 
 // Test 1: Component instantiation
@@ -349,7 +349,7 @@ console.log('✅ ${name} test suite passed');`;
         });
 
         return {
-            framework: '@eldrex/cairn',
+            framework: '@eldrex/cairnjs',
             version: '1.0.0',
             syntaxParadigm: 'Zero-JSX procedural builder functions with fine-grained signals',
             commonPatterns: [

@@ -9,7 +9,7 @@ Cairn includes power-user navigation components such as Command Palettes (`Cmd+K
 Global searchable launcher with fuzzy filtering, categorized action groups, and keyboard selection:
 
 ```javascript
-import { CommandPalette, mount } from '@eldrex/cairn';
+import { CommandPalette, mount } from '@eldrex/cairnjs';
 
 const palette = CommandPalette({
     placeholder: 'Type a command or search...',
@@ -37,7 +37,7 @@ mount('#app', palette);
 Custom right-click menu positioned at cursor coordinates with boundary viewport detection:
 
 ```javascript
-import { ContextMenu, div, mount } from '@eldrex/cairn';
+import { ContextMenu, div, mount } from '@eldrex/cairnjs';
 
 const targetBox = div({ style: { padding: '3rem', background: '#1e293b', textAlign: 'center' } },
     'Right click anywhere inside this box'
@@ -63,7 +63,7 @@ mount('#app', div(targetBox, menu));
 Data table with column sorting (asc/desc), live keyword search, and automatic pagination:
 
 ```javascript
-import { DataTable, mount } from '@eldrex/cairn';
+import { DataTable, mount } from '@eldrex/cairnjs';
 
 const usersTable = DataTable({
     columns: [
@@ -91,7 +91,7 @@ mount('#app', usersTable);
 Wizard controller managing step sequences, validations, and back/forward navigation:
 
 ```javascript
-import { Stepper, div, p, button, mount } from '@eldrex/cairn';
+import { Stepper, div, p, button, mount } from '@eldrex/cairnjs';
 
 const wizard = Stepper({
     steps: ['Account', 'Profile', 'Billing', 'Confirmation'],

@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Developer Experience & Debugging System
+ * @eldrex/cairnjs - Developer Experience & Debugging System
  * Auto-logging, state mutation tracking, DOM timing, and helpful CSS warnings.
  */
 

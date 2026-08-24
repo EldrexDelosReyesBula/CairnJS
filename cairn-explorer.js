@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn-explorer - Production Component Explorer & Interactive Drawer
+ * @eldrex/cairnjs-explorer - Production Component Explorer & Interactive Drawer
  * Injects an interactive developer drawer with component preview, live prop editor, and event stream.
  */
 

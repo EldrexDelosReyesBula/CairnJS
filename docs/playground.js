@@ -2,6 +2,172 @@
 // Standalone external module to ensure zero HTML parser collisions or script tag conflicts.
 
 export const TEMPLATES = {
+    starter: `import { cairn } from '../src/index.js';
+const { state, div, h1, p, button, span, mount } = cairn;
+
+// 1. Reactive state signals
+const name = state('World');
+const count = state(0);
+
+// 2. Pure declarative UI component
+const App = () => div({
+    style: {
+        maxWidth: '460px',
+        margin: '3rem auto',
+        padding: '2.5rem 2rem',
+        background: '#111827',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '1rem',
+        textAlign: 'center',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+        color: '#f8fafc'
+    }
+},
+    h1(() => \`Hello, \${name.value}! 👋\`, {
+        style: { fontSize: '2.2rem', fontWeight: '800', color: '#38bdf8', marginBottom: '0.75rem' }
+    }),
+    p('Welcome to CairnJS! Edit this code in the editor and watch it update live.', {
+        style: { color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '1.75rem' }
+    }),
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' } },
+        button(() => \`🚀 Clicked \${count.value} times\`, {
+            style: {
+                padding: '0.8rem 1.6rem',
+                background: 'linear-gradient(135deg, #0284c7, #38bdf8)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(56, 189, 248, 0.35)',
+                transition: 'transform 0.1s ease'
+            },
+            onclick: () => {
+                count.value++;
+                name.value = count.value % 2 === 0 ? 'World' : 'Cairn Developer';
+            }
+        })
+    ),
+    div({ style: { background: '#0f172a', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', color: '#64748b' } },
+        span('⚡ Fine-grained direct DOM reactivity • Zero Virtual DOM')
+    )
+);
+
+// 3. Mount directly to DOM
+mount('#app', App());`,
+
+    typography: `import { cairn } from '../src/index.js';
+const { div, h1, h2, h3, h4, h5, h6, p, strong, em, code, hr, a, span, button, mount } = cairn;
+
+const App = () => div({
+    style: { maxWidth: '520px', margin: '2rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc' }
+},
+    h1('Heading 1 (h1)', { style: { color: '#38bdf8', fontSize: '1.8rem', marginBottom: '0.5rem' } }),
+    h2('Heading 2 (h2)', { style: { color: '#818cf8', fontSize: '1.5rem', marginBottom: '0.5rem' } }),
+    h3('Heading 3 (h3)', { style: { color: '#c084fc', fontSize: '1.25rem', marginBottom: '0.5rem' } }),
+    h4('Heading 4 (h4)', { style: { color: '#cbd5e1', fontSize: '1.1rem', marginBottom: '0.5rem' } }),
+    h5('Heading 5 (h5)', { style: { color: '#94a3b8', fontSize: '0.95rem', marginBottom: '0.5rem' } }),
+    h6('Heading 6 (h6)', { style: { color: '#64748b', fontSize: '0.85rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' } }),
+    
+    hr({ style: { border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '1rem 0' } }),
+
+    p(
+        'Paragraph element (p) with inline tags: ',
+        strong('strong bold text, '),
+        em('emphasized italic text, '),
+        'and inline code ',
+        code('const count = state(0);', { style: { background: '#0f172a', padding: '2px 6px', borderRadius: '4px', color: '#38bdf8', fontFamily: 'monospace' } }),
+        '.'
+    ),
+
+    p({ style: { marginTop: '1rem' } },
+        'Hyperlink element (a): ',
+        a('https://github.com/EldrexDelosReyesBula/CairnJS', { target: '_blank', style: { color: '#38bdf8', textDecoration: 'underline', fontWeight: '600' } }, 'Visit CairnJS GitHub Repository ↗')
+    )
+);
+
+mount('#app', App());`,
+
+    flipcard: `import { cairn, state } from '../src/index.js';
+const { div, h2, h3, p, button, span, mount } = cairn;
+
+const isFlipped = state(false);
+
+const App = () => div({
+    style: { maxWidth: '440px', margin: '2rem auto', textAlign: 'center', color: '#fff', perspective: '1000px' }
+},
+    h2('3D Flippable Interactive Card', { style: { marginBottom: '0.5rem' } }),
+    p('Click the card or button below to trigger 3D perspective flip transform:', { style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }),
+
+    div({
+        style: {
+            width: '320px',
+            height: '210px',
+            margin: '0 auto 1.5rem auto',
+            position: 'relative',
+            transformStyle: 'preserve-3d',
+            transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: () => isFlipped.value ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            cursor: 'pointer'
+        },
+        onclick: () => { isFlipped.value = !isFlipped.value; }
+    },
+        // Front Face
+        div({
+            style: {
+                position: 'absolute',
+                inset: 0,
+                backfaceVisibility: 'hidden',
+                background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                borderRadius: '1.25rem',
+                padding: '1.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+            }
+        },
+            span('⚡', { style: { fontSize: '2.5rem', marginBottom: '0.5rem' } }),
+            h3('CairnJS Signals Engine', { style: { fontSize: '1.2rem', color: '#38bdf8', marginBottom: '0.25rem' } }),
+            p('Zero VDOM overhead with direct DOM manipulation.', { style: { fontSize: '0.8rem', color: '#94a3b8' } }),
+            span('Click to flip ↷', { style: { fontSize: '0.75rem', color: '#38bdf8', marginTop: '1rem', fontWeight: '600' } })
+        ),
+
+        // Back Face
+        div({
+            style: {
+                position: 'absolute',
+                inset: 0,
+                backfaceVisibility: 'hidden',
+                background: 'linear-gradient(135deg, #0284c7, #6366f1)',
+                borderRadius: '1.25rem',
+                padding: '1.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                transform: 'rotateY(180deg)',
+                boxShadow: '0 20px 40px rgba(2, 132, 199, 0.4)'
+            }
+        },
+            span('✨', { style: { fontSize: '2.5rem', marginBottom: '0.5rem' } }),
+            h3('Sub-12KB Powerhouse', { style: { fontSize: '1.2rem', color: '#fff', marginBottom: '0.25rem' } }),
+            p('Full UI suite, 3D WebGL, 60fps spring physics & forms.', { style: { fontSize: '0.8rem', color: '#e0f2fe' } }),
+            span('Click to return ↶', { style: { fontSize: '0.75rem', color: '#fff', marginTop: '1rem', fontWeight: '600' } })
+        )
+    ),
+
+    button(() => isFlipped.value ? 'Flip to Front' : 'Flip to Back', {
+        style: { padding: '0.65rem 1.5rem', background: '#334155', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer' },
+        onclick: () => { isFlipped.value = !isFlipped.value; }
+    })
+);
+
+mount('#app', App());`,
+
     counter: `import { cairn } from '../src/index.js';
 const { state, computed, div, button, h2, p, mount } = cairn;
 
@@ -37,7 +203,6 @@ const App = () => div({
             style: { padding: '0.6rem 1rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '600' },
             onclick: () => {
                 count.value++;
-                console.log('Count incremented to:', count.value);
             }
         })
     ),
@@ -72,7 +237,6 @@ const addTodo = () => {
     if (!val) return;
     todos.value = [...todos.value, { id: nextId++, text: val, done: false }];
     inputText.value = '';
-    console.log('Added new todo:', val);
 };
 
 const App = () => div({
@@ -102,6 +266,21 @@ const App = () => div({
         })
     ),
 
+    div({ style: { display: 'flex', gap: '0.25rem', marginBottom: '1rem', background: '#0f172a', padding: '0.25rem', borderRadius: '0.5rem' } },
+        button('All', {
+            style: { flex: 1, padding: '0.35rem', background: () => filter.value === 'all' ? '#334155' : 'transparent', color: () => filter.value === 'all' ? '#38bdf8' : '#94a3b8', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: '600' },
+            onclick: () => { filter.value = 'all'; }
+        }),
+        button('Active', {
+            style: { flex: 1, padding: '0.35rem', background: () => filter.value === 'active' ? '#334155' : 'transparent', color: () => filter.value === 'active' ? '#38bdf8' : '#94a3b8', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: '600' },
+            onclick: () => { filter.value = 'active'; }
+        }),
+        button('Completed', {
+            style: { flex: 1, padding: '0.35rem', background: () => filter.value === 'completed' ? '#334155' : 'transparent', color: () => filter.value === 'completed' ? '#38bdf8' : '#94a3b8', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: '600' },
+            onclick: () => { filter.value = 'completed'; }
+        })
+    ),
+
     ul({ style: { listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' } },
         () => filtered.value.map(item => li({
             style: {
@@ -114,7 +293,7 @@ const App = () => div({
             }
         },
             span({
-                style: { textDecoration: item.done ? 'line-through' : 'none', color: item.done ? '#64748b' : '#f8fafc', cursor: 'pointer' },
+                style: { textDecoration: item.done ? 'line-through' : 'none', color: item.done ? '#64748b' : '#f8fafc', cursor: 'pointer', flex: 1 },
                 onclick: () => {
                     todos.value = todos.value.map(t => t.id === item.id ? { ...t, done: !t.done } : t);
                 }
@@ -129,8 +308,8 @@ const App = () => div({
 
 mount('#app', App());`,
 
-    forms: `import { cairn, createForm } from '../src/index.js';
-const { div, h2, mount } = cairn;
+    forms: `import { cairn, createForm, validators } from '../src/index.js';
+const { div, h2, p, mount } = cairn;
 
 const profileForm = createForm({
     fields: {
@@ -138,14 +317,10 @@ const profileForm = createForm({
         email: { label: 'Work Email', type: 'email', default: '', required: true }
     },
     schema: {
-        username: [
-            (v) => (!v || v.length < 3 ? 'Username must be at least 3 characters' : null)
-        ],
-        email: [
-            (v) => (!v || !v.includes('@') ? 'Enter a valid email address' : null)
-        ]
+        username: [validators.required('Username is required'), validators.minLength(3, 'Minimum 3 chars')],
+        email: [validators.required(), validators.email('Valid email required')]
     },
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
         console.log('✅ Form Submitted:', values);
         alert('Form Submitted successfully:\\n' + JSON.stringify(values, null, 2));
     }
@@ -157,13 +332,1076 @@ const App = () => div({
         border: '1px solid rgba(255,255,255,0.1)',
         padding: '2rem',
         borderRadius: '1rem',
-        maxWidth: '420px',
+        maxWidth: '440px',
         margin: '2rem auto',
         color: '#f8fafc'
     }
 },
-    h2({ style: { marginBottom: '1.25rem', textAlign: 'center' } }, 'Declarative Form Validation'),
+    h2({ style: { marginBottom: '0.5rem', textAlign: 'center' } }, 'Declarative Form Validation'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem', textAlign: 'center' } }, 'Schema-based reactive errors & touched states'),
     profileForm
+);
+
+mount('#app', App());`,
+
+    reconciler: `import { cairn, For, state } from '../src/index.js';
+const { div, h2, p, button, span, mount } = cairn;
+
+const items = state([
+    { id: 'item-1', name: '⚡ Fine-Grained Signals', tag: 'Core' },
+    { id: 'item-2', name: '🎨 Adaptive Theme Engine', tag: 'Styling' },
+    { id: 'item-3', name: '🚀 WebGPU Acceleration', tag: 'Graphics' }
+]);
+
+const shuffle = () => {
+    const arr = [...items.value];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    items.value = arr;
+};
+
+const addItem = () => {
+    const id = 'item-' + Date.now();
+    items.value = [...items.value, { id, name: \`✨ Dynamic Feature #\${items.value.length + 1}\`, tag: 'New' }];
+};
+
+const App = () => div({
+    style: { maxWidth: '480px', margin: '2rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }
+},
+    h2({ style: { textAlign: 'center', marginBottom: '0.5rem' } }, 'Keyed List Reconciler'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', marginBottom: '1.25rem' } }, 'Surgical DOM diffing reorders nodes without destroying instances:'),
+    
+    div({ style: { display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' } },
+        button('🔀 Shuffle Order', {
+            style: { flex: 1, padding: '0.6rem', background: '#334155', color: '#fff', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '600' },
+            onclick: shuffle
+        }),
+        button('+ Add Item', {
+            style: { flex: 1, padding: '0.6rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '600' },
+            onclick: addItem
+        })
+    ),
+
+    div({ style: { display: 'flex', flexDirection: 'column', gap: '0.5rem' } },
+        For({
+            each: items,
+            key: (item) => item.id,
+            children: (item) => div({
+                style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.75rem 1rem',
+                    background: '#1e293b',
+                    borderRadius: '0.5rem',
+                    border: '1px solid rgba(255,255,255,0.05)'
+                }
+            },
+                span(item.name, { style: { fontWeight: '600' } }),
+                span(item.tag, { style: { fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.2rem 0.5rem', borderRadius: '4px' } })
+            )
+        })
+    )
+);
+
+mount('#app', App());`,
+
+    motion: `import { cairn, spring, state } from '../src/index.js';
+const { div, h2, p, button, span, mount } = cairn;
+
+const posX = state(0);
+const posY = state(0);
+const activePreset = state('bouncy');
+const activeTarget = state('center');
+
+const presets = {
+    bouncy: { stiffness: 220, damping: 10, mass: 1 },
+    gentle: { stiffness: 120, damping: 14, mass: 1 },
+    wobbly: { stiffness: 180, damping: 6, mass: 0.8 },
+    stiff:  { stiffness: 350, damping: 25, mass: 1 }
+};
+
+const triggerMotion = (targetKey, targetX, targetY) => {
+    activeTarget.value = targetKey;
+    const config = presets[activePreset.value] || presets.bouncy;
+    spring({
+        from: posX.value,
+        to: targetX,
+        ...config,
+        onUpdate: (v) => { posX.value = v; }
+    });
+    spring({
+        from: posY.value,
+        to: targetY,
+        ...config,
+        onUpdate: (v) => { posY.value = v; }
+    });
+};
+
+const App = () => div({
+    style: { maxWidth: '560px', margin: '1rem auto', textAlign: 'center', background: '#0f172a', padding: '1.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }
+},
+    h2({ style: { marginBottom: '0.5rem', fontSize: '1.4rem' } }, '60fps Spring Physics Engine'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'Select spring physics preset & trigger kinematic transforms:'),
+
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' } },
+        Object.keys(presets).map(pName => button(pName.toUpperCase(), {
+            style: {
+                padding: '0.5rem 1rem',
+                fontSize: '0.8rem',
+                fontWeight: () => activePreset.value === pName ? '700' : '500',
+                background: () => activePreset.value === pName ? '#0284c7' : '#1e293b',
+                color: () => activePreset.value === pName ? '#fff' : '#94a3b8',
+                border: () => activePreset.value === pName ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                boxShadow: () => activePreset.value === pName ? '0 4px 14px rgba(56, 189, 248, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { activePreset.value = pName; }
+        }))
+    ),
+
+    div({
+        style: {
+            height: '180px',
+            background: '#020617',
+            borderRadius: '0.75rem',
+            border: '1px solid rgba(255,255,255,0.08)',
+            position: 'relative',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '1.5rem'
+        }
+    },
+        () => div({
+            style: {
+                width: '72px',
+                height: '72px',
+                borderRadius: '1.25rem',
+                background: 'linear-gradient(135deg, #38bdf8, #818cf8, #ec4899)',
+                transform: \`translate(\${posX.value}px, \${posY.value}px) rotate(\${posX.value * 0.5}deg)\`,
+                boxShadow: '0 12px 30px rgba(56, 189, 248, 0.45)',
+                cursor: 'grab'
+            }
+        })
+    ),
+
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center' } },
+        button('Left Target', {
+            style: {
+                padding: '0.6rem 1.1rem',
+                background: () => activeTarget.value === 'left' ? '#0284c7' : '#1e293b',
+                color: () => activeTarget.value === 'left' ? '#fff' : '#94a3b8',
+                border: () => activeTarget.value === 'left' ? '1px solid #38bdf8' : '1px solid #334155',
+                borderRadius: '0.5rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => triggerMotion('left', -140, 0)
+        }),
+        button('Center Burst', {
+            style: {
+                padding: '0.6rem 1.1rem',
+                background: () => activeTarget.value === 'center' ? '#0284c7' : '#1e293b',
+                color: () => activeTarget.value === 'center' ? '#fff' : '#94a3b8',
+                border: () => activeTarget.value === 'center' ? '1px solid #38bdf8' : '1px solid #334155',
+                borderRadius: '0.5rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => triggerMotion('center', 0, -25)
+        }),
+        button('Right Target', {
+            style: {
+                padding: '0.6rem 1.1rem',
+                background: () => activeTarget.value === 'right' ? '#0284c7' : '#1e293b',
+                color: () => activeTarget.value === 'right' ? '#fff' : '#94a3b8',
+                border: () => activeTarget.value === 'right' ? '1px solid #38bdf8' : '1px solid #334155',
+                borderRadius: '0.5rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => triggerMotion('right', 140, 0)
+        })
+    )
+);
+
+mount('#app', App());`,
+
+    gestures: `import { cairn, spring, state } from '../src/index.js';
+const { div, h2, p, button, span, mount } = cairn;
+
+const dragX = state(0);
+const dragY = state(0);
+const isDragging = state(false);
+const dismissed = state(false);
+
+let startX = 0;
+let startY = 0;
+
+const onMouseDown = (e) => {
+    isDragging.value = true;
+    startX = e.clientX - dragX.value;
+    startY = e.clientY - dragY.value;
+};
+
+window.addEventListener('mousemove', (e) => {
+    if (!isDragging.value) return;
+    dragX.value = e.clientX - startX;
+    dragY.value = e.clientY - startY;
+});
+
+window.addEventListener('mouseup', () => {
+    if (!isDragging.value) return;
+    isDragging.value = false;
+    
+    // Swipe fling check
+    if (Math.abs(dragX.value) > 120) {
+        const dir = dragX.value > 0 ? 400 : -400;
+        spring.bouncy({
+            from: dragX.value,
+            to: dir,
+            onUpdate: (v) => { dragX.value = v; },
+            onComplete: () => { dismissed.value = true; }
+        });
+    } else {
+        // Snap back to origin
+        spring.bouncy({ from: dragX.value, to: 0, onUpdate: (v) => { dragX.value = v; } });
+        spring.bouncy({ from: dragY.value, to: 0, onUpdate: (v) => { dragY.value = v; } });
+    }
+});
+
+const resetCard = () => {
+    dismissed.value = false;
+    dragX.value = 0;
+    dragY.value = 0;
+};
+
+const App = () => div({
+    style: { maxWidth: '460px', margin: '2rem auto', textAlign: 'center', color: '#fff' }
+},
+    h2({ style: { marginBottom: '0.5rem' } }, 'Touch & Drag Gesture Physics'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }, 'Drag the interactive card horizontally to feel momentum & spring snap:'),
+
+    () => !dismissed.value ? div({
+        style: {
+            background: 'linear-gradient(145deg, #1e293b, #0f172a)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            borderRadius: '1.25rem',
+            padding: '2.5rem 1.5rem',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+            cursor: () => isDragging.value ? 'grabbing' : 'grab',
+            transform: () => \`translate3d(\${dragX.value}px, \${dragY.value}px, 0) rotate(\${dragX.value * 0.08}deg)\`,
+            transition: () => isDragging.value ? 'none' : 'box-shadow 0.2s ease',
+            userSelect: 'none'
+        },
+        onmousedown: onMouseDown
+    },
+        div({ style: { fontSize: '2.5rem', marginBottom: '0.75rem' } }, '🚀'),
+        h2('Kinematic Drag Card', { style: { fontSize: '1.2rem', marginBottom: '0.5rem' } }),
+        p('Swipe left or right to fling, or release to spring-snap back to center.', { style: { color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' } })
+    ) : div({
+        style: { padding: '3rem 1.5rem', background: '#111827', borderRadius: '1rem', border: '1px dashed #38bdf8' }
+    },
+        p('✨ Card Swiped & Dismissed!', { style: { color: '#38bdf8', fontWeight: '700', marginBottom: '1rem' } }),
+        button('↺ Reset Card', {
+            style: { padding: '0.6rem 1.25rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' },
+            onclick: resetCard
+        })
+    )
+);
+
+mount('#app', App());`,
+
+    physics: `import { cairn, physics, state } from '../src/index.js';
+const { div, h2, p, button, mount } = cairn;
+
+const canvasNode = document.createElement('canvas');
+canvasNode.width = 540;
+canvasNode.height = 340;
+canvasNode.style.width = '100%';
+canvasNode.style.maxWidth = '540px';
+canvasNode.style.height = '340px';
+canvasNode.style.borderRadius = '0.75rem';
+canvasNode.style.background = '#020617';
+
+const mode = state('attract');
+const ctx = canvasNode.getContext('2d');
+const particles = [];
+const count = 85;
+
+for (let i = 0; i < count; i++) {
+    particles.push(physics.particle({
+        x: Math.random() * 540,
+        y: Math.random() * 340,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6,
+        gravity: 0,
+        friction: 0.985,
+        bounce: 0.85
+    }));
+}
+
+let attractor = { x: 270, y: 170, active: true };
+
+canvasNode.addEventListener('mousemove', (e) => {
+    const rect = canvasNode.getBoundingClientRect();
+    attractor.x = (e.clientX - rect.left) * (540 / rect.width);
+    attractor.y = (e.clientY - rect.top) * (340 / rect.height);
+});
+
+canvasNode.addEventListener('click', () => {
+    // Click burst repulsion
+    particles.forEach(p => {
+        const dx = p.x - attractor.x;
+        const dy = p.y - attractor.y;
+        p.applyForce(dx * 0.45, dy * 0.45);
+    });
+});
+
+function loop() {
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.22)';
+    ctx.fillRect(0, 0, 540, 340);
+
+    // Draw central attractor beacon
+    ctx.beginPath();
+    ctx.arc(attractor.x, attractor.y, 9, 0, Math.PI * 2);
+    ctx.fillStyle = mode.value === 'attract' ? '#38bdf8' : '#f43f5e';
+    ctx.shadowColor = mode.value === 'attract' ? '#38bdf8' : '#f43f5e';
+    ctx.shadowBlur = 16;
+    ctx.fill();
+
+    particles.forEach((p, idx) => {
+        const dx = attractor.x - p.x;
+        const dy = attractor.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const mult = mode.value === 'attract' ? 1 : -1;
+        const force = (45 / dist) * mult;
+        p.applyForce((dx / dist) * force, (dy / dist) * force);
+
+        p.step(0.016, { minX: 6, maxX: 534, minY: 6, maxY: 334 });
+
+        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        const hue = (idx * 4 + speed * 25) % 360;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.min(2.5 + speed * 0.6, 6.5), 0, Math.PI * 2);
+        ctx.fillStyle = \`hsl(\${hue}, 90%, 65%)\`;
+        ctx.shadowColor = \`hsl(\${hue}, 90%, 65%)\`;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+    });
+
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+const App = () => div({
+    style: { maxWidth: '560px', margin: '1rem auto', textAlign: 'center', color: '#fff', background: '#0f172a', padding: '1.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }
+},
+    h2({ style: { marginBottom: '0.5rem', fontSize: '1.4rem' } }, 'N-Body Gravitational Physics'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'Move cursor to attract particles. Click anywhere to trigger kinetic repulsion burst:'),
+    canvasNode,
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1.25rem' } },
+        button('Attract Mode', {
+            style: {
+                padding: '0.5rem 1.1rem',
+                background: () => mode.value === 'attract' ? '#0284c7' : '#1e293b',
+                color: () => mode.value === 'attract' ? '#fff' : '#94a3b8',
+                border: () => mode.value === 'attract' ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: () => mode.value === 'attract' ? '700' : '500',
+                boxShadow: () => mode.value === 'attract' ? '0 4px 14px rgba(56, 189, 248, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { mode.value = 'attract'; }
+        }),
+        button('Repel Mode', {
+            style: {
+                padding: '0.5rem 1.1rem',
+                background: () => mode.value === 'repel' ? '#f43f5e' : '#1e293b',
+                color: () => mode.value === 'repel' ? '#fff' : '#94a3b8',
+                border: () => mode.value === 'repel' ? '1px solid #fb7185' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: () => mode.value === 'repel' ? '700' : '500',
+                boxShadow: () => mode.value === 'repel' ? '0 4px 14px rgba(244, 63, 94, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { mode.value = 'repel'; }
+        })
+    )
+);
+
+mount('#app', App());`,
+
+    transitions: `import { cairn, state } from '../src/index.js';
+const { div, h2, p, button, span, mount } = cairn;
+
+const activeTab = state('overview');
+const expandedCard = state(null);
+
+const items = [
+    { id: '1', title: 'Signals Reactivity', desc: 'Direct atomic updates with zero VDOM diffing overhead.', icon: '⚡' },
+    { id: '2', title: 'Spring Kinematics', desc: 'Hardware accelerated 60fps spring physics solver.', icon: '🌀' },
+    { id: '3', title: 'WebGL 3D Meshes', desc: 'Zero-dependency 3D scene graph and shader pipeline.', icon: '🎲' }
+];
+
+const App = () => div({
+    style: { maxWidth: '460px', margin: '1.5rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }
+},
+    h2({ style: { textAlign: 'center', marginBottom: '0.5rem' } }, 'Fluid View Transitions & Morph'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', marginBottom: '1.5rem' } }, 'Click any card to trigger smooth animated layout expansion:'),
+
+    div({ style: { display: 'flex', flexDirection: 'column', gap: '0.75rem' } },
+        items.map(item => () => div({
+            style: {
+                background: '#1e293b',
+                border: () => expandedCard.value === item.id ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.05)',
+                borderRadius: '0.75rem',
+                padding: '1rem',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                boxShadow: () => expandedCard.value === item.id ? '0 12px 30px rgba(56, 189, 248, 0.25)' : 'none',
+                transform: () => expandedCard.value === item.id ? 'scale(1.02)' : 'scale(1)'
+            },
+            onclick: () => {
+                expandedCard.value = expandedCard.value === item.id ? null : item.id;
+            }
+        },
+            div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                div({ style: { display: 'flex', alignItems: 'center', gap: '0.75rem' } },
+                    span(item.icon, { style: { fontSize: '1.4rem' } }),
+                    span(item.title, { style: { fontWeight: '700', fontSize: '1rem' } })
+                ),
+                span(() => expandedCard.value === item.id ? '▲' : '▼', { style: { color: '#38bdf8', fontSize: '0.8rem' } })
+            ),
+            () => expandedCard.value === item.id ? div({
+                style: {
+                    marginTop: '0.75rem',
+                    paddingTop: '0.75rem',
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                    animation: 'cairn-fade-up 0.25s ease forwards'
+                }
+            },
+                p(item.desc, { style: { fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.5', margin: 0 } })
+            ) : null
+        ))
+    )
+);
+
+mount('#app', App());`,
+
+    canvas2d: `import { cairn, state } from '../src/index.js';
+const { div, h2, p, button, mount } = cairn;
+
+const canvasNode = document.createElement('canvas');
+canvasNode.width = 540;
+canvasNode.height = 340;
+canvasNode.style.width = '100%';
+canvasNode.style.maxWidth = '540px';
+canvasNode.style.height = '340px';
+canvasNode.style.borderRadius = '0.75rem';
+canvasNode.style.background = '#020617';
+
+const particleSpeed = state(1.0);
+const ctx = canvasNode.getContext('2d');
+let time = 0;
+
+function draw() {
+    time += 0.02 * particleSpeed.value;
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.2)';
+    ctx.fillRect(0, 0, canvasNode.width, canvasNode.height);
+
+    const count = 36;
+    const cx = canvasNode.width / 2;
+    const cy = canvasNode.height / 2;
+    
+    for (let i = 0; i < count; i++) {
+        const angle = time * 1.5 + (i * Math.PI * 2 / count);
+        const radius = 80 + Math.sin(time * 3 + i) * 35;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * (radius * 0.6);
+        const hue = (i * 10 + time * 60) % 360;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 4 + Math.sin(time * 2 + i) * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = \`hsl(\${hue}, 95%, 65%)\`;
+        ctx.shadowColor = \`hsl(\${hue}, 95%, 65%)\`;
+        ctx.shadowBlur = 14;
+        ctx.fill();
+    }
+    requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+const App = () => div({
+    style: { maxWidth: '560px', margin: '1rem auto', textAlign: 'center', color: '#f8fafc', background: '#0f172a', padding: '1.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }
+},
+    h2({ style: { marginBottom: '0.5rem', fontSize: '1.4rem' } }, '2D Hardware Canvas & Kinematics'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, '60fps glowing particle halo rendered natively in Canvas 2D:'),
+    canvasNode,
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1.25rem' } },
+        [0.5, 1.0, 2.0].map(spd => button(\`\${spd}x Speed\`, {
+            style: {
+                padding: '0.5rem 1rem',
+                background: () => particleSpeed.value === spd ? '#0284c7' : '#1e293b',
+                color: () => particleSpeed.value === spd ? '#fff' : '#94a3b8',
+                border: () => particleSpeed.value === spd ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: () => particleSpeed.value === spd ? '700' : '500',
+                boxShadow: () => particleSpeed.value === spd ? '0 4px 14px rgba(56, 189, 248, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { particleSpeed.value = spd; }
+        }))
+    )
+);
+
+mount('#app', App());`,
+
+    canvas3d: `import { cairn, createScene3D, state } from '../src/index.js';
+const { div, h2, p, button, mount } = cairn;
+
+const canvasNode = document.createElement('canvas');
+canvasNode.width = 540;
+canvasNode.height = 360;
+canvasNode.style.width = '100%';
+canvasNode.style.maxWidth = '540px';
+canvasNode.style.height = '360px';
+canvasNode.style.borderRadius = '0.75rem';
+canvasNode.style.background = '#020617';
+canvasNode.style.cursor = 'grab';
+
+const activeColor = state('cyan');
+const colors = {
+    cyan:   [0.22, 0.75, 0.98],
+    emerald:[0.16, 0.85, 0.55],
+    purple: [0.75, 0.35, 0.95],
+    amber:  [0.98, 0.65, 0.15]
+};
+
+setTimeout(() => {
+    const scene = createScene3D(canvasNode, { width: 540, height: 360, clearColor: [0.015, 0.03, 0.07, 1.0] });
+    if (!scene) return;
+
+    scene.camera({ fov: 55, position: [0, 1.2, 5.0] });
+    scene.light({ direction: [1, -1, -0.8], color: [1, 1, 1], intensity: 1.5, ambient: 0.35 });
+    
+    const box = scene.add(scene.box({ size: 1.3, color: colors.cyan }));
+    box.position = [0, 0.2, 0];
+
+    const sphere = scene.add(scene.sphere({ radius: 0.5, segments: 24, color: [0.98, 0.4, 0.3] }));
+    const floor = scene.add(scene.plane({ width: 8, height: 8, color: [0.08, 0.12, 0.2] }));
+    floor.position = [0, -1.2, 0];
+
+    let isDragging = false, lastX = 0, rotY = 0;
+    canvasNode.addEventListener('mousedown', (e) => { isDragging = true; lastX = e.clientX; canvasNode.style.cursor = 'grabbing'; });
+    window.addEventListener('mouseup', () => { isDragging = false; canvasNode.style.cursor = 'grab'; });
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        rotY += (e.clientX - lastX) * 0.01;
+        lastX = e.clientX;
+    });
+    
+    let t = 0;
+    scene.animate((dt) => {
+        t += dt;
+        box.material.color = colors[activeColor.value] || colors.cyan;
+
+        if (box) {
+            box.rotation[1] = rotY + t * 0.8;
+            box.rotation[0] = t * 0.4;
+        }
+        if (sphere) {
+            sphere.position[0] = Math.cos(t * 1.5) * 2.0;
+            sphere.position[1] = 0.2 + Math.sin(t * 2) * 0.5;
+            sphere.position[2] = Math.sin(t * 1.5) * 2.0;
+        }
+        scene.render();
+    });
+}, 50);
+
+const App = () => div({
+    style: { maxWidth: '560px', margin: '1rem auto', textAlign: 'center', color: '#fff', background: '#0f172a', padding: '1.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }
+},
+    h2({ style: { marginBottom: '0.5rem', fontSize: '1.4rem' } }, '3D WebGL Scene Graph Engine'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'Pure zero-dependency WebGL 3D meshes, directional light, and orbiting camera:'),
+    canvasNode,
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1.25rem' } },
+        Object.keys(colors).map(cKey => button(cKey.toUpperCase(), {
+            style: {
+                padding: '0.5rem 1rem',
+                background: () => activeColor.value === cKey ? '#0284c7' : '#1e293b',
+                color: () => activeColor.value === cKey ? '#fff' : '#94a3b8',
+                border: () => activeColor.value === cKey ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: () => activeColor.value === cKey ? '700' : '500',
+                boxShadow: () => activeColor.value === cKey ? '0 4px 14px rgba(56, 189, 248, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { activeColor.value = cKey; }
+        }))
+    )
+);
+
+mount('#app', App());`,
+
+    galaxy3d: `import { cairn, createScene3D, state } from '../src/index.js';
+const { div, h2, p, button, mount } = cairn;
+
+const canvasNode = document.createElement('canvas');
+canvasNode.width = 540;
+canvasNode.height = 360;
+canvasNode.style.width = '100%';
+canvasNode.style.maxWidth = '540px';
+canvasNode.style.height = '360px';
+canvasNode.style.borderRadius = '0.75rem';
+canvasNode.style.background = '#020617';
+canvasNode.style.cursor = 'grab';
+
+const speed = state(1.0);
+const speeds = [
+    { label: '0.5x Speed', val: 0.5 },
+    { label: '1.0x Normal', val: 1.0 },
+    { label: '2.5x Warp', val: 2.5 }
+];
+
+setTimeout(() => {
+    const scene = createScene3D(canvasNode, { width: 540, height: 360, clearColor: [0.015, 0.03, 0.07, 1.0] });
+    if (!scene) return;
+
+    scene.camera({ fov: 50, position: [0, 1.2, 7.2] });
+    scene.light({ direction: [0.8, -1.0, -0.6], color: [1, 0.95, 0.85], intensity: 1.6, ambient: 0.3 });
+
+    // 1. Central Glowing Sun
+    const sun = scene.add(scene.sphere({ radius: 0.85, segments: 24, color: [1.0, 0.75, 0.15] }));
+    sun.position = [0, 0.4, 0];
+
+    // 2. Multi-Planet Orbital Hierarchy
+    const planets = [
+        { mesh: scene.add(scene.sphere({ radius: 0.26, segments: 16, color: [0.22, 0.75, 0.98] })), dist: 1.8, speed: 1.8, angle: 0, tilt: 0.1 },
+        { mesh: scene.add(scene.sphere({ radius: 0.35, segments: 16, color: [0.95, 0.4, 0.25] })), dist: 2.8, speed: 1.2, angle: 2, tilt: -0.2 },
+        { mesh: scene.add(scene.sphere({ radius: 0.45, segments: 20, color: [0.65, 0.45, 0.95] })), dist: 3.9, speed: 0.7, angle: 4, tilt: 0.15 },
+        { mesh: scene.add(scene.sphere({ radius: 0.12, segments: 12, color: [0.85, 0.85, 0.95] })), dist: 0.65, speed: 4.5, angle: 0, parentIndex: 2 }
+    ];
+
+    // 3. Grid Floor Plane
+    const floor = scene.add(scene.plane({ width: 14, height: 14, color: [0.06, 0.1, 0.18] }));
+    floor.position = [0, -1.2, 0];
+
+    // Interactive mouse rotation
+    let isDragging = false, lastX = 0, rotY = 0;
+    canvasNode.addEventListener('mousedown', (e) => { isDragging = true; lastX = e.clientX; canvasNode.style.cursor = 'grabbing'; });
+    window.addEventListener('mouseup', () => { isDragging = false; canvasNode.style.cursor = 'grab'; });
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        rotY += (e.clientX - lastX) * 0.01;
+        lastX = e.clientX;
+    });
+
+    let t = 0;
+    scene.animate((dt) => {
+        t += dt * speed.value;
+
+        // Sun self-rotation & pulse
+        sun.rotation[1] = t * 0.4;
+        const scale = 1.0 + Math.sin(t * 3) * 0.04;
+        sun.scale = [scale, scale, scale];
+
+        // Planet orbits
+        planets.forEach((p) => {
+            if (p.parentIndex !== undefined) {
+                const parent = planets[p.parentIndex].mesh;
+                const moonAngle = t * p.speed;
+                p.mesh.position = [
+                    parent.position[0] + Math.cos(moonAngle) * p.dist,
+                    parent.position[1] + Math.sin(moonAngle * 1.5) * 0.2,
+                    parent.position[2] + Math.sin(moonAngle) * p.dist
+                ];
+            } else {
+                const a = p.angle + t * p.speed;
+                p.mesh.position = [
+                    Math.cos(a) * p.dist,
+                    0.4 + Math.sin(a * 2) * p.tilt,
+                    Math.sin(a) * p.dist
+                ];
+                p.mesh.rotation[1] += dt * 2;
+            }
+        });
+
+        // Dynamic Camera Orbit with user drag offset
+        const camDist = 7.2;
+        const camAngle = t * 0.12 + rotY;
+        scene.camera({
+            position: [Math.sin(camAngle) * camDist, 1.2, Math.cos(camAngle) * camDist]
+        });
+
+        scene.render();
+    });
+}, 50);
+
+const App = () => div({
+    style: { maxWidth: '560px', margin: '1rem auto', textAlign: 'center', color: '#fff', background: '#0f172a', padding: '1.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }
+},
+    h2({ style: { marginBottom: '0.5rem', fontSize: '1.4rem' } }, '3D Solar System & Orbital Dynamics'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'Hierarchical multi-body physics, orbital math & interactive 3D drag camera:'),
+    canvasNode,
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1.25rem' } },
+        speeds.map(s => button(s.label, {
+            style: {
+                padding: '0.5rem 1.1rem',
+                background: () => speed.value === s.val ? '#0284c7' : '#1e293b',
+                color: () => speed.value === s.val ? '#ffffff' : '#94a3b8',
+                border: () => speed.value === s.val ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: () => speed.value === s.val ? '700' : '500',
+                boxShadow: () => speed.value === s.val ? '0 4px 14px rgba(56, 189, 248, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { speed.value = s.val; }
+        }))
+    )
+);
+
+mount('#app', App());`,
+
+    torus_matrix3d: `import { cairn, createScene3D, state } from '../src/index.js';
+const { div, h2, p, button, mount } = cairn;
+
+const canvasNode = document.createElement('canvas');
+canvasNode.width = 540;
+canvasNode.height = 360;
+canvasNode.style.width = '100%';
+canvasNode.style.maxWidth = '540px';
+canvasNode.style.height = '360px';
+canvasNode.style.borderRadius = '0.75rem';
+canvasNode.style.background = '#020617';
+canvasNode.style.cursor = 'grab';
+
+const patternMode = state('wave');
+const modes = [
+    { label: 'Wave Harmonics', key: 'wave' },
+    { label: 'Vortex Ring', key: 'vortex' },
+    { label: 'Pulsing Core', key: 'pulse' }
+];
+
+setTimeout(() => {
+    const scene = createScene3D(canvasNode, { width: 540, height: 360, clearColor: [0.015, 0.03, 0.07, 1.0] });
+    if (!scene) return;
+
+    scene.camera({ fov: 55, position: [0, 1.2, 6.2] });
+    scene.light({ direction: [1, -1, -1], color: [1, 1, 1], intensity: 1.5, ambient: 0.3 });
+
+    const nodes = [];
+    const count = 20;
+    const radius = 2.4;
+
+    for (let i = 0; i < count; i++) {
+        const r = 0.2 + 0.8 * Math.sin(i);
+        const g = 0.4 + 0.6 * Math.cos(i);
+        const b = 0.95;
+        const box = scene.add(scene.box({ size: 0.44, color: [r, g, b] }));
+        nodes.push({ box, index: i });
+    }
+
+    // Central Core Sphere
+    const core = scene.add(scene.sphere({ radius: 0.85, segments: 24, color: [0.95, 0.25, 0.65] }));
+    core.position = [0, 0.2, 0];
+
+    // Interactive mouse rotation
+    let isDragging = false, lastX = 0, rotY = 0;
+    canvasNode.addEventListener('mousedown', (e) => { isDragging = true; lastX = e.clientX; canvasNode.style.cursor = 'grabbing'; });
+    window.addEventListener('mouseup', () => { isDragging = false; canvasNode.style.cursor = 'grab'; });
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        rotY += (e.clientX - lastX) * 0.01;
+        lastX = e.clientX;
+    });
+
+    let t = 0;
+    scene.animate((dt) => {
+        t += dt;
+
+        core.rotation[1] = t * 1.2;
+        core.rotation[0] = t * 0.6;
+
+        nodes.forEach(({ box, index }) => {
+            const angle = (index / count) * Math.PI * 2 + t * 0.8;
+            let wave = Math.sin(t * 2 + index * 0.5) * 0.8;
+            let currentRadius = radius;
+
+            if (patternMode.value === 'vortex') {
+                wave = Math.cos(t * 3 + index) * 1.2;
+                currentRadius = 1.6 + Math.sin(t * 2 + index * 0.3) * 1.0;
+            } else if (patternMode.value === 'pulse') {
+                const pulseScale = 1.8 + Math.sin(t * 4) * 0.6;
+                currentRadius = pulseScale;
+                wave = Math.sin(t * 2 + index) * 0.4;
+            }
+            
+            box.position = [
+                Math.cos(angle) * currentRadius,
+                0.2 + wave,
+                Math.sin(angle) * currentRadius
+            ];
+
+            box.rotation[0] = t * 2 + index;
+            box.rotation[1] = t * 1.5 + index;
+            box.rotation[2] = t * 0.8;
+        });
+
+        // Dynamic orbiting light & camera
+        scene.light({
+            direction: [Math.cos(t * 1.5), -1, Math.sin(t * 1.5)],
+            color: [0.8 + Math.sin(t) * 0.2, 0.9, 1.0]
+        });
+
+        const camAngle = t * 0.1 + rotY;
+        scene.camera({
+            position: [Math.sin(camAngle) * 6.2, 1.2, Math.cos(camAngle) * 6.2]
+        });
+
+        scene.render();
+    });
+}, 50);
+
+const App = () => div({
+    style: { maxWidth: '560px', margin: '1rem auto', textAlign: 'center', color: '#fff', background: '#0f172a', padding: '1.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }
+},
+    h2({ style: { marginBottom: '0.5rem', fontSize: '1.4rem' } }, '3D Kinetic Helix & Parametric Ring'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, '20 synchronized 3D polyhedra meshes with real-time wave kinematics & lighting:'),
+    canvasNode,
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1.25rem' } },
+        modes.map(m => button(m.label, {
+            style: {
+                padding: '0.5rem 1.1rem',
+                background: () => patternMode.value === m.key ? '#6366f1' : '#1e293b',
+                color: () => patternMode.value === m.key ? '#ffffff' : '#94a3b8',
+                border: () => patternMode.value === m.key ? '1px solid #818cf8' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: () => patternMode.value === m.key ? '700' : '500',
+                boxShadow: () => patternMode.value === m.key ? '0 4px 14px rgba(99, 102, 241, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { patternMode.value = m.key; }
+        }))
+    )
+);
+
+mount('#app', App());`,
+
+    product_viewer3d: `import { cairn, createScene3D, state } from '../src/index.js';
+const { div, h2, p, button, span, mount } = cairn;
+
+const canvasNode = document.createElement('canvas');
+canvasNode.width = 540;
+canvasNode.height = 360;
+canvasNode.style.width = '100%';
+canvasNode.style.maxWidth = '540px';
+canvasNode.style.height = '360px';
+canvasNode.style.borderRadius = '0.75rem';
+canvasNode.style.background = '#020617';
+canvasNode.style.cursor = 'grab';
+
+const activeTheme = state('cyberpunk');
+const isWireframe = state(false);
+
+const themes = {
+    cyberpunk: { light: [0.2, -1, -0.8], color: [0.95, 0.2, 0.6], ambient: 0.35, meshColor: [0.22, 0.75, 0.98] },
+    gold:      { light: [1, -1, -0.5], color: [1.0, 0.85, 0.4], ambient: 0.4, meshColor: [1.0, 0.7, 0.1] },
+    arctic:    { light: [0, -1.5, -1], color: [0.7, 0.9, 1.0], ambient: 0.45, meshColor: [0.9, 0.95, 1.0] }
+};
+
+setTimeout(() => {
+    const scene = createScene3D(canvasNode, { width: 540, height: 360, clearColor: [0.02, 0.04, 0.09, 1.0] });
+    if (!scene) return;
+
+    scene.camera({ fov: 45, position: [0, 1.1, 5.2] });
+
+    // Central Artifact Box
+    const artifact = scene.add(scene.box({ size: 1.4, color: [0.22, 0.75, 0.98] }));
+    artifact.position = [0, 0.2, 0];
+
+    // Satellite Ring Spheres
+    const satellites = [
+        scene.add(scene.sphere({ radius: 0.24, segments: 16, color: [0.95, 0.4, 0.3] })),
+        scene.add(scene.sphere({ radius: 0.19, segments: 16, color: [0.65, 0.35, 0.95] })),
+        scene.add(scene.sphere({ radius: 0.16, segments: 16, color: [0.35, 0.95, 0.65] }))
+    ];
+
+    // Pedestal Floor
+    const pedestal = scene.add(scene.plane({ width: 8, height: 8, color: [0.08, 0.12, 0.2] }));
+    pedestal.position = [0, -1.2, 0];
+
+    // 360 Orbit drag
+    let isDragging = false, lastX = 0, lastY = 0, rotY = 0, rotX = 0.15;
+    canvasNode.addEventListener('mousedown', (e) => { isDragging = true; lastX = e.clientX; lastY = e.clientY; canvasNode.style.cursor = 'grabbing'; });
+    window.addEventListener('mouseup', () => { isDragging = false; canvasNode.style.cursor = 'grab'; });
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        rotY += (e.clientX - lastX) * 0.012;
+        rotX = Math.max(-0.4, Math.min(0.8, rotX + (e.clientY - lastY) * 0.01));
+        lastX = e.clientX;
+        lastY = e.clientY;
+    });
+
+    let t = 0;
+    scene.animate((dt) => {
+        t += dt;
+
+        const th = themes[activeTheme.value] || themes.cyberpunk;
+        scene.light({ direction: th.light, color: th.color, ambient: th.ambient });
+        artifact.material.color = th.meshColor;
+        artifact.material.wireframe = isWireframe.value;
+
+        if (!isDragging) {
+            rotY += dt * 0.5;
+        }
+
+        artifact.rotation[1] = rotY;
+        artifact.rotation[0] = rotX;
+
+        satellites.forEach((sat, i) => {
+            const angle = t * 1.5 + (i * Math.PI * 2 / 3);
+            sat.position = [
+                Math.cos(angle) * 1.9,
+                0.2 + Math.sin(t * 2 + i) * 0.3,
+                Math.sin(angle) * 1.9
+            ];
+        });
+
+        scene.render();
+    });
+}, 50);
+
+const App = () => div({
+    style: { maxWidth: '560px', margin: '1rem auto', textAlign: 'center', color: '#fff', background: '#0f172a', padding: '1.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }
+},
+    h2({ style: { marginBottom: '0.5rem', fontSize: '1.4rem' } }, '3D Interactive Product Studio'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'Drag to rotate 360°. Switch dynamic studio lighting presets & wireframe:'),
+    canvasNode,
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1.25rem', flexWrap: 'wrap' } },
+        button('Cyberpunk', {
+            style: {
+                padding: '0.5rem 1rem',
+                background: () => activeTheme.value === 'cyberpunk' ? '#ec4899' : '#1e293b',
+                color: () => activeTheme.value === 'cyberpunk' ? '#ffffff' : '#94a3b8',
+                border: () => activeTheme.value === 'cyberpunk' ? '1px solid #f472b6' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontWeight: () => activeTheme.value === 'cyberpunk' ? '700' : '500',
+                fontSize: '0.85rem',
+                boxShadow: () => activeTheme.value === 'cyberpunk' ? '0 4px 14px rgba(236, 72, 153, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { activeTheme.value = 'cyberpunk'; }
+        }),
+        button('Gold Studio', {
+            style: {
+                padding: '0.5rem 1rem',
+                background: () => activeTheme.value === 'gold' ? '#eab308' : '#1e293b',
+                color: () => activeTheme.value === 'gold' ? '#000000' : '#94a3b8',
+                border: () => activeTheme.value === 'gold' ? '1px solid #fde047' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontWeight: () => activeTheme.value === 'gold' ? '700' : '500',
+                fontSize: '0.85rem',
+                boxShadow: () => activeTheme.value === 'gold' ? '0 4px 14px rgba(234, 179, 8, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { activeTheme.value = 'gold'; }
+        }),
+        button('Arctic Minimal', {
+            style: {
+                padding: '0.5rem 1rem',
+                background: () => activeTheme.value === 'arctic' ? '#38bdf8' : '#1e293b',
+                color: () => activeTheme.value === 'arctic' ? '#000000' : '#94a3b8',
+                border: () => activeTheme.value === 'arctic' ? '1px solid #7dd3fc' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontWeight: () => activeTheme.value === 'arctic' ? '700' : '500',
+                fontSize: '0.85rem',
+                boxShadow: () => activeTheme.value === 'arctic' ? '0 4px 14px rgba(56, 189, 248, 0.35)' : 'none',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { activeTheme.value = 'arctic'; }
+        }),
+        button(() => isWireframe.value ? 'Solid Mesh' : 'Wireframe', {
+            style: {
+                padding: '0.5rem 1rem',
+                background: () => isWireframe.value ? '#334155' : '#1e293b',
+                color: () => isWireframe.value ? '#38bdf8' : '#94a3b8',
+                border: () => isWireframe.value ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                transition: 'all 0.15s ease'
+            },
+            onclick: () => { isWireframe.value = !isWireframe.value; }
+        })
+    )
+);
+
+mount('#app', App());`,
+
+    charts: `import { cairn, Charts, state } from '../src/index.js';
+const { div, h2, p, button, mount } = cairn;
+
+const chartCanvas = document.createElement('canvas');
+chartCanvas.width = 440;
+chartCanvas.height = 220;
+chartCanvas.style.width = '100%';
+chartCanvas.style.maxWidth = '440px';
+chartCanvas.style.height = '220px';
+chartCanvas.style.borderRadius = '0.5rem';
+
+const revenue = state([45, 62, 80, 95, 78, 110, 135]);
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+
+Charts.reactive('bar', chartCanvas, () => ({
+    labels: months,
+    datasets: [
+        { label: 'Revenue (k$)', values: revenue.value, color: '#38bdf8' }
+    ]
+}), { title: 'Monthly Revenue Growth', padding: 30 });
+
+const randomize = () => {
+    revenue.value = months.map(() => Math.floor(40 + Math.random() * 90));
+};
+
+const App = () => div({
+    style: { maxWidth: '480px', margin: '2rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', textAlign: 'center' }
+},
+    h2({ style: { marginBottom: '0.5rem' } }, 'Real-Time Streaming Charts'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'Reactive Canvas chart engine redraws instantly on signal mutations:'),
+    chartCanvas,
+    div({ style: { marginTop: '1.25rem' } },
+        button('🎲 Randomize Dataset', {
+            style: { padding: '0.6rem 1.25rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer' },
+            onclick: randomize
+        })
+    )
 );
 
 mount('#app', App());`,
@@ -175,7 +1413,7 @@ const showModal = state(false);
 const showDrawer = state(false);
 
 const App = () => div({
-    style: { maxWidth: '420px', margin: '3rem auto', textAlign: 'center' }
+    style: { maxWidth: '440px', margin: '3rem auto', textAlign: 'center' }
 },
     h2({ style: { color: '#f8fafc', marginBottom: '1.5rem' } }, 'Accessible Overlays & Toasts'),
     
@@ -199,7 +1437,6 @@ const App = () => div({
                     cancelText: 'Cancel'
                 });
                 if (confirmed) {
-                    console.log('Confirmed delete');
                     Toast.error('Resource permanently deleted.');
                 } else {
                     Toast.info('Action cancelled.');
@@ -271,7 +1508,7 @@ const App = () => div({
 mount('#app', App());`,
 
     stepper: `import { cairn, Stepper, Toast } from '../src/index.js';
-const { div, h2, p, button, mount } = cairn;
+const { div, h2, p, mount } = cairn;
 
 const wizard = Stepper({
     steps: [
@@ -322,6 +1559,62 @@ const App = () => div({
 
 mount('#app', App());`,
 
+    tabs: `import { cairn, Tabs } from '../src/index.js';
+const { div, h2, p, mount } = cairn;
+
+const tabbedView = Tabs({
+    items: [
+        {
+            label: 'Architecture',
+            content: div(
+                p('⚡ Fine-grained direct DOM reactivity without Virtual DOM overhead.', { style: { color: '#cbd5e1', lineHeight: '1.6' } })
+            )
+        },
+        {
+            label: 'Zero-Deps',
+            content: div(
+                p('📦 Under 12KB UMD / ESM runtime with built-in spring physics and forms.', { style: { color: '#cbd5e1', lineHeight: '1.6' } })
+            )
+        },
+        {
+            label: 'Ecosystem',
+            content: div(
+                p('🔌 Drop-in bridges for React, Vue, Svelte, and W3C Custom Elements.', { style: { color: '#cbd5e1', lineHeight: '1.6' } })
+            )
+        }
+    ]
+});
+
+const App = () => div({
+    style: { maxWidth: '480px', margin: '2rem auto', color: '#f8fafc', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)' }
+},
+    h2({ style: { marginBottom: '1.25rem', textAlign: 'center' } }, 'Interactive Tabs Container'),
+    tabbedView
+);
+
+mount('#app', App());`,
+
+    rating: `import { cairn, Rating, Toast } from '../src/index.js';
+const { div, h2, p, mount } = cairn;
+
+const userRating = Rating({
+    max: 5,
+    value: 4,
+    onChange: (val) => {
+        Toast.success(\`Thank you for giving \${val} stars!\`);
+    }
+});
+
+const App = () => div({
+    style: { maxWidth: '400px', margin: '3rem auto', textAlign: 'center', background: '#111827', padding: '2rem', borderRadius: '1rem', color: '#f8fafc' }
+},
+    h2({ style: { marginBottom: '0.5rem' } }, 'Interactive Rating Component'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }, 'Click any star to submit your review:'),
+    userRating
+);
+
+mount('#app', App());`,
+
     datatable: `import { cairn, DataTable, span } from '../src/index.js';
 const { div, h2, mount } = cairn;
 
@@ -360,7 +1653,7 @@ const usersTable = DataTable({
 const App = () => div({
     style: { maxWidth: '640px', margin: '2rem auto', color: '#f8fafc' }
 },
-    h2({ style: { marginBottom: '1rem', textAlign: 'center' } }, 'Interactive DataTable with Search & Sorting'),
+    h2({ style: { marginBottom: '1rem', textAlign: 'center' } }, 'Interactive DataTable Grid'),
     usersTable
 );
 
@@ -396,184 +1689,158 @@ const App = () => div({
 
 mount('#app', App());`,
 
-    motion: `import { cairn, spring, state } from '../src/index.js';
+    realtime: `import { cairn, state } from '../src/index.js';
+const { div, h2, p, input, button, ul, li, span, mount } = cairn;
+
+const messages = state([
+    { id: 1, user: 'Sarah J.', text: 'Hey team! Exploring the Cairn 1.2.0 realtime engine.', time: '10:42 AM' },
+    { id: 2, user: 'Alex R.', text: 'The fine-grained shared state synchronization is super responsive!', time: '10:43 AM' }
+]);
+const draft = state('');
+const currentAuthor = state('Eldrex');
+
+const sendMessage = () => {
+    const text = draft.value.trim();
+    if (!text) return;
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    messages.value = [...messages.value, { id: Date.now(), user: currentAuthor.value, text, time }];
+    draft.value = '';
+};
+
+const App = () => div({
+    style: { maxWidth: '460px', margin: '2rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }
+},
+    h2({ style: { textAlign: 'center', marginBottom: '0.25rem' } }, 'Real-Time Collaboration & Chat'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', marginBottom: '1.25rem' } }, 'Multi-user reactive message stream with shared state:'),
+
+    ul({ style: { listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '220px', overflowY: 'auto', marginBottom: '1rem' } },
+        () => messages.value.map(m => li({
+            style: {
+                background: '#1e293b',
+                padding: '0.6rem 0.85rem',
+                borderRadius: '0.5rem',
+                border: '1px solid rgba(255,255,255,0.05)'
+            }
+        },
+            div({ style: { display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' } },
+                span(m.user, { style: { fontWeight: '700', color: '#38bdf8', fontSize: '0.85rem' } }),
+                span(m.time, { style: { fontSize: '0.75rem', color: '#64748b' } })
+            ),
+            p(m.text, { style: { fontSize: '0.9rem', color: '#f8fafc', margin: 0 } })
+        ))
+    ),
+
+    div({ style: { display: 'flex', gap: '0.5rem' } },
+        input({
+            placeholder: 'Type a message...',
+            value: draft,
+            style: { flex: 1, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '0.6rem 0.85rem', borderRadius: '0.5rem', outline: 'none' },
+            oninput: (e) => draft.value = e.target.value,
+            onkeydown: (e) => e.key === 'Enter' && sendMessage()
+        }),
+        button('Send', {
+            style: { background: '#0284c7', color: '#fff', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' },
+            onclick: sendMessage
+        })
+    )
+);
+
+mount('#app', App());`,
+
+    devtools: `import { cairn, devtools, state, computed } from '../src/index.js';
 const { div, h2, p, button, mount } = cairn;
 
-const posX = state(0);
-let moving = false;
+devtools.enable();
 
-const triggerSpring = () => {
-    if (moving) return;
-    moving = true;
-    const target = posX.value === 0 ? 180 : 0;
-    
-    spring({
-        from: posX.value,
-        to: target,
-        stiffness: 220,
-        damping: 12,
-        onUpdate: (v) => { posX.value = v; },
-        onComplete: () => { moving = false; }
+const cartCount = state(3);
+const unitPrice = state(45);
+const totalPrice = computed(() => cartCount.value * unitPrice.value);
+
+const mutateAndLog = () => {
+    const oldVal = cartCount.value;
+    cartCount.value++;
+    devtools.stateViewer.record('cart.items', oldVal, cartCount.value);
+    devtools.trace('Cart Price Recalculation', () => {
+        return totalPrice.value;
     });
 };
 
 const App = () => div({
-    style: { maxWidth: '420px', margin: '2rem auto', textAlign: 'center', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)' }
+    style: { maxWidth: '460px', margin: '2rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', textAlign: 'center' }
 },
-    h2({ style: { color: '#f8fafc', marginBottom: '0.5rem' } }, '60fps Spring Physics Engine'),
-    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }, 'Hardware accelerated motion equations'),
+    h2({ style: { marginBottom: '0.5rem' } }, 'DevTools Inspector & Time-Travel'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'Open browser developer console (F12) to inspect real-time traces & state timeline:'),
 
-    div({ style: { height: '80px', background: '#0f172a', borderRadius: '0.5rem', position: 'relative', overflow: 'hidden', padding: '10px', marginBottom: '1.5rem' } },
-        () => div({
-            style: {
-                width: '60px',
-                height: '60px',
-                background: 'linear-gradient(135deg, #38bdf8, #818cf8)',
-                borderRadius: '0.5rem',
-                transform: \`translateX(\${posX.value}px)\`,
-                boxShadow: '0 8px 20px rgba(56, 189, 248, 0.4)'
-            }
-        })
+    div({ style: { background: '#0f172a', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.25rem', textAlign: 'left', fontSize: '0.9rem' } },
+        p(() => \`Items in Cart: \${cartCount.value}\`),
+        p(() => \`Total Calculated: $\${totalPrice.value}\`, { style: { fontWeight: '700', color: '#38bdf8', marginTop: '0.25rem' } }),
+        p(() => \`Recorded State Changes: \${devtools.stateViewer.timeline.value.length}\`, { style: { fontSize: '0.75rem', color: '#a855f7', marginTop: '0.5rem' } })
     ),
 
-    button('Trigger Spring Bounce', {
-        style: { padding: '0.75rem 1.5rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' },
-        onclick: triggerSpring
+    button('+ Add Cart Item & Trace State', {
+        style: { padding: '0.75rem 1.25rem', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' },
+        onclick: mutateAndLog
     })
 );
 
 mount('#app', App());`,
 
-    canvas: `import { cairn, createCanvas2D } from '../src/index.js';
-const { div, h2, p, mount } = cairn;
+    personalize: `import { cairn, personalize, Toast } from '../src/index.js';
+const { div, h2, p, button, mount } = cairn;
 
-const canvas = createCanvas2D(null, {
-    width: 380,
-    height: 220,
-    background: '#0f172a'
+const userPrefs = personalize({
+    accentColor: { default: '#38bdf8' },
+    theme: { default: 'dark' }
 });
 
-let time = 0;
-canvas.onDraw((ctx, dt) => {
-    time += dt || 0.016;
-    const count = 28;
-    for (let i = 0; i < count; i++) {
-        const angle = (time * 1.2) + (i * (Math.PI * 2 / count));
-        const radius = 65 + Math.sin(time * 2 + i) * 20;
-        const x = 190 + Math.cos(angle) * radius;
-        const y = 110 + Math.sin(angle) * (radius * 0.55);
-        const hue = (i * 13 + time * 60) % 360;
-        ctx.fillStyle(\`hsl(\${hue}, 90%, 65%)\`).circle(x, y, 4.5 + Math.sin(time * 3 + i) * 2);
-    }
-});
-canvas.start();
+const colors = ['#38bdf8', '#a855f7', '#10b981', '#f43f5e', '#f59e0b'];
 
 const App = () => div({
-    style: { maxWidth: '420px', margin: '2rem auto', textAlign: 'center', color: '#f8fafc' }
+    style: { maxWidth: '440px', margin: '2rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', textAlign: 'center' }
 },
-    h2({ style: { marginBottom: '0.5rem' } }, '2D Canvas Animation Loop'),
-    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' } }, 'High-performance reactive canvas scene graph'),
-    div({ style: { borderRadius: '0.75rem', overflow: 'hidden', display: 'inline-block', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' } },
-        canvas.el
-    )
-);
+    h2({ style: { marginBottom: '0.5rem' } }, 'Personalization & Preferences'),
+    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }, 'Signals automatically persist to local storage across page reloads:'),
 
-mount('#app', App());`,
+    p('Pick Theme Accent Color:', { style: { fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' } }),
+    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' } },
+        colors.map(col => button('', {
+            style: {
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: col,
+                border: () => (userPrefs.preferences.value && userPrefs.preferences.value.accentColor === col) ? '3px solid #fff' : 'none',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease'
+            },
+            onclick: () => {
+                userPrefs.set('accentColor', col);
+                Toast.success('Theme updated to ' + col);
+            }
+        }))
+    ),
 
-    i18n: `import { cairn, createI18n } from '../src/index.js';
-const { div, h2, p, button, span, mount } = cairn;
-
-const i18n = createI18n({
-    locale: 'en',
-    messages: {
-        en: { welcome: 'Welcome, {name}!', desc: 'Zero-dependency reactive framework.' },
-        es: { welcome: '¡Bienvenido, {name}!', desc: 'Marco reactivo sin dependencias externas.' },
-        ar: { welcome: 'مرحبا {name}!', desc: 'إطار عمل تفاعلي عالي الأداء.' }
-    }
-});
-
-const App = () => div({
-    style: { maxWidth: '420px', margin: '2rem auto', textAlign: 'center', background: '#111827', padding: '2rem', borderRadius: '1rem', color: '#f8fafc' }
-},
-    h2({ style: { marginBottom: '0.5rem' } }, () => i18n.t('welcome', { name: 'Eldrex' })),
-    p({ style: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' } }, () => i18n.t('desc')),
-
-    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center' } },
-        button('English', {
-            style: { padding: '0.5rem 0.75rem', background: '#1e293b', color: '#fff', border: '1px solid #334155', borderRadius: '0.375rem', cursor: 'pointer' },
-            onclick: () => i18n.setLocale('en')
-        }),
-        button('Español', {
-            style: { padding: '0.5rem 0.75rem', background: '#1e293b', color: '#fff', border: '1px solid #334155', borderRadius: '0.375rem', cursor: 'pointer' },
-            onclick: () => i18n.setLocale('es')
-        }),
-        button('العربية (RTL)', {
-            style: { padding: '0.5rem 0.75rem', background: '#1e293b', color: '#fff', border: '1px solid #334155', borderRadius: '0.375rem', cursor: 'pointer' },
-            onclick: () => i18n.setLocale('ar')
+    div({
+        style: {
+            padding: '1rem',
+            background: '#0f172a',
+            borderRadius: '0.5rem',
+            border: () => '2px solid ' + ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || '#38bdf8')
+        }
+    },
+        p(() => 'Active Accent: ' + ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || '#38bdf8'), {
+            style: {
+                fontWeight: '700',
+                color: () => (userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || '#38bdf8'
+            }
         })
     )
 );
 
 mount('#app', App());`,
 
-    tabs: `import { cairn, Tabs } from '../src/index.js';
-const { div, h2, p, button, mount } = cairn;
-
-const tabbedView = Tabs({
-    items: [
-        {
-            label: 'Architecture',
-            content: div(
-                p('⚡ Fine-grained direct DOM reactivity without Virtual DOM overhead.', { style: { color: '#cbd5e1', lineHeight: '1.6' } })
-            )
-        },
-        {
-            label: 'Zero-Deps',
-            content: div(
-                p('📦 Under 12KB UMD / ESM runtime with built-in spring physics and forms.', { style: { color: '#cbd5e1', lineHeight: '1.6' } })
-            )
-        },
-        {
-            label: 'Ecosystem',
-            content: div(
-                p('🔌 Drop-in bridges for React, Vue, Svelte, and W3C Custom Elements.', { style: { color: '#cbd5e1', lineHeight: '1.6' } })
-            )
-        }
-    ]
-});
-
-const App = () => div({
-    style: { maxWidth: '480px', margin: '2rem auto', color: '#f8fafc', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)' }
-},
-    h2({ style: { marginBottom: '1.25rem', textAlign: 'center' } }, 'Interactive Tabs Container'),
-    tabbedView
-);
-
-mount('#app', App());`,
-
-    rating: `import { cairn, Rating, Toast } from '../src/index.js';
-const { div, h2, p, button, mount } = cairn;
-
-const userRating = Rating({
-    max: 5,
-    value: 4,
-    onChange: (val) => {
-        console.log('Rated:', val);
-        Toast.success(\`Thank you for giving \${val} stars!\`);
-    }
-});
-
-const App = () => div({
-    style: { maxWidth: '400px', margin: '3rem auto', textAlign: 'center', background: '#111827', padding: '2rem', borderRadius: '1rem', color: '#f8fafc' }
-},
-    h2({ style: { marginBottom: '0.5rem' } }, 'Interactive Rating Component'),
-    p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }, 'Click any star to submit your review:'),
-    userRating
-);
-
-mount('#app', App());`,
-
-    posts: `import { cairn, spring, state, computed, Toast } from '../src/index.js';
+    posts: `import { cairn, spring, state, Toast } from '../src/index.js';
 const { div, h2, p, button, input, img, span, mount } = cairn;
 
 const posts = state([
@@ -587,169 +1854,222 @@ const posts = state([
         likes: state(142),
         isLiked: state(false),
         comments: state([{ user: 'Sarah J.', text: 'The fine-grained reactivity makes this feel instant!' }])
-    },
-    {
-        id: 2,
-        author: 'Elena Rostova',
-        handle: '@elena_dev',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-        image: '../examples/assets/954fef29d383752d08306b5b33714058.jpg',
-        text: 'High-contrast monochrome perspective photography. Built interactive image cards in less than 20 lines of CairnJS code!',
-        likes: state(89),
-        isLiked: state(false),
-        comments: state([{ user: 'Alex R.', text: 'Super crisp layout and typography!' }])
     }
 ]);
 
-const toggleLike = (post, btnEl) => {
-    post.isLiked.value = !post.isLiked.value;
+const toggleLike = (post) => {
     if (post.isLiked.value) {
-        post.likes.value++;
-        spring({
-            from: 1, to: 1.35, stiffness: 300, damping: 10,
-            onUpdate: (scale) => { if (btnEl) btnEl.style.transform = \`scale(\${scale})\`; },
-            onComplete: () => {
-                spring({
-                    from: 1.35, to: 1, stiffness: 250, damping: 12,
-                    onUpdate: (scale) => { if (btnEl) btnEl.style.transform = \`scale(\${scale})\`; }
-                });
-            }
-        });
-    } else {
         post.likes.value--;
+        post.isLiked.value = false;
+    } else {
+        post.likes.value++;
+        post.isLiked.value = true;
+        Toast.success(\`Liked \${post.author}'s post!\`);
     }
 };
 
-const PostCard = (post) => {
-    const commentInput = state('');
-    return div({
-        style: { background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1rem', overflow: 'hidden', color: '#f8fafc', marginBottom: '1.5rem' }
+const App = () => div({
+    style: { maxWidth: '440px', margin: '1rem auto', color: '#f8fafc' }
+},
+    () => posts.value.map(post => div({
+        style: {
+            background: '#111827',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '1rem',
+            overflow: 'hidden',
+            marginBottom: '1.5rem',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+        }
     },
-        div({ style: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem' } },
-            img(post.avatar, { style: { width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' } }),
+        div({ style: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem' } },
+            img({ src: post.avatar, style: { width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' } }),
             div(
-                div({ style: { fontWeight: '700', fontSize: '0.9rem' } }, post.author),
-                div({ style: { fontSize: '0.75rem', color: '#94a3b8' } }, post.handle)
+                p(post.author, { style: { fontWeight: '700', fontSize: '0.9rem', margin: 0 } }),
+                p(post.handle, { style: { fontSize: '0.75rem', color: '#94a3b8', margin: 0 } })
             )
         ),
-        img(post.image, { style: { width: '100%', maxHeight: '340px', objectFit: 'cover', display: 'block' } }),
+        img({ src: post.image, style: { width: '100%', height: '240px', objectFit: 'cover', display: 'block' } }),
         div({ style: { padding: '1rem' } },
-            div({ style: { display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' } },
-                button({
-                    style: () => ({ background: 'transparent', border: 'none', fontSize: '1.15rem', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'transform 0.15s' }),
-                    onclick: (e) => toggleLike(post, e.currentTarget)
-                }, () => span({ class: post.isLiked.value ? 'fa-solid fa-heart' : 'fa-regular fa-heart', style: { color: post.isLiked.value ? '#f43f5e' : '#94a3b8' } })),
-                span(() => \`\${post.likes.value} likes\`, { style: { fontWeight: '700', fontSize: '0.85rem' } })
+            div({ style: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' } },
+                button(() => post.isLiked.value ? '❤️ Liked' : '🤍 Like', {
+                    style: { background: 'transparent', border: 'none', color: () => post.isLiked.value ? '#f43f5e' : '#fff', fontWeight: '700', cursor: 'pointer', fontSize: '0.9rem' },
+                    onclick: () => toggleLike(post)
+                }),
+                span(() => \`\${post.likes.value} likes\`, { style: { fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600' } })
             ),
-            p(post.text, { style: { fontSize: '0.9rem', lineHeight: '1.5', color: '#cbd5e1', marginBottom: '0.75rem' } }),
-            div({ style: { borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.5rem' } },
-                () => post.comments.value.map(c => div({ style: { fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.25rem' } },
-                    span(\`\${c.user}: \`, { style: { fontWeight: '700', color: '#f8fafc' } }),
-                    span(c.text)
-                )),
-                div({ style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
-                    input({
-                        placeholder: 'Write a comment...',
-                        value: commentInput,
-                        style: { flex: '1', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.375rem', padding: '0.4rem 0.6rem', color: '#fff', fontSize: '0.8rem' },
-                        oninput: (e) => commentInput.value = e.target.value,
-                        onkeydown: (e) => {
-                            if (e.key === 'Enter' && commentInput.value.trim()) {
-                                post.comments.value = [...post.comments.value, { user: 'You', text: commentInput.value.trim() }];
-                                commentInput.value = '';
-                            }
-                        }
-                    })
-                )
-            )
+            p(post.text, { style: { fontSize: '0.85rem', lineHeight: '1.5', color: '#cbd5e1' } })
         )
-    );
-};
-
-const App = () => div({ style: { maxWidth: '440px', margin: '1rem auto' } },
-    h2({ style: { textAlign: 'center', color: '#f8fafc', marginBottom: '1.25rem' } }, 'CairnJS Social Feed'),
-    posts.value.map(p => PostCard(p))
+    ))
 );
 
 mount('#app', App());`,
 
-    store: `import { cairn, state, computed, spring, Toast, ConfirmDialog } from '../src/index.js';
-const { div, h2, h3, p, button, span, img, input, mount } = cairn;
+    store: `import { cairn, state, computed, Toast, ConfirmDialog } from '../src/index.js';
+const { div, h2, h3, p, button, span, img, mount } = cairn;
 
 const products = [
-    { id: 1, name: 'ANC Wireless Headphones', price: 249, img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&auto=format&fit=crop&q=80' },
-    { id: 2, name: 'Mechanical Keyboard', price: 189, img: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300&auto=format&fit=crop&q=80' }
+    { id: 1, title: 'Cairn Zen Stone Fountain', price: 89, image: '../examples/assets/83d40a8a2d26f9d5f3d378fcb961e6bd.jpg' },
+    { id: 2, title: 'Minimalist Matte Ceramic Planter', price: 45, image: '../examples/assets/954fef29d383752d08306b5b33714058.jpg' }
 ];
 
-const cart = state([{ ...products[0], qty: 1 }]);
-const subtotal = computed(() => cart.value.reduce((s, i) => s + i.price * i.qty, 0));
-const count = computed(() => cart.value.reduce((s, i) => s + i.qty, 0));
+const cart = state([]);
+const cartCount = computed(() => cart.value.reduce((sum, item) => sum + item.qty, 0));
+const cartTotal = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.qty), 0));
 
-const addToCart = (p) => {
-    const item = cart.value.find(i => i.id === p.id);
-    if (item) {
-        cart.value = cart.value.map(i => i.id === p.id ? { ...i, qty: i.qty + 1 } : i);
+const addToCart = (product) => {
+    const existing = cart.value.find(item => item.id === product.id);
+    if (existing) {
+        cart.value = cart.value.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
     } else {
-        cart.value = [...cart.value, { ...p, qty: 1 }];
+        cart.value = [...cart.value, { ...product, qty: 1 }];
     }
-    Toast.success(\`Added \${p.name}!\`);
+    Toast.success(\`Added "\${product.title}" to cart!\`);
 };
 
-const App = () => div({ style: { maxWidth: '440px', margin: '1.5rem auto', color: '#f8fafc' } },
-    h2({ style: { textAlign: 'center', marginBottom: '1rem' } }, 'Reactive Cart & Store'),
-    div({ style: { background: '#111827', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-        span('Items in Cart:'),
-        () => span(\`\${count.value} items — Total: $\${subtotal.value}\`, { style: { fontWeight: '700', color: '#38bdf8' } })
+const checkout = async () => {
+    if (cart.value.length === 0) return;
+    const ok = await ConfirmDialog.confirm({
+        title: 'Confirm Order Checkout',
+        message: \`Complete purchase for $\${cartTotal.value}? Standard 2-day delivery included.\`,
+        confirmText: 'Pay with Card',
+        variant: 'primary'
+    });
+    if (ok) {
+        cart.value = [];
+        Toast.success('Order placed successfully! Thank you.');
+    }
+};
+
+const App = () => div({
+    style: { maxWidth: '520px', margin: '1rem auto', color: '#f8fafc' }
+},
+    div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' } },
+        h2({ style: { fontSize: '1.3rem' } }, 'CairnJS Store'),
+        button(() => \`🛒 Cart (\${cartCount.value})\`, {
+            style: { padding: '0.5rem 1rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' }
+        })
     ),
-    div({ style: { display: 'flex', flexDirection: 'column', gap: '1rem' } },
-        products.map(prod => div({
-            style: { display: 'flex', gap: '1rem', background: '#1e293b', padding: '0.75rem', borderRadius: '0.5rem', alignItems: 'center' }
+
+    div({ style: { display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' } },
+        products.map(p => div({
+            style: {
+                display: 'flex',
+                gap: '1rem',
+                background: '#111827',
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                border: '1px solid rgba(255,255,255,0.08)'
+            }
         },
-            img(prod.img, { style: { width: '60px', height: '60px', borderRadius: '0.375rem', objectFit: 'cover' } }),
-            div({ style: { flex: 1 } },
-                div({ style: { fontWeight: '700' } }, prod.name),
-                div({ style: { color: '#38bdf8', fontSize: '0.85rem' } }, \`$\${prod.price}\`)
-            ),
-            button('+ Add', {
-                style: { background: '#0284c7', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: '600' },
-                onclick: () => addToCart(prod)
-            })
+            img({ src: p.image, style: { width: '80px', height: '80px', borderRadius: '0.5rem', objectFit: 'cover' } }),
+            div({ style: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } },
+                div(
+                    h3(p.title, { style: { fontSize: '0.95rem', marginBottom: '0.25rem' } }),
+                    span(\`$\${p.price}\`, { style: { color: '#38bdf8', fontWeight: '700' } })
+                ),
+                button('+ Add to Cart', {
+                    style: { alignSelf: 'flex-start', padding: '0.4rem 0.85rem', background: '#1e293b', color: '#fff', border: '1px solid #334155', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' },
+                    onclick: () => addToCart(p)
+                })
+            )
         ))
-    )
+    ),
+
+    () => cart.value.length > 0 ? div({
+        style: { background: '#111827', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)' }
+    },
+        div({ style: { display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontWeight: '700' } },
+            span('Total Amount:'),
+            span(() => \`$\${cartTotal.value}\`, { style: { color: '#10b981', fontSize: '1.1rem' } })
+        ),
+        button('Complete Checkout', {
+            style: { width: '100%', padding: '0.75rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' },
+            onclick: checkout
+        })
+    ) : null
+);
+
+mount('#app', App());`,
+
+    bridges: `import { cairn, defineCustomElement, state, div, h3, p, button, mount } from '../src/index.js';
+
+const Widget = (props) => {
+    const count = state(parseInt(props.initial || 5, 10));
+    return div({
+        style: {
+            background: '#0f172a',
+            padding: '1.5rem',
+            borderRadius: '0.75rem',
+            border: '1px solid #38bdf8',
+            color: '#fff',
+            textAlign: 'center'
+        }
+    },
+        h3('⚡ W3C Custom Element: <cairn-widget>', { style: { color: '#38bdf8', fontSize: '1rem', marginBottom: '0.5rem' } }),
+        p(() => \`Counter Value: \${count.value}\`, { style: { fontSize: '1.25rem', fontWeight: '800', margin: '0.75rem 0' } }),
+        button('Increment +', {
+            style: { padding: '0.5rem 1rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.375rem', fontWeight: '700', cursor: 'pointer' },
+            onclick: () => count.value++
+        })
+    );
+};
+
+defineCustomElement('cairn-widget', Widget, ['initial']);
+
+const App = () => div({
+    style: { maxWidth: '460px', margin: '2rem auto', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }
+},
+    cairn.h2({ style: { textAlign: 'center', marginBottom: '0.5rem' } }, 'Universal Framework Bridges'),
+    cairn.p({ style: { color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', marginBottom: '1.5rem' } }, 'Compile Cairn components into standard Custom Elements or React/Vue wrappers:'),
+    cairn.element('cairn-widget', { initial: '12' })
 );
 
 mount('#app', App());`
 };
 
-// UI Elements & State Handlers
-let monacoEditor = null;
+// DOM Node References
 const editorTextarea = document.getElementById('code-editor');
-const monacoContainer = document.getElementById('monaco-editor-container');
 const previewFrame = document.getElementById('preview-frame');
 const templatePicker = document.getElementById('template-picker');
 const consoleLogs = document.getElementById('console-logs');
 const runtimeStatus = document.getElementById('runtime-status');
-const toast = document.getElementById('toast');
-const toastMsg = document.getElementById('toast-msg');
+const monacoContainer = document.getElementById('monaco-editor-container');
 
+let monacoEditor = null;
+
+// Toast Utility
 export function showToast(msg) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
     if (!toast || !toastMsg) return;
     toastMsg.textContent = msg;
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2500);
+    setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
-export function appendConsole(type, ...args) {
+// Console Logger in UI
+export function appendConsole(level, ...args) {
     if (!consoleLogs) return;
     const entry = document.createElement('div');
-    entry.className = 'log-entry ' + type;
-    const icon = type === 'error' ? 'fa-solid fa-triangle-exclamation' : (type === 'warn' ? 'fa-solid fa-exclamation' : 'fa-solid fa-terminal');
-    const text = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-    entry.innerHTML = '<i class="' + icon + '"></i> <span>' + text + '</span>';
+    entry.className = 'log-entry ' + level;
+    
+    let icon = 'fa-circle-info';
+    if (level === 'warn') icon = 'fa-triangle-exclamation';
+    if (level === 'error') icon = 'fa-circle-xmark';
+
+    const formattedArgs = args.map(a => {
+        if (typeof a === 'object' && a !== null) {
+            try { return JSON.stringify(a); } catch(e) { return String(a); }
+        }
+        return String(a);
+    }).join(' ');
+
+    entry.innerHTML = '<i class="fa-solid ' + icon + '"></i> <span>' + formattedArgs + '</span>';
     consoleLogs.appendChild(entry);
     consoleLogs.scrollTop = consoleLogs.scrollHeight;
 }
 
+// Get and Set Code in Editor
 export function getCode() {
     if (monacoEditor) {
         return monacoEditor.getValue();
@@ -760,31 +2080,25 @@ export function getCode() {
 export function setCode(code) {
     if (monacoEditor) {
         monacoEditor.setValue(code);
-    }
-    if (editorTextarea) {
+    } else if (editorTextarea) {
         editorTextarea.value = code;
     }
 }
 
-// Sandbox Runner HTML Builder
+// Code Execution Engine (Runs inside Sandbox Iframe)
 export function runCode() {
     if (!previewFrame) return;
-    const rawCode = getCode();
-    if (runtimeStatus) {
-        runtimeStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8; font-size: 0.5rem;"></i> Running...';
-    }
 
-    // Normalize relative imports so sandbox iframe resolves ../src/index.js correctly
-    const normalizedCode = rawCode
-        .replace(/from\s+['"]@eldrex\/cairn['"]/g, "from '../src/index.js'")
-        .replace(/from\s+['"]cairn['"]/g, "from '../src/index.js'")
-        .replace(/from\s+['"]\.\/src\/index\.js['"]/g, "from '../src/index.js'");
+    if (consoleLogs) consoleLogs.innerHTML = '';
+    appendConsole('info', 'Executing CairnJS sandbox...');
 
-    const openScript = '<' + 'script>';
-    const openScriptModule = '<' + 'script type="module">';
-    const closeScript = '<' + '/script>';
+    const code = getCode();
+    const normalizedCode = code.replace(/<\/script>/gi, '<\\/script>');
+    const baseUrl = window.location.origin + '/docs/';
 
-    const baseUrl = window.location.origin + window.location.pathname;
+    const openScript = '<script>';
+    const openScriptModule = '<script type="module">';
+    const closeScript = '</' + 'script>';
 
     const iframeDoc = '<!DOCTYPE html>\n' +
 '<html lang="en" data-theme="' + (document.documentElement.getAttribute('data-theme') || 'dark') + '">\n' +
@@ -878,7 +2192,7 @@ export function getInitialTemplateKey() {
             return candidate;
         }
     } catch(e) {}
-    return 'counter';
+    return 'starter';
 }
 
 // Template Switching
@@ -937,7 +2251,7 @@ export function initMonaco() {
 
             // TypeScript / JavaScript Compiler Options for ES Modules & React JSX
             monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-                noSemanticValidation: false,
+                noSemanticValidation: true,
                 noSyntaxValidation: false
             });
             monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -956,20 +2270,28 @@ export function initMonaco() {
                 .catch(() => '')
                 .then(dts => {
                     if (dts) {
-                        monaco.languages.typescript.javascriptDefaults.addExtraLib(dts, 'ts:cairn.d.ts');
+                        monaco.languages.typescript.javascriptDefaults.addExtraLib(dts, 'file:///node_modules/@types/cairn/index.d.ts');
                         monaco.languages.typescript.javascriptDefaults.addExtraLib(
                             `declare module '../src/index.js' { export * from 'cairn'; }
-                             declare module '@eldrex/cairn' { export * from 'cairn'; }
+                             declare module '@eldrex/cairnjs' { export * from 'cairn'; }
                              declare module 'cairn' { export * from 'cairn'; }`,
-                            'ts:cairn-modules.d.ts'
+                            'file:///node_modules/@types/cairn/cairn-modules.d.ts'
                         );
                     }
                 });
 
-            // Create Monaco Editor Instance with Initial Template
+            const initialCode = TEMPLATES[initialKey] || TEMPLATES.counter;
+            const modelUri = monaco.Uri.parse('file:///playground-main.js');
+            let model = monaco.editor.getModel(modelUri);
+            if (!model) {
+                model = monaco.editor.createModel(initialCode, 'javascript', modelUri);
+            } else {
+                model.setValue(initialCode);
+            }
+
+            // Create Monaco Editor Instance with Initial Template Model
             monacoEditor = monaco.editor.create(monacoContainer, {
-                value: TEMPLATES[initialKey] || TEMPLATES.counter,
-                language: 'javascript',
+                model: model,
                 theme: currentTheme === 'dark' ? 'vs-dark' : 'vs',
                 automaticLayout: true,
                 fontSize: 13.5,
@@ -1089,4 +2411,3 @@ if (themeBtn) {
 const initialTheme = localStorage.getItem('cairn-theme') || 'dark';
 syncTheme(initialTheme);
 initMonaco();
-

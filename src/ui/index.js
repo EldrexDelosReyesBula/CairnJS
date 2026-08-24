@@ -1,5 +1,5 @@
 /**
- * 🧱 @eldrex/cairn/ui - Production UI Primitives Suite (50+ Components)
+ * 🧱 @eldrex/cairnjs/ui - Production UI Primitives Suite (50+ Components)
  * Zero-dependency, framework-agnostic, accessible UI primitives for Cairn.
  */
 
@@ -15,6 +15,7 @@ import { CodeBlock } from '../docs.js';
 import { createFocusTrap, useClickOutside, useEscapeKey, updateFloatingPosition, overlayStack } from '../overlay.js';
 import { portal } from '../portal.js';
 import { useHotkeys } from '../utils.js';
+import { VirtualList } from '../virtual-list.js';
 
 // --- SVG ICON SYSTEM & ICON PRIMITIVES ---
 export const ICON_PATHS = {
@@ -1839,12 +1840,8 @@ export const EmptyState = (props = {}) => Center({ minHeight: '150px' }, h3(prop
 export const Notification = (props = {}) => Alert(props);
 
 // --- ADVANCED COMPONENTS ---
-export const VirtualList = (props = {}) => {
-    const data = props.data || [];
-    return div({ style: { maxHeight: '300px', overflowY: 'auto' } }, data.map(item => props.renderItem ? props.renderItem(item) : div(String(item))));
-};
 export const DragDrop = (props = {}, ...children) => div({ style: { border: '2px dashed #475569', padding: '1rem', borderRadius: '0.5rem' } }, ...children);
-export const Charts = {
+export const UICharts = {
     Line: (props = {}) => div(`[Chart: ${props.type || 'Line'}]`, { style: { background: '#1e293b', padding: '2rem', borderRadius: '0.5rem', textAlign: 'center' } })
 };
 
@@ -1862,7 +1859,7 @@ export const UI = {
     // Feedback & Overlay
     Modal, ConfirmDialog, Drawer, Toast, Alert, Progress, Skeleton, Spinner, EmptyState, Notification,
     // Advanced
-    VirtualList, DragDrop, Charts, CodeBlock,
+    VirtualList, DragDrop, Charts: UICharts, CodeBlock,
     // Aliases
     box: Box, container: Container, grid: Grid, stack: Stack, divider: Divider, spacer: Spacer, center: Center, cluster: Cluster, split: Split, aspectRatio: AspectRatio,
     button: (...args) => button(...args),
@@ -1870,7 +1867,6 @@ export const UI = {
     navbar: Navbar, sidebar: Sidebar, menu: Menu, dropdown: Dropdown, breadcrumbs: Breadcrumbs, pagination: Pagination, tabs: Tabs, segmentedControl: SegmentedControl, stepper: Stepper, commandPalette: CommandPalette, contextMenu: ContextMenu,
     table: Table, dataTable: DataTable, dataGrid: DataGrid, list: List, card: Card, badge: Badge, avatar: Avatar, tag: Tag, tooltip: Tooltip, popover: Popover, accordion: Accordion, timeline: Timeline, tree: Tree, statistic: Statistic,
     modal: Modal, confirmDialog: ConfirmDialog, drawer: Drawer, toast: Toast, alert: Alert, progress: Progress, skeleton: Skeleton, spinner: Spinner, emptyState: EmptyState, notification: Notification,
-    virtualList: VirtualList, dragDrop: DragDrop, charts: Charts, codeBlock: CodeBlock
 };
 
 export default UI;

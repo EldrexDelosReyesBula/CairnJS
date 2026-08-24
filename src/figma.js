@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/figma - Design-to-Code Pipeline
+ * @eldrex/cairnjs/figma - Design-to-Code Pipeline
  * Figma plugin & design-to-code parser for Cairn.
  */
 

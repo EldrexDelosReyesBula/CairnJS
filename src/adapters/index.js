@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/adapters - Extensible Multi-Styling Adapters Architecture
+ * @eldrex/cairnjs/adapters - Extensible Multi-Styling Adapters Architecture
  * Supports Tailwind CSS, CSS Modules, Styled Components, Emotion, UnoCSS, Bootstrap,
  * Motion, Design Tokens, and custom 3rd-party adapters.
  */
@@ -10,13 +10,13 @@ import { styled } from './styled.js';
 import { unocss } from './unocss.js';
 import { bootstrap } from './bootstrap.js';
 import { motion } from './motion.js';
-import { tokens } from './tokens.js';
+import { tokensAdapter } from './tokens.js';
 
 class AdapterRegistry {
     constructor() {
         this._adapters = new Map();
         // Register built-in adapters by default
-        this.register(tokens);
+        this.register(tokensAdapter);
         this.register(tailwind);
         this.register(cssModules);
         this.register(styled);
@@ -133,7 +133,8 @@ export {
     unocss,
     bootstrap,
     motion,
-    tokens
+    tokensAdapter as tokens,
+    tokensAdapter
 };
 
 export const adapters = {
@@ -152,7 +153,8 @@ export const adapters = {
     unocss,
     bootstrap,
     motion,
-    tokens
+    tokens: tokensAdapter,
+    tokensAdapter
 };
 
 export default adapters;

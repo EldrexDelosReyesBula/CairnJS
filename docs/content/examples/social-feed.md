@@ -22,7 +22,7 @@ A high-performance social community feed demonstrating **nested reactive signals
 When the user clicks the heart icon, Cairn's spring engine drives a continuous physics curve without needing external CSS animation libraries:
 
 ```javascript
-import { cairn, spring, state } from '@eldrex/cairn';
+import { cairn, spring, state } from '@eldrex/cairnjs';
 
 const toggleLike = (post, btnEl) => {
     post.isLiked.value = !post.isLiked.value;

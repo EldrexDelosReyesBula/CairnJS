@@ -1,8 +1,8 @@
 /**
- * @eldrex/cairn - Virtual DOM Reconciler / Key-Based Diffing
+ * @eldrex/cairnjs - Virtual DOM Reconciler & Key-Based List Engine
  * Efficient, keyed list reconciliation that surgically patches the DOM
  * instead of destroying and recreating entire node trees.
- * Dramatically improves performance for large reactive lists.
+ * Preserves input focus, scroll positions, and CSS transitions during array mutations.
  */
 
 import { effect } from './state.js';
@@ -15,36 +15,25 @@ import { effect } from './state.js';
  * @param {Array} oldItems Previous item array (with keys)
  * @param {Array} newItems New item array (with keys)
  * @param {Function} renderItem (item, index) => HTMLElement
- * @param {Function} getKey (item) => string|number unique key extractor
- *
- * @example
- * const items = state([{ id: 1, name: 'A' }, { id: 2, name: 'B' }]);
- * const container = div();
- * let prevItems = [];
- *
- * effect(() => {
- *   const newItems = items.value;
- *   reconcile(container, prevItems, newItems, (item) => div(item.name), (item) => item.id);
- *   prevItems = [...newItems];
- * });
+ * @param {Function} getKey (item, index) => string|number unique key extractor
  */
-export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item) => item.id ?? item) {
+export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item, i) => item?.id ?? item?.key ?? i) {
     if (!parent) return;
 
     const oldKeyMap = new Map();
     oldItems.forEach((item, i) => {
-        const key = getKey(item);
+        const key = getKey(item, i);
         oldKeyMap.set(key, { item, index: i, node: parent.children[i] });
     });
 
     const newKeyMap = new Map();
     newItems.forEach((item, i) => {
-        newKeyMap.set(getKey(item), item);
+        newKeyMap.set(getKey(item, i), item);
     });
 
     // Remove nodes no longer in new list
-    oldItems.forEach((item) => {
-        const key = getKey(item);
+    oldItems.forEach((item, i) => {
+        const key = getKey(item, i);
         if (!newKeyMap.has(key)) {
             const entry = oldKeyMap.get(key);
             if (entry && entry.node && entry.node.parentNode === parent) {
@@ -55,7 +44,7 @@ export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item
 
     // Insert / reorder nodes for new items
     newItems.forEach((item, newIdx) => {
-        const key = getKey(item);
+        const key = getKey(item, newIdx);
         const existing = oldKeyMap.get(key);
 
         if (!existing) {
@@ -83,6 +72,66 @@ export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item
 }
 
 /**
+ * Creates a reactive keyed list descriptor for declarative template rendering.
+ *
+ * @example
+ * // Usage in Cairn DOM builders:
+ * ul(
+ *   each(todos, (todo) => todo.id, (todo) => li(todo.title))
+ * )
+ *
+ * @param {Array|object|Function} listSource Cairn state signal, array, or getter function
+ * @param {Function} [keyOrRender] Key selector function or render function if 2 arguments passed
+ * @param {Function} [maybeRender] Render function (item, index) => HTMLElement
+ * @returns {object} Cairn Each Descriptor
+ */
+export function each(listSource, keyOrRender, maybeRender) {
+    let getKey;
+    let renderItem;
+
+    if (typeof maybeRender === 'function') {
+        getKey = typeof keyOrRender === 'function' ? keyOrRender : (item, i) => item?.id ?? item?.key ?? i;
+        renderItem = maybeRender;
+    } else if (typeof keyOrRender === 'function') {
+        getKey = (item, i) => item?.id ?? item?.key ?? i;
+        renderItem = keyOrRender;
+    } else {
+        getKey = (item, i) => item?.id ?? item?.key ?? i;
+        renderItem = (item) => item;
+    }
+
+    return {
+        _isCairnEach: true,
+        listSource,
+        getKey,
+        renderItem
+    };
+}
+
+/**
+ * Declarative component wrapper for keyed list iteration.
+ *
+ * @example
+ * For({
+ *   each: todosSignal,
+ *   key: (todo) => todo.id,
+ *   children: (todo, index) => li(todo.text)
+ * })
+ *
+ * @param {object} props
+ * @param {Array|object|Function} props.each Source array or signal
+ * @param {Function} [props.key] Key extraction function
+ * @param {Function} props.children Render function
+ * @returns {object} Cairn Each Descriptor
+ */
+export function For(props = {}) {
+    const listSource = props.each || props.items || [];
+    const getKey = props.key || ((item, i) => item?.id ?? item?.key ?? i);
+    const renderItem = props.children || props.render || ((item) => item);
+    return each(listSource, getKey, renderItem);
+}
+
+/**
  * Creates a managed reactive list that auto-reconciles on signal change.
  *
  * @param {HTMLElement} parent Container element
@@ -90,14 +139,8 @@ export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item
  * @param {Function} renderItem (item, index) => HTMLElement
  * @param {Function} getKey Key extractor function
  * @returns {Function} Unsubscribe function
- *
- * @example
- * const todos = state([{ id: 1, text: 'Buy milk' }]);
- * const list = div();
- *
- * const stop = createList(list, todos, (todo) => li(todo.text), (t) => t.id);
  */
-export function createList(parent, listSignal, renderItem, getKey = item => item.id ?? item) {
+export function createList(parent, listSignal, renderItem, getKey = (item, i) => item?.id ?? item?.key ?? i) {
     let prevItems = [];
 
     return effect(() => {
@@ -131,7 +174,7 @@ export function patchProps(el, oldProps = {}, newProps = {}) {
             el.removeAttribute(key);
         } else if (key === 'style' && typeof newVal === 'object') {
             Object.entries(newVal).forEach(([sk, sv]) => {
-                if (el.style[sk] !== sv) el.style[sk] = sv;
+                if (el.style && el.style[sk] !== sv) el.style[sk] = sv;
             });
         } else if (key === 'className' || key === 'class') {
             if (el.className !== newVal) el.className = newVal;
@@ -141,5 +184,6 @@ export function patchProps(el, oldProps = {}, newProps = {}) {
     });
 }
 
-export const reconciler = { reconcile, createList, patchProps };
+export const reconciler = { reconcile, each, For, createList, patchProps };
 export default reconciler;
+

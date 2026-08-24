@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Explicit Watcher
+ * @eldrex/cairnjs - Explicit Watcher
  * Vue-style watch() for explicitly observing state signal changes
  * with old/new value access, immediate execution, and deep comparison.
  */

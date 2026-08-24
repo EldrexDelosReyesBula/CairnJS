@@ -19,7 +19,7 @@ Cairn includes a zero-dependency native canvas chart engine. No Chart.js, no D3.
 ## Bar Chart
 
 ```js
-import { Charts } from '@eldrex/cairn';
+import { Charts } from '@eldrex/cairnjs';
 
 Charts.bar('#chart', {
   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
@@ -104,7 +104,7 @@ Charts.scatter('#scatter', {
 `Charts.reactive()` wraps any chart type in a Cairn `effect()` — the chart automatically redraws whenever the bound data signal changes.
 
 ```js
-import { state, Charts } from '@eldrex/cairn';
+import { state, Charts } from '@eldrex/cairnjs';
 
 const salesData = state({
   labels: ['Jan', 'Feb', 'Mar'],

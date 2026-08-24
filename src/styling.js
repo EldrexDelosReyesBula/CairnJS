@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Styling & Design System Engine
+ * @eldrex/cairnjs - Styling & Design System Engine
  * Design tokens, CSS Custom Properties Theme Engine, keyframe injection,
  * scoped CSS styling, glassmorphism, gradients, and reactive media/darkMode listeners.
  */
@@ -199,6 +199,32 @@ export function setTheme(name) {
 }
 
 /**
+ * Master theme function / namespace
+ * Accepts a dictionary of themes e.g. { light: {...}, dark: {...} } or acts as theme manager
+ */
+export function theme(themesMapOrName) {
+    if (typeof themesMapOrName === 'string') {
+        return setTheme(themesMapOrName);
+    }
+    if (typeof themesMapOrName === 'object' && themesMapOrName !== null) {
+        Object.entries(themesMapOrName).forEach(([themeName, themeConfig]) => {
+            createTheme(themeName, themeConfig);
+        });
+        return themesMapOrName;
+    }
+    return activeTheme.value;
+}
+
+Object.assign(theme, {
+    createTheme,
+    setTheme,
+    activeTheme,
+    createTokens,
+    tokens,
+    get: (name) => _themeRegistry.get(name)
+});
+
+/**
  * Calculates a fluid clamp() CSS value for typography and spacing.
  * @param {number} minPx Minimum value in pixels
  * @param {number} maxPx Maximum value in pixels
@@ -241,47 +267,74 @@ export function keyframes(rulesObj) {
     return animName;
 }
 
-let cssClassCounter = 0;
+let coatClassCounter = 0;
 
 /**
- * Programmatic scoped CSS style generator.
- * @param {object} rules CSS declarations including nested pseudo-selectors
- * @returns {string} Generated scoped class name
+ * Native Coat Styling System
+ * @param {object|Function} rules Style object with selectors/media queries, or dynamic resolver function
+ * @returns {string|Function} Scoped class name or reactive resolver
  */
-export function css(rules) {
-    cssClassCounter++;
-    const className = `cairn-css-${cssClassCounter}`;
+export function coat(rules) {
+    if (typeof rules === 'function') {
+        return rules;
+    }
+    if (!rules || typeof rules !== 'object') return '';
+
+    coatClassCounter++;
+    const className = `cairn-coat-${coatClassCounter}`;
 
     if (typeof document !== 'undefined') {
         let mainStyles = '';
         let nestedStyles = '';
 
         Object.entries(rules).forEach(([key, val]) => {
-            if (typeof val === 'object') {
+            if (typeof val === 'object' && val !== null) {
                 let subStr = '';
                 Object.entries(val).forEach(([p, v]) => {
-                    const kebab = p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+                    const kebab = p.startsWith('--') ? p : p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
                     subStr += `${kebab}: ${v}; `;
                 });
-                if (key.startsWith('&') || key.startsWith(':')) {
+                if (key.startsWith('&') || key.startsWith(':') || key.startsWith('[') || key.startsWith('.')) {
                     const selector = key.startsWith('&') ? key.replace('&', `.${className}`) : `.${className}${key}`;
                     nestedStyles += `${selector} { ${subStr}} `;
                 } else if (key.startsWith('@')) {
                     nestedStyles += `${key} { .${className} { ${subStr}} } `;
+                } else {
+                    nestedStyles += `.${className} ${key} { ${subStr}} `;
                 }
-            } else {
-                const kebab = key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+            } else if (val !== undefined && val !== null) {
+                const kebab = key.startsWith('--') ? key : key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
                 mainStyles += `${kebab}: ${val}; `;
             }
         });
 
         const styleEl = document.createElement('style');
+        styleEl.setAttribute('data-cairn-coat', className);
         styleEl.textContent = `.${className} { ${mainStyles}} ${nestedStyles}`;
         document.head.appendChild(styleEl);
     }
 
     return className;
 }
+
+Object.assign(coat, {
+    variants(config = {}) {
+        return (selectedVariant) => {
+            const v = (selectedVariant && selectedVariant.value !== undefined) ? selectedVariant.value : selectedVariant;
+            return config[v] || config.default || {};
+        };
+    },
+    compose(...coats) {
+        return coats.reduce((acc, c) => {
+            if (typeof c === 'object' && c !== null) {
+                return { ...acc, ...c };
+            }
+            return acc;
+        }, {});
+    }
+});
+
+export const css = coat;
 
 export function media(query) {
     if (typeof window === 'undefined' || !window.matchMedia) {

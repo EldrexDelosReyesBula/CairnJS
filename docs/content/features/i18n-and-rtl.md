@@ -7,7 +7,7 @@ Cairn includes a zero-dependency internationalization engine with reactive local
 ## Setting up i18n
 
 ```javascript
-import { createI18n, p, button, div, mount } from '@eldrex/cairn';
+import { createI18n, p, button, div, mount } from '@eldrex/cairnjs';
 
 const i18n = createI18n({
     locale: 'en',

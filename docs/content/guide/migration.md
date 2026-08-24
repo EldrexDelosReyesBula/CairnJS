@@ -1,6 +1,6 @@
 # The Complete Cairn Migration Handbook
 
-Welcome to the definitive guide for migrating existing web applications and components to **Cairn** (`@eldrex/cairn`). Whether you are coming from **Vanilla JavaScript and raw HTML/CSS**, **React**, **Vue**, **Svelte**, **Angular**, or legacy libraries like **jQuery, Alpine.js, or HTMX**, this handbook provides detailed, side-by-side architectural mappings, code conversions, and real-world refactorings.
+Welcome to the definitive guide for migrating existing web applications and components to **Cairn** (`@eldrex/cairnjs`). Whether you are coming from **Vanilla JavaScript and raw HTML/CSS**, **React**, **Vue**, **Svelte**, **Angular**, or legacy libraries like **jQuery, Alpine.js, or HTMX**, this handbook provides detailed, side-by-side architectural mappings, code conversions, and real-world refactorings.
 
 ---
 
@@ -117,7 +117,7 @@ Cairn combines the **declarative power of signals** with the **direct simplicity
 
 #### ✅ After: Clean Cairn Refactor (Zero DOM Queries, Fine-Grained Signals)
 ```javascript
-import { collection, computed, div, h2, p, button, span, mount } from '@eldrex/cairn';
+import { collection, computed, div, h2, p, button, span, mount } from '@eldrex/cairnjs';
 
 export const ShoppingCart = () => {
     const items = collection([
@@ -174,7 +174,7 @@ tabs.forEach(tab => {
 
 #### ✅ After: Cairn
 ```javascript
-import { state, div, button, p } from '@eldrex/cairn';
+import { state, div, button, p } from '@eldrex/cairnjs';
 
 export const TabbedNav = () => {
     const activeTab = state('overview');
@@ -208,7 +208,7 @@ export const TabbedNav = () => {
 ### Real-World Refactor 3: Dynamic Filterable Data Table
 
 ```javascript
-import { state, computed, collection, div, input, table, thead, tbody, tr, th, td, mount } from '@eldrex/cairn';
+import { state, computed, collection, div, input, table, thead, tbody, tr, th, td, mount } from '@eldrex/cairnjs';
 
 export const FilterableTable = () => {
     const search = state('');
@@ -292,7 +292,7 @@ You do not need to perform a risky big-bang rewrite. You can migrate your React 
 #### Method 1: Convert a Cairn Component to a React Component (`cairnToReact`)
 ```jsx
 // MyCairnCard.js
-import { component, state, div, h3, button } from '@eldrex/cairn';
+import { component, state, div, h3, button } from '@eldrex/cairnjs';
 
 export const MyCairnCard = component(({ title = 'Default' }) => {
     const clicks = state(0);
@@ -306,7 +306,7 @@ export const MyCairnCard = component(({ title = 'Default' }) => {
 ```jsx
 // In your React App (App.jsx)
 import React from 'react';
-import { cairnToReact } from '@eldrex/cairn';
+import { cairnToReact } from '@eldrex/cairnjs';
 import { MyCairnCard } from './MyCairnCard.js';
 
 // Wraps Cairn into a native React Functional Component with prop syncing
@@ -325,7 +325,7 @@ export default function App() {
 #### Method 2: Mount into a React Ref with `useCairn` Hook
 ```jsx
 import React, { useState } from 'react';
-import { useCairn } from '@eldrex/cairn';
+import { useCairn } from '@eldrex/cairnjs';
 import { MyCairnCard } from './MyCairnCard.js';
 
 export function Dashboard() {
@@ -377,7 +377,7 @@ Vue developers will feel immediately at home with Cairn signals because they beh
 </template>
 
 <script setup>
-import { cairnToVue, component, state, div, button } from '@eldrex/cairn';
+import { cairnToVue, component, state, div, button } from '@eldrex/cairnjs';
 
 const CairnMetrics = cairnToVue(component(({ initialPings = 0 }) => {
     const pings = state(initialPings);
@@ -407,7 +407,7 @@ $effect(() => { ... });            const stop = effect(() => { ... });
 #### Svelte Action Directive (`cairnToSvelte`)
 ```html
 <script>
-  import { cairnToSvelte, component, state, div, button } from '@eldrex/cairn';
+  import { cairnToSvelte, component, state, div, button } from '@eldrex/cairnjs';
 
   const MyWidget = component(({ start = 0 }) => {
       const val = state(start);
@@ -424,7 +424,7 @@ $effect(() => { ... });            const stop = effect(() => { ... });
 
 ```typescript
 import { Component } from '@angular/core';
-import { cairnToAngular, component, state, div, button } from '@eldrex/cairn';
+import { cairnToAngular, component, state, div, button } from '@eldrex/cairnjs';
 
 const MyCairnComp = component(({ title = 'Angular' }) => {
     const count = state(0);
@@ -458,7 +458,7 @@ $('#search-input').on('keyup', function() {
 });
 
 // ✅ Modern Cairn
-import { state, computed, collection, div, input, ul, li, mount } from '@eldrex/cairn';
+import { state, computed, collection, div, input, ul, li, mount } from '@eldrex/cairnjs';
 
 const search = state('');
 const users = collection(['Alice', 'Bob', 'Charlie']);
@@ -483,7 +483,7 @@ mount('#app', div(
 
 <!-- ✅ Cairn (Pure JS, No Custom HTML Attributes) -->
 <script type="module">
-    import { state, div, button, p, mount } from '@eldrex/cairn';
+    import { state, div, button, p, mount } from '@eldrex/cairnjs';
 
     const open = state(false);
     const count = state(0);

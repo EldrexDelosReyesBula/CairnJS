@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Native Canvas Chart Engine
+ * @eldrex/cairnjs - Native Canvas Chart Engine
  * Built-in bar, line, donut, and scatter charts rendered directly on HTML Canvas.
  * No external charting dependencies. Reactive redraw on signal change.
  */
@@ -106,7 +106,7 @@ function bar(target, data, opts = {}) {
 /**
  * Draws a line chart on an HTML Canvas element.
  */
-function line(target, data, opts = {}) {
+function lineChart(target, data, opts = {}) {
     const ctx = getCtx(target);
     if (!ctx) return;
     const canvas = ctx.canvas;
@@ -315,7 +315,7 @@ function scatter(target, data, opts = {}) {
  * @returns {Function} Unwatch stop function
  */
 function reactive(type, target, dataFn, opts = {}) {
-    const chartFns = { bar, line, donut, scatter };
+    const chartFns = { bar, line: lineChart, donut, scatter };
     const fn = chartFns[type] || bar;
     return effect(() => {
         const data = dataFn();
@@ -323,5 +323,5 @@ function reactive(type, target, dataFn, opts = {}) {
     });
 }
 
-export const Charts = { bar, line, donut, scatter, reactive };
+export const Charts = { bar, line: lineChart, donut, scatter, reactive };
 export default Charts;

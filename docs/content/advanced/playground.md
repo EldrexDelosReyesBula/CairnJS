@@ -7,7 +7,7 @@ Cairn includes a built-in interactive playground runner (`createPlayground`) for
 ## Launching a Component Playground
 
 ```javascript
-import { createPlayground, button, UI, mount } from '@eldrex/cairn';
+import { createPlayground, button, UI, mount } from '@eldrex/cairnjs';
 
 const playground = createPlayground({
     title: 'Cairn Design System Showcase',

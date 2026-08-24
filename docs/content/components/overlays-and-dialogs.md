@@ -9,7 +9,7 @@ Cairn includes a robust overlay architecture providing accessible focus trapping
 Accessible dialog component with automatic `aria-modal="true"`, focus entrapment, and background scroll locking:
 
 ```javascript
-import { Modal, button, p, mount } from '@eldrex/cairn';
+import { Modal, button, p, mount } from '@eldrex/cairnjs';
 
 const myModal = Modal({
     title: 'Account Settings',
@@ -33,7 +33,7 @@ mount('#app', button('Open Settings', { onclick: () => myModal.open() }));
 Display asynchronous confirmation prompts with `await`:
 
 ```javascript
-import { ConfirmDialog } from '@eldrex/cairn';
+import { ConfirmDialog } from '@eldrex/cairnjs';
 
 async function handleDeleteProject() {
     const confirmed = await ConfirmDialog.confirm({
@@ -57,7 +57,7 @@ async function handleDeleteProject() {
 Slide-in panels supporting 4 placement anchors (`'left'`, `'right'`, `'top'`, `'bottom'`):
 
 ```javascript
-import { Drawer, p, button, mount } from '@eldrex/cairn';
+import { Drawer, p, button, mount } from '@eldrex/cairnjs';
 
 const navDrawer = Drawer({
     title: 'Navigation Menu',
@@ -80,12 +80,12 @@ mount('#app', button('Open Menu', { onclick: () => navDrawer.open() }));
 Portal-mounted toast notifications with auto-dismiss timers and global history log:
 
 ```javascript
-import { Toast, NotificationCenter } from '@eldrex/cairn';
+import { Toast, NotificationCenter } from '@eldrex/cairnjs';
 
 // 1. Trigger Toasts
 Toast.success('Profile updated successfully!');
 Toast.error('Failed to sync with remote server.');
-Toast.info('New version 1.1.0 available.');
+Toast.info('New version 1.2.0 available.');
 Toast.warning('Your session will expire in 5 minutes.');
 
 // 2. Global History Center
@@ -100,7 +100,7 @@ const historyDrawer = NotificationCenter.Panel();
 Low-level overlay primitives exported for custom UI components:
 
 ```javascript
-import { createFocusTrap, useClickOutside, useEscapeKey, updateFloatingPosition } from '@eldrex/cairn';
+import { createFocusTrap, useClickOutside, useEscapeKey, updateFloatingPosition } from '@eldrex/cairnjs';
 
 // 1. Entrap Tab navigation inside any container
 const trap = createFocusTrap(myContainerEl);

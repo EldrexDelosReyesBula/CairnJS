@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/docs - Component Documentation Generator & Themed CodeBlock Syntax Highlighter
+ * @eldrex/cairnjs/docs - Component Documentation Generator & Themed CodeBlock Syntax Highlighter
  * Generates standalone Markdown/HTML documentation and renders syntax-highlighted codeblocks
  * with themes like Dracula, One Dark, GitHub Dark, Tokyo Night, Monokai, and Cairn.
  */
@@ -99,7 +99,7 @@ export const CODE_THEMES = {
 /**
  * Escapes HTML characters.
  */
-function escapeHtml(str) {
+function escapeDocsHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -118,7 +118,7 @@ function escapeHtml(str) {
  */
 export function highlight(codeStr = '', lang = 'js', theme = 'dracula') {
     const t = typeof theme === 'string' ? (CODE_THEMES[theme] || CODE_THEMES.dracula) : theme;
-    let text = escapeHtml(codeStr);
+    let text = escapeDocsHtml(codeStr);
 
     // Comments (// ... and /* ... */)
     text = text.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g, `<span style="color: ${t.comment}; font-style: italic;">$1</span>`);
@@ -267,7 +267,7 @@ export const docs = {
                 propTable += `| \`${pName}\` | \`${pDef.type || 'any'}\` | ${pDef.description || '-'} |\n`;
             });
 
-            return `# ${name}\n\n${meta.description || 'Component documentation.'}\n\n## Props\n\n${propTable}\n\n## Usage Example\n\n\`\`\`js\nimport { ${name} } from '@eldrex/cairn';\n\n// Usage example\n\`\`\`\n`;
+            return `# ${name}\n\n${meta.description || 'Component documentation.'}\n\n## Props\n\n${propTable}\n\n## Usage Example\n\n\`\`\`js\nimport { ${name} } from '@eldrex/cairnjs';\n\n// Usage example\n\`\`\`\n`;
         }).join('\n---\n\n');
 
         return {
@@ -326,7 +326,7 @@ export const docs = {
                     p(ex.description, { style: { fontWeight: 'bold', color: '#38bdf8', marginBottom: '6px' } }),
                     CodeBlock({ code: ex.code, lang: 'javascript', theme: 'dracula' })
                 ))
-                : CodeBlock({ code: `import { button } from '@eldrex/cairn';\nbutton("Click me");`, lang: 'javascript', theme: 'dracula' })
+                : CodeBlock({ code: `import { button } from '@eldrex/cairnjs';\nbutton("Click me");`, lang: 'javascript', theme: 'dracula' })
         );
     },
 
@@ -442,5 +442,118 @@ export function createPlayground(config = {}) {
         )
     );
 }
+
+export const Heading = ({ level = 1, text }) => {
+    const Tag = level === 1 ? h1 : level === 2 ? h2 : h3;
+    return Tag(text, {
+        style: {
+            fontSize: level === 1 ? '2rem' : level === 2 ? '1.5rem' : '1.25rem',
+            fontWeight: 700,
+            color: '#0f172a',
+            margin: '1.5rem 0 0.75rem 0'
+        }
+    });
+};
+
+export const Paragraph = ({ text }) => {
+    return p(text, {
+        style: {
+            fontSize: '1rem',
+            lineHeight: 1.7,
+            color: '#334155',
+            margin: '0.75rem 0'
+        }
+    });
+};
+
+export const Code = ({ language = 'javascript', code: codeStr = '', theme = 'cairn' }) => {
+    return CodeBlock({ code: codeStr, lang: language, theme });
+};
+
+export const Callout = ({ type = 'info', text }) => {
+    const bgColors = {
+        info: 'rgba(56, 189, 248, 0.1)',
+        success: 'rgba(34, 197, 94, 0.1)',
+        warning: 'rgba(234, 179, 8, 0.1)',
+        danger: 'rgba(239, 68, 68, 0.1)'
+    };
+    const borderColors = {
+        info: '#38bdf8',
+        success: '#22c55e',
+        warning: '#eab308',
+        danger: '#ef4444'
+    };
+
+    return div({
+        class: `cairn-callout cairn-callout-${type}`,
+        style: {
+            padding: '1rem 1.25rem',
+            borderRadius: '0.5rem',
+            background: bgColors[type] || bgColors.info,
+            borderLeft: `4px solid ${borderColors[type] || borderColors.info}`,
+            color: '#1e293b',
+            fontSize: '0.95rem',
+            margin: '1rem 0',
+            lineHeight: 1.5
+        }
+    }, text);
+};
+
+export const Table = ({ headers = [], rows = [] }) => {
+    return div({
+        style: { width: '100%', overflowX: 'auto', margin: '1.5rem 0' }
+    },
+        div({
+            style: {
+                display: 'grid',
+                gridTemplateColumns: `repeat(${headers.length || 1}, 1fr)`,
+                borderBottom: '2px solid #e2e8f0',
+                paddingBottom: '0.5rem',
+                fontWeight: 600,
+                color: '#0f172a'
+            }
+        }, headers.map(h => span(h, { style: { padding: '0.5rem' } }))),
+        div(rows.map(row => div({
+            style: {
+                display: 'grid',
+                gridTemplateColumns: `repeat(${headers.length || 1}, 1fr)`,
+                borderBottom: '1px solid #f1f5f9',
+                padding: '0.5rem 0',
+                color: '#334155'
+            }
+        }, row.map(cell => span(cell, { style: { padding: '0.5rem' } })))))
+    );
+};
+
+export const Example = ({ component: Comp, code: codeStr = '' }) => {
+    return div({
+        style: {
+            margin: '1.5rem 0',
+            border: '1px solid #e2e8f0',
+            borderRadius: '0.75rem',
+            overflow: 'hidden'
+        }
+    },
+        div({
+            style: {
+                padding: '1.5rem',
+                background: '#f8fafc',
+                display: 'grid',
+                placeItems: 'center'
+            }
+        }, typeof Comp === 'function' ? Comp() : Comp),
+        codeStr ? CodeBlock({ code: codeStr, lang: 'javascript', theme: 'one-dark' }) : null
+    );
+};
+
+Object.assign(docs, {
+    Heading,
+    Paragraph,
+    Code,
+    Callout,
+    Table,
+    Example,
+    createPlayground
+});
 
 export default docs;

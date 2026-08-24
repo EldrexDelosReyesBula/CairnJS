@@ -2,7 +2,7 @@
 
 Build reactive, framework-agnostic web applications and components with zero external dependencies. Use with React, Vue, Svelte, Angular, standard Web Components, or vanilla HTML/JS.
 
-[![npm](https://img.shields.io/badge/npm-1.1.0-black)](https://www.npmjs.com/package/@eldrex/cairnjs)
+[![npm](https://img.shields.io/badge/npm-1.2.0-black)](https://www.npmjs.com/package/@eldrex/cairnjs)
 [![Documentation](https://img.shields.io/badge/Docs-cairnjs.vercel.app-blue)](https://cairnjs.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![LLM Prompt Context](https://img.shields.io/badge/LLM_Context-llms.txt-purple.svg)](./llms.txt)
@@ -60,8 +60,8 @@ npm install @eldrex/cairnjs
 <!-- UMD Global (@latest) -->
 <script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
 
-<!-- Pinned Immutable Release (@1.1.0) -->
-<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.1.0/dist/cairn.min.js"></script>
+<!-- Pinned Immutable Release (@1.2.0) -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.2.0/dist/cairn.min.js"></script>
 ```
 
 ---

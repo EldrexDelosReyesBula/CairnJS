@@ -1,6 +1,6 @@
 # Cairn API Reference
 
-Complete, AI-readable function signatures and specifications for `@eldrex/cairn`.
+Complete, AI-readable function signatures and specifications for `@eldrex/cairnjs`.
 
 ---
 
@@ -153,7 +153,7 @@ Physics spring interpolator. Options: `{ from, to, stiffness, damping, mass, onU
 
 ### Kinematic Particle Physics
 ```js
-import { physics } from '@eldrex/cairn';
+import { physics } from '@eldrex/cairnjs';
 
 const p = physics.particle({ x: 100, y: 100, vx: 2, vy: -5, mass: 1, damping: 0.98 });
 p.applyForce(0, 9.8); // Apply gravity
@@ -391,7 +391,7 @@ Vector graphics primitives with browser and Node.js SSR support:
 Interactive syntax highlighter supporting `dracula`, `one-dark`, `github-dark`, `tokyo-night`, `monokai`, and `cairn` themes with 1-click reactive copy.
 ```js
 UI.CodeBlock({
-    code: `import { state } from '@eldrex/cairn';\nconst count = state(0);`,
+    code: `import { state } from '@eldrex/cairnjs';\nconst count = state(0);`,
     language: 'javascript',
     theme: 'dracula',
     title: 'Counter.js',

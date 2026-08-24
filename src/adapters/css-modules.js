@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/adapters - CSS Modules Adapter
+ * @eldrex/cairnjs/adapters - CSS Modules Adapter
  * Resolves scoped class names from CSS Modules stylesheet objects.
  * Supports `modules: styles` or `cssModule: styles.card`.
  */

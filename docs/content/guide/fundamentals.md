@@ -1,6 +1,6 @@
 # Cairn Fundamentals — Complete Handbook for Beginners
 
-Welcome to **Cairn** (`@eldrex/cairn`)! This handbook is designed to get you building reactive, beautiful web applications immediately **without having to memorize complex APIs, compilers, or build setups**.
+Welcome to **Cairn** (`@eldrex/cairnjs`)! This handbook is designed to get you building reactive, beautiful web applications immediately **without having to memorize complex APIs, compilers, or build setups**.
 
 ---
 
@@ -19,7 +19,7 @@ Cairn is a **zero-dependency, zero-build UI and reactivity library**.
     <div id="app"></div>
 
     <script type="module">
-        import { state, div, h1, button, mount } from 'https://esm.sh/@eldrex/cairn@1.0.0';
+        import { state, div, h1, button, mount } from 'https://esm.sh/@eldrex/cairnjs@1.0.0';
 
         const count = state(0);
 
@@ -127,7 +127,7 @@ Use these battle-tested, zero-boilerplate recipes in your apps right away:
 
 ### Recipe 1: Toggle Switch Button
 ```javascript
-import { state, div, button } from '@eldrex/cairn';
+import { state, div, button } from '@eldrex/cairnjs';
 
 export const ToggleSwitch = () => {
     const active = state(false);
@@ -152,7 +152,7 @@ export const ToggleSwitch = () => {
 
 ### Recipe 2: Modal Popup with Backdrop Blur
 ```javascript
-import { state, div, h2, p, button } from '@eldrex/cairn';
+import { state, div, h2, p, button } from '@eldrex/cairnjs';
 
 export const ModalDemo = () => {
     const isOpen = state(false);
@@ -192,7 +192,7 @@ export const ModalDemo = () => {
 
 ### Recipe 3: Accordion / Collapsible Section
 ```javascript
-import { state, div, button, p } from '@eldrex/cairn';
+import { state, div, button, p } from '@eldrex/cairnjs';
 
 export const AccordionItem = ({ title, content }) => {
     const open = state(false);
@@ -211,7 +211,7 @@ export const AccordionItem = ({ title, content }) => {
 
 ### Recipe 4: Tabs Switcher
 ```javascript
-import { state, div, button } from '@eldrex/cairn';
+import { state, div, button } from '@eldrex/cairnjs';
 
 export const TabsDemo = () => {
     const activeTab = state('overview');
@@ -243,7 +243,7 @@ export const TabsDemo = () => {
 
 ### Recipe 5: Live Search Filterable List
 ```javascript
-import { state, computed, collection, div, input, ul, li } from '@eldrex/cairn';
+import { state, computed, collection, div, input, ul, li } from '@eldrex/cairnjs';
 
 export const SearchableList = () => {
     const search = state('');
@@ -272,7 +272,7 @@ export const SearchableList = () => {
 
 ### Recipe 6: Toast Notification Banner
 ```javascript
-import { state, div, button } from '@eldrex/cairn';
+import { state, div, button } from '@eldrex/cairnjs';
 
 export const ToastDemo = () => {
     const message = state('');
@@ -306,7 +306,7 @@ export const ToastDemo = () => {
 
 ### Recipe 7: Async Data Loader with Loading Spinner
 ```javascript
-import { resource, div, h4, p, button } from '@eldrex/cairn';
+import { resource, div, h4, p, button } from '@eldrex/cairnjs';
 
 export const UserProfile = () => {
     const userResource = resource(async () => {
@@ -341,7 +341,7 @@ export const UserProfile = () => {
 
 ### Recipe 8: Dark / Light Mode Theme Switcher
 ```javascript
-import { createTheme, setTheme, activeTheme, div, button, h3, p } from '@eldrex/cairn';
+import { createTheme, setTheme, activeTheme, div, button, h3, p } from '@eldrex/cairnjs';
 
 createTheme('dark', { colors: { background: '#0f172a', text: '#f8fafc', card: '#1e293b' } });
 createTheme('light', { colors: { background: '#f8fafc', text: '#0f172a', card: '#ffffff' } });
@@ -375,7 +375,7 @@ export const ThemeToggleApp = () => {
 
 ### Recipe 9: Spring-Animated Bouncy Action Button
 ```javascript
-import { spring, button } from '@eldrex/cairn';
+import { spring, button } from '@eldrex/cairnjs';
 
 export const BouncyButton = ({ label, onClick }) => {
     const scale = state(1);
@@ -408,7 +408,7 @@ export const BouncyButton = ({ label, onClick }) => {
 
 ### Recipe 10: Form with Live Validation
 ```javascript
-import { state, computed, div, input, button, p } from '@eldrex/cairn';
+import { state, computed, div, input, button, p } from '@eldrex/cairnjs';
 
 export const ValidatedForm = () => {
     const email = state('');
@@ -464,7 +464,7 @@ export const ValidatedForm = () => {
 Here is a full, real-world dashboard application demonstrating all concepts together:
 
 ```javascript
-import { state, computed, collection, div, h1, h3, p, button, input, span, mount, spring } from '@eldrex/cairn';
+import { state, computed, collection, div, h1, h3, p, button, input, span, mount, spring } from '@eldrex/cairnjs';
 
 export const MasterDashboard = () => {
     const search = state('');

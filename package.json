@@ -1,11 +1,15 @@
 {
   "name": "@eldrex/cairnjs",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Zero-dependency, high-performance UI framework with fine-grained reactivity, complete motion suite, declarative form validation, overlays, and WASM acceleration.",
   "type": "module",
   "main": "dist/cairn.js",
   "module": "src/index.js",
   "types": "./cairn.d.ts",
+  "bin": {
+    "cairn": "./bin/cairn.js",
+    "cairnjs": "./bin/cairn.js"
+  },
   "homepage": "https://cairnjs.vercel.app",
   "exports": {
     ".": {
@@ -32,11 +36,16 @@
     "./wasm": {
       "types": "./cairn.d.ts",
       "import": "./src/wasm.js"
+    },
+    "./graphics": {
+      "types": "./cairn.d.ts",
+      "import": "./src/graphics.js"
     }
   },
   "files": [
     "src",
     "dist",
+    "bin",
     "cairn.d.ts",
     "cairn.schema.json",
     "cairn.types.json",
@@ -45,8 +54,12 @@
     "LICENSE"
   ],
   "scripts": {
+    "start": "node bin/cairn.js web",
+    "dev": "node bin/cairn.js dev",
     "build": "node build.js",
-    "test": "node tests/index.test.js"
+    "test": "node tests/index.test.js",
+    "info": "node bin/cairn.js info",
+    "analyze": "node bin/cairn.js analyze"
   },
   "keywords": [
     "cairnjs",

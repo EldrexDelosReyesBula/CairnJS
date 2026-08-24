@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/adapters - UnoCSS Adapter
+ * @eldrex/cairnjs/adapters - UnoCSS Adapter
  * Maps `uno: '...'` or `uno: [...]` tokens into element classes.
  */
 

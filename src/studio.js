@@ -362,7 +362,7 @@ export class ${componentName}Component {
         }
 
         // Default Cairn Code Generator
-        return `import { component, state, div, h2, p, button } from '@eldrex/cairn';
+        return `import { component, state, div, h2, p, button } from '@eldrex/cairnjs';
 
 export const ${componentName} = component((props = {}) => {
   const pings = state(142);
@@ -404,5 +404,18 @@ export default ${componentName};`;
     }
 }
 
-export const studio = new StudioEngine();
+export const studioEngine = new StudioEngine();
+
+export function studio(options = {}) {
+    return studioEngine.enable(options);
+}
+
+Object.assign(studio, studioEngine);
+// Bind instance methods
+Object.getOwnPropertyNames(StudioEngine.prototype).forEach(method => {
+    if (method !== 'constructor' && typeof studioEngine[method] === 'function') {
+        studio[method] = studioEngine[method].bind(studioEngine);
+    }
+});
+
 export default studio;

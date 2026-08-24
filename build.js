@@ -20,8 +20,14 @@ console.log('Building Cairn distribution bundles...');
 // Read source files
 const debugCode = fs.readFileSync(path.join(__dirname, 'src', 'debug.js'), 'utf-8');
 const extensibilityCode = fs.readFileSync(path.join(__dirname, 'src', 'extensibility.js'), 'utf-8');
-const adaptersCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'index.js'), 'utf-8');
 const tailwindCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'tailwind.js'), 'utf-8');
+const cssModulesCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'css-modules.js'), 'utf-8');
+const styledCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'styled.js'), 'utf-8');
+const unocssCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'unocss.js'), 'utf-8');
+const bootstrapCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'bootstrap.js'), 'utf-8');
+const motionAdapterCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'motion.js'), 'utf-8');
+const tokensAdapterCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'tokens.js'), 'utf-8');
+const adaptersCode = fs.readFileSync(path.join(__dirname, 'src', 'adapters', 'index.js'), 'utf-8');
 const stateCode = fs.readFileSync(path.join(__dirname, 'src', 'state.js'), 'utf-8');
 const domCode = fs.readFileSync(path.join(__dirname, 'src', 'dom.js'), 'utf-8');
 const componentCode = fs.readFileSync(path.join(__dirname, 'src', 'component.js'), 'utf-8');
@@ -39,6 +45,7 @@ const figmaCode = fs.readFileSync(path.join(__dirname, 'src', 'figma.js'), 'utf-
 const rectShape = fs.readFileSync(path.join(__dirname, 'src', 'shapes', 'rect.js'), 'utf-8');
 const circleShape = fs.readFileSync(path.join(__dirname, 'src', 'shapes', 'circle.js'), 'utf-8');
 const bezierShape = fs.readFileSync(path.join(__dirname, 'src', 'shapes', 'bezier.js'), 'utf-8');
+const shapesCode = fs.readFileSync(path.join(__dirname, 'src', 'shapes', 'index.js'), 'utf-8');
 
 // Additional modules
 const storeCode = fs.readFileSync(path.join(__dirname, 'src', 'store.js'), 'utf-8');
@@ -66,8 +73,10 @@ const bridgesCode = fs.readFileSync(path.join(__dirname, 'src', 'framework-bridg
 function stripImportsExports(code) {
     return code
         .replace(/import\s+[\s\S]*?;/g, '')
-        .replace(/export\s+function\s+/g, 'function ')
+        .replace(/export\s+(async\s+)?function\s+/g, '$1function ')
         .replace(/export\s+const\s+/g, 'const ')
+        .replace(/export\s+let\s+/g, 'let ')
+        .replace(/export\s+var\s+/g, 'var ')
         .replace(/export\s+class\s+/g, 'class ')
         .replace(/export\s+default\s+[\s\S]*?;/g, '')
         .replace(/export\s+\{[\s\S]*?\};/g, '');
@@ -77,15 +86,22 @@ const tagList = 'h, div, span, p, h1, h2, h3, h4, h5, h6, button, input, img, a,
 
 const bundledBody = `
 ${stripImportsExports(debugCode)}
+${stripImportsExports(stateCode)}
+${stripImportsExports(reconcilerCode)}
+${stripImportsExports(stylingCode)}
 ${stripImportsExports(extensibilityCode)}
 ${stripImportsExports(tailwindCode)}
+${stripImportsExports(cssModulesCode)}
+${stripImportsExports(styledCode)}
+${stripImportsExports(unocssCode)}
+${stripImportsExports(bootstrapCode)}
+${stripImportsExports(motionAdapterCode)}
+${stripImportsExports(tokensAdapterCode)}
 ${stripImportsExports(adaptersCode)}
-${stripImportsExports(stateCode)}
 ${stripImportsExports(animationCode)}
 ${stripImportsExports(domCode)}
 ${stripImportsExports(componentCode)}
 ${stripImportsExports(mountCode)}
-${stripImportsExports(stylingCode)}
 ${stripImportsExports(wasmCode)}
 ${stripImportsExports(virtualListCode)}
 ${stripImportsExports(physicsCode)}
@@ -97,6 +113,7 @@ ${stripImportsExports(figmaCode)}
 ${stripImportsExports(rectShape)}
 ${stripImportsExports(circleShape)}
 ${stripImportsExports(bezierShape)}
+${stripImportsExports(shapesCode)}
 ${stripImportsExports(storeCode)}
 ${stripImportsExports(contextCode)}
 ${stripImportsExports(lifecycleCode)}
@@ -112,19 +129,11 @@ ${stripImportsExports(chartsCode)}
 ${stripImportsExports(keyboardCode)}
 ${stripImportsExports(utilsCode)}
 ${stripImportsExports(ssrCode)}
-${stripImportsExports(reconcilerCode)}
 ${stripImportsExports(mobileCode)}
 ${stripImportsExports(threeCode)}
 ${stripImportsExports(docsCode)}
 ${stripImportsExports(iterationCode)}
 ${stripImportsExports(bridgesCode)}
-
-const shapes = { rect, circle, bezier,
-    svg, polygon, ellipse, line, path, text: text,
-    group, defs, linearGradient, arrow, star, triangle
-};
-
-const utils = { color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep };
 
 const cairn = {
     state, computed, effect, collection, resource, component, mount, ${tagList},
@@ -135,8 +144,9 @@ const cairn = {
     physics, router, debug, ui: UI, UI, studio, ai, figma: { figmaToCairn },
     use, config, register: (name, fn, meta) => componentsRegistry.register(name, fn, meta),
     components: componentsRegistry, utils: utilsRegistry, animations: animationRegistry, hooks: hooksBus, middleware: middlewareEngine,
-    mobile, three, docs, hmr: iteration.hmr, live: iteration.live, version: iteration.version, abTest: iteration.abTest,
-    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte,
+    mobile, three, docs,
+    hmr: iteration.hmr, live: iteration.live, version: iteration.version, abTest: iteration.abTest,
+    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement, defineCustomElement, useCairn,
     createStore, useStore, listStores,
     createContext, provideContext, useContext, removeContext,
     onMount, onUnmount, onUpdate, withLifecycle, attachLifecycle,
@@ -144,12 +154,13 @@ const cairn = {
     portal, errorBoundary, suspense, createI18n,
     createCanvas2D, createScene3D, Charts, keyboard,
     utils, color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep,
-    renderToString, hydrate, reconcile, createList, patchProps, reconciler
+    renderToString, hydrate, ssr: { renderToString, hydrate },
+    reconcile, each, For, createList, patchProps, reconciler
 };
 `;
 
 const umdBundle = `/**
- * Cairn v1.0.0 — Complete Motion System Release
+ * Cairn v1.2.0 — Complete Fine-Grained Reactive Framework Release
  * (c) Eldrex Bula & Cairn Contributors. MIT License.
  */
 (function (global, factory) {
@@ -165,7 +176,7 @@ ${bundledBody}
 `;
 
 const esmBundle = `/**
- * Cairn v1.0.0 — Complete Motion System Release
+ * Cairn v1.2.0 — Complete Fine-Grained Reactive Framework Release
  * (c) Eldrex Bula & Cairn Contributors. MIT License.
  */
 ${bundledBody}
@@ -175,13 +186,14 @@ export {
     shapes, tokens, keyframes, media, styleHelper,
     wasmEngine, isWasmSupported, engine, perf, SharedStateBuffer, DomRef, VirtualList, physics, router, debug, UI, studio, ai, figmaToCairn,
     use, config, componentsRegistry, utilsRegistry, animationRegistry, hooksBus, middlewareEngine, registerComponent, tailwind, resolveAdapters,
-    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte,
+    cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement, defineCustomElement, useCairn,
     mobile, three, docs, iteration,
     createStore, useStore, listStores, createContext, provideContext, useContext, removeContext,
     onMount, onUnmount, onUpdate, withLifecycle, attachLifecycle, batch, isBatching, watch, watchEffect,
     portal, errorBoundary, suspense, createI18n, createCanvas2D, createScene3D, Charts, keyboard,
     utils, color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep,
-    renderToString, hydrate, reconcile, createList, patchProps, reconciler,
+    renderToString, hydrate, ssr,
+    reconcile, each, For, createList, patchProps, reconciler,
     cairn
 };
 export default cairn;

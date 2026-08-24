@@ -1,6 +1,6 @@
 # Cairn Documentation
 
-Welcome to the official documentation for **Cairn** (`@eldrex/cairn`) — a reactive, framework-agnostic, zero-dependency component system that covers everything a modern UI framework needs.
+Welcome to the official documentation for **Cairn** (`@eldrex/cairnjs`) — a reactive, framework-agnostic, zero-dependency component system that covers everything a modern UI framework needs.
 
 ---
 

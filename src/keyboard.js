@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Keyboard Shortcut Manager
+ * @eldrex/cairnjs - Keyboard Shortcut Manager
  * Global, composable keyboard shortcut registry with modifier key support.
  */
 

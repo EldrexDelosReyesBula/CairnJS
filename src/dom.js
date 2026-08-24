@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - DOM Builder Engine
+ * @eldrex/cairnjs - DOM Builder Engine
  * Declarative, reactive HTML element builders with zero dependencies, automatic accessibility, and helpful error warnings.
  */
 
@@ -8,6 +8,7 @@ import { warnInvalidCss, logDomUpdate } from './debug.js';
 import { middlewareEngine } from './extensibility.js';
 import { resolveAdapters } from './adapters/index.js';
 import { applyAnimateProp, gesture } from './animation.js';
+import { coat } from './styling.js';
 
 // Global document reference safety check (SSR/Node friendly)
 const getDoc = () => {
@@ -28,18 +29,53 @@ export function h(tag, ...args) {
     const mockAttrs = {};
     const mockChildren = [];
     const mockStyle = {};
+    const mockClassList = {
+        _classes: new Set(),
+        add(...cls) { cls.forEach(c => c && this._classes.add(String(c))); this._sync(); },
+        remove(...cls) { cls.forEach(c => this._classes.delete(String(c))); this._sync(); },
+        contains(c) { return this._classes.has(String(c)); },
+        toggle(c, force) {
+            const has = this._classes.has(String(c));
+            const shouldHave = force !== undefined ? Boolean(force) : !has;
+            if (shouldHave) this._classes.add(String(c));
+            else this._classes.delete(String(c));
+            this._sync();
+            return shouldHave;
+        },
+        _sync() { mockAttrs['class'] = Array.from(this._classes).join(' '); }
+    };
     const el = doc ? doc.createElement(tag) : {
         tagName: tag.toUpperCase(),
         nodeType: 1,
         attributes: mockAttrs,
         style: mockStyle,
+        classList: mockClassList,
         childNodes: mockChildren,
         className: '',
-        setAttribute(k, v) { mockAttrs[k] = String(v); if (k === 'class' || k === 'className') this.className = String(v); },
+        setAttribute(k, v) {
+            mockAttrs[k] = String(v);
+            if (k === 'class' || k === 'className') {
+                this.className = String(v);
+                mockClassList._classes = new Set(String(v).split(/\s+/).filter(Boolean));
+            }
+        },
         getAttribute(k) { return mockAttrs[k] || (k === 'class' ? this.className : null); },
         hasAttribute(k) { return Boolean(mockAttrs[k]); },
+        removeAttribute(k) { delete mockAttrs[k]; },
         addEventListener() {},
-        appendChild(child) { mockChildren.push(child); }
+        removeEventListener() {},
+        appendChild(child) { mockChildren.push(child); return child; },
+        insertBefore(newNode, refNode) {
+            const idx = mockChildren.indexOf(refNode);
+            if (idx >= 0) mockChildren.splice(idx, 0, newNode);
+            else mockChildren.push(newNode);
+            return newNode;
+        },
+        removeChild(child) {
+            const idx = mockChildren.indexOf(child);
+            if (idx >= 0) mockChildren.splice(idx, 1);
+            return child;
+        }
     };
 
     let props = {};
@@ -47,13 +83,18 @@ export function h(tag, ...args) {
 
     // Parse flexible arguments
     args.forEach((arg) => {
-        if (arg === null || arg === undefined) return;
+        if (arg === null || arg === undefined || typeof arg === 'boolean') return;
 
         if (Array.isArray(arg)) {
-            arg.forEach((child) => children.push(child));
+            arg.forEach((child) => {
+                if (child !== null && child !== undefined && typeof child !== 'boolean') {
+                    children.push(child);
+                }
+            });
         } else if (
             typeof arg === 'object' &&
             !arg._isCairnState &&
+            !arg._isCairnEach &&
             !(typeof Element !== 'undefined' && arg instanceof Element) &&
             !(arg.nodeType)
         ) {
@@ -63,23 +104,175 @@ export function h(tag, ...args) {
         }
     });
 
+    // Polymorphic tag override: props.as
+    if (props.as && typeof props.as === 'string' && props.as !== tag) {
+        const asTag = props.as;
+        const nextProps = { ...props };
+        delete nextProps.as;
+        return h(asTag, nextProps, ...children);
+    }
+
     // Run middleware beforeCreate interceptor & adapter style resolvers
     props = middlewareEngine.beforeCreate(tag, props);
     props = resolveAdapters(props);
 
+    // Gestures Support
+    if (props.gestures && typeof props.gestures === 'object' && el.addEventListener) {
+        gesture(el, props.gestures);
+    }
+    if (props.drag && typeof props.drag === 'object' && el.addEventListener) {
+        gesture(el, { drag: true, ...props.drag });
+    }
+    if (props.swipe && typeof props.swipe === 'object' && el.addEventListener) {
+        gesture(el, { swipe: true, ...props.swipe });
+    }
+    if (props.pinch && typeof props.pinch === 'object' && el.addEventListener) {
+        gesture(el, { pinch: true, ...props.pinch });
+    }
+
+    // Native Coat Styling System Support
+    if (props.coat) {
+        if (typeof props.coat === 'function') {
+            effect(() => {
+                const resolved = props.coat();
+                if (typeof resolved === 'string') {
+                    if (el.classList) el.classList.add(resolved);
+                    else if (el.className !== undefined) el.className = (el.className + ' ' + resolved).trim();
+                } else if (typeof resolved === 'object' && resolved !== null) {
+                    const generatedClass = coat(resolved);
+                    if (el.classList) el.classList.add(generatedClass);
+                    else if (el.className !== undefined) el.className = (el.className + ' ' + generatedClass).trim();
+                }
+            });
+        } else if (typeof props.coat === 'object') {
+            const generatedClass = coat(props.coat);
+            if (el.classList) el.classList.add(generatedClass);
+            else if (el.className !== undefined) el.className = (el.className + ' ' + generatedClass).trim();
+        } else if (typeof props.coat === 'string') {
+            if (el.classList) el.classList.add(props.coat);
+            else if (el.className !== undefined) el.className = (el.className + ' ' + props.coat).trim();
+        }
+    }
+
+    // Declarative Animations & Transitions
+    if (props.animate !== undefined) {
+        if (typeof props.animate === 'function') {
+            effect(() => {
+                const animVal = props.animate();
+                if (animVal) {
+                    const duration = typeof animVal === 'object' && animVal.duration ? animVal.duration : (props.duration || 400);
+                    const delay = typeof animVal === 'object' && animVal.delay ? animVal.delay : (props.delay || 0);
+                    const easing = typeof animVal === 'object' && animVal.easing ? animVal.easing : (props.easing || 'cubic-bezier(0.16, 1, 0.3, 1)');
+                    applyAnimateProp(el, animVal, duration, delay, easing);
+                }
+            });
+        } else {
+            const duration = typeof props.animate === 'object' && props.animate.duration ? props.animate.duration : (props.duration || 400);
+            const delay = typeof props.animate === 'object' && props.animate.delay ? props.animate.delay : (props.delay || 0);
+            const easing = typeof props.animate === 'object' && props.animate.easing ? props.animate.easing : (props.easing || 'cubic-bezier(0.16, 1, 0.3, 1)');
+            applyAnimateProp(el, props.animate, duration, delay, easing);
+        }
+    }
+
+    if (props.transition !== undefined) {
+        const applyTrans = (tVal) => {
+            if (!el.style) return;
+            if (typeof tVal === 'string') {
+                el.style.transition = tVal;
+            } else if (typeof tVal === 'object' && tVal !== null) {
+                if (tVal.properties && typeof tVal.properties === 'object') {
+                    const parts = Object.entries(tVal.properties).map(([prop, conf]) => {
+                        const dur = conf.duration !== undefined ? `${conf.duration}ms` : '300ms';
+                        const tim = conf.timing || conf.easing || 'ease';
+                        const del = conf.delay ? `${conf.delay}ms` : '0ms';
+                        return `${prop} ${dur} ${tim} ${del}`;
+                    });
+                    el.style.transition = parts.join(', ');
+                } else {
+                    const prop = tVal.property || 'all';
+                    const dur = tVal.duration !== undefined ? `${tVal.duration}ms` : '300ms';
+                    const tim = tVal.timing || tVal.easing || 'ease';
+                    const del = tVal.delay ? `${tVal.delay}ms` : '0ms';
+                    el.style.transition = `${prop} ${dur} ${tim} ${del}`;
+                }
+            }
+        };
+
+        if (typeof props.transition === 'function') {
+            effect(() => {
+                applyTrans(props.transition());
+            });
+        } else {
+            applyTrans(props.transition);
+        }
+    }
+
     // Automatic ARIA & Accessibility Defaults
+    if (props.ariaLabel) {
+        props['aria-label'] = props.ariaLabel;
+    }
+    if (props.description && !props['aria-description']) {
+        props['aria-description'] = props.description;
+    }
+    if (props.keyboardShortcut && typeof window !== 'undefined') {
+        const key = props.keyboardShortcut.toLowerCase();
+        window.addEventListener('keydown', (e) => {
+            const hasCtrl = e.ctrlKey || e.metaKey;
+            if (key.includes('ctrl') && hasCtrl && e.key.toLowerCase() === key.replace('ctrl+', '').trim()) {
+                e.preventDefault();
+                if (props.onclick) props.onclick(e);
+            }
+        });
+    }
+
     if (tag === 'button' && el.setAttribute) {
         if (!props.role && !el.hasAttribute('role')) el.setAttribute('role', 'button');
         if (props.tabIndex === undefined && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
         
-        // Keyboard Enter / Space trigger execution
-        if (el.addEventListener) {
-            el.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (props.onclick) props.onclick(e);
-                }
-            });
+        // Apply default beautiful variants and sizes if not already custom classes
+        const variant = props.variant || 'default';
+        const size = props.size || 'md';
+
+        const sizeStyles = {
+            sm: 'padding: 6px 12px; font-size: 13px; border-radius: 6px;',
+            md: 'padding: 8px 16px; font-size: 14px; border-radius: 8px;',
+            lg: 'padding: 12px 24px; font-size: 16px; border-radius: 10px;'
+        };
+
+        const variantStyles = {
+            default: 'background: #ffffff; color: #1f2937; border: 1px solid #d1d5db; box-shadow: 0 1px 2px rgba(0,0,0,0.05);',
+            primary: 'background: #6366f1; color: #ffffff; border: 1px solid transparent; box-shadow: 0 2px 4px rgba(99,102,241,0.25); font-weight: 600;',
+            secondary: 'background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; font-weight: 500;',
+            ghost: 'background: transparent; color: #4b5563; border: 1px solid transparent;',
+            danger: 'background: #ef4444; color: #ffffff; border: 1px solid transparent; box-shadow: 0 2px 4px rgba(239,68,68,0.25); font-weight: 600;',
+            custom: ''
+        };
+
+        if (variant !== 'custom' && !props.style) {
+            const baseBtnStyle = `display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none; ${sizeStyles[size] || sizeStyles.md} ${variantStyles[variant] || variantStyles.default}`;
+            if (el.style) el.style.cssText = baseBtnStyle;
+        }
+
+        // Loading state
+        if (props.loading) {
+            if (el.setAttribute) el.setAttribute('disabled', 'true');
+            if (el.style) el.style.opacity = '0.75';
+            const spinner = doc ? doc.createElement('span') : null;
+            if (spinner) {
+                spinner.className = 'cairn-btn-spinner';
+                spinner.style.cssText = 'display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: cairn-spin 0.8s linear infinite;';
+                children.unshift(spinner);
+            }
+        }
+
+        // Icon handling
+        if (props.icon) {
+            const iconPos = props.iconPosition || 'left';
+            if (iconPos === 'right') {
+                children.push(props.icon);
+            } else {
+                children.unshift(props.icon);
+            }
         }
     }
 
@@ -116,16 +309,23 @@ export function h(tag, ...args) {
                     }
                     if (startTime) logDomUpdate(tag, performance.now() - startTime);
                 });
+            } else if (val && val._isCairnState) {
+                effect(() => {
+                    if (el.style && typeof val.value === 'string') {
+                        el.style.cssText = val.value;
+                    } else if (el.style && typeof val.value === 'object' && val.value !== null) {
+                        Object.entries(val.value).forEach(([sKey, sVal]) => {
+                            el.style[sKey] = sVal;
+                        });
+                    }
+                });
             } else if (typeof val === 'object' && val !== null) {
                 Object.entries(val).forEach(([sKey, sVal]) => {
-                    if (typeof sVal === 'function') {
+                    const isReactive = typeof sVal === 'function' || (sVal && sVal._isCairnState);
+                    if (isReactive) {
                         effect(() => {
-                            const computedVal = sVal();
-                            if (el.style) el.style[sKey] = computedVal;
-                        });
-                    } else if (sVal && sVal._isCairnState) {
-                        effect(() => {
-                            if (el.style) el.style[sKey] = sVal.value;
+                            const computedVal = typeof sVal === 'function' ? sVal() : sVal.value;
+                            if (el.style) el.style[sKey] = (computedVal !== undefined && computedVal !== null) ? computedVal : '';
                         });
                     } else if (el.style) {
                         el.style[sKey] = sVal;
@@ -135,27 +335,37 @@ export function h(tag, ...args) {
                 el.style.cssText = val;
             }
         } else if (key === 'className' || key === 'class') {
-            const formatClass = (c) => {
+            const resolveClass = (c) => {
                 if (!c) return '';
-                if (Array.isArray(c)) return c.filter(Boolean).join(' ');
-                if (typeof c === 'object') return Object.entries(c).filter(([, v]) => Boolean(v)).map(([k]) => k).join(' ');
-                return String(c);
+                if (typeof c === 'string' || typeof c === 'number') return String(c);
+                if (c && c._isCairnState) return resolveClass(c.value);
+                if (typeof c === 'function') return resolveClass(c());
+                if (Array.isArray(c)) {
+                    return c.map(resolveClass).filter(Boolean).join(' ');
+                }
+                if (typeof c === 'object') {
+                    return Object.entries(c)
+                        .filter(([, v]) => {
+                            let resolvedVal = v;
+                            if (typeof v === 'function') resolvedVal = v();
+                            else if (v && v._isCairnState) resolvedVal = v.value;
+                            return Boolean(resolvedVal);
+                        })
+                        .map(([k]) => k)
+                        .join(' ');
+                }
+                return '';
             };
 
-            if (typeof val === 'function') {
+            const hasReactivity = typeof val === 'function' || (val && val._isCairnState) || typeof val === 'object';
+            if (hasReactivity) {
                 effect(() => {
-                    const formatted = formatClass(val());
-                    if (el.className !== undefined) el.className = formatted;
-                    if (el.setAttribute) el.setAttribute('class', formatted);
-                });
-            } else if (val && val._isCairnState) {
-                effect(() => {
-                    const formatted = formatClass(val.value);
+                    const formatted = resolveClass(val);
                     if (el.className !== undefined) el.className = formatted;
                     if (el.setAttribute) el.setAttribute('class', formatted);
                 });
             } else if (el.className !== undefined) {
-                const formatted = formatClass(val);
+                const formatted = resolveClass(val);
                 el.className = formatted;
                 if (el.setAttribute) el.setAttribute('class', formatted);
             }
@@ -182,12 +392,22 @@ export function h(tag, ...args) {
         } else if (typeof val === 'function') {
             effect(() => {
                 const computedVal = val();
-                if (el.setAttribute) el.setAttribute(key, computedVal);
+                if (key === 'innerHTML' || key === 'textContent') {
+                    if (key in el) el[key] = (computedVal !== undefined && computedVal !== null) ? computedVal : '';
+                } else if (el.setAttribute) {
+                    el.setAttribute(key, computedVal);
+                }
             });
         } else if (val && val._isCairnState) {
             effect(() => {
-                if (el.setAttribute) el.setAttribute(key, val.value);
+                if (key === 'innerHTML' || key === 'textContent') {
+                    if (key in el) el[key] = (val.value !== undefined && val.value !== null) ? val.value : '';
+                } else if (el.setAttribute) {
+                    el.setAttribute(key, val.value);
+                }
             });
+        } else if (key === 'innerHTML' || key === 'textContent') {
+            if (key in el) el[key] = val;
         } else if (el.setAttribute) {
             el.setAttribute(key, val);
         }
@@ -203,9 +423,80 @@ export function h(tag, ...args) {
 
     // Append Children
     const appendChildNode = (childNode) => {
-        if (childNode === null || childNode === undefined) return;
+        if (childNode === null || childNode === undefined || typeof childNode === 'boolean') return;
         if (Array.isArray(childNode)) {
             childNode.forEach(appendChildNode);
+            return;
+        }
+
+        if (childNode && childNode._isCairnEach) {
+            if (doc) {
+                const endMarker = doc.createTextNode('');
+                if (el.appendChild) el.appendChild(endMarker);
+
+                let oldEntries = new Map();
+
+                effect(() => {
+                    const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
+                    let rawList = childNode.listSource;
+                    if (typeof rawList === 'function') rawList = rawList();
+                    else if (rawList && rawList._isCairnState) rawList = rawList.value;
+
+                    const newItems = Array.isArray(rawList) ? rawList : [];
+                    const newKeyMap = new Map();
+                    const newEntries = [];
+
+                    newItems.forEach((item, i) => {
+                        const key = childNode.getKey(item, i);
+                        newKeyMap.set(key, { item, index: i });
+                    });
+
+                    // Remove deleted nodes
+                    for (const [key, entry] of oldEntries) {
+                        if (!newKeyMap.has(key)) {
+                            if (entry.node && entry.node.parentNode) {
+                                entry.node.parentNode.removeChild(entry.node);
+                            }
+                        }
+                    }
+
+                    // Reconcile and reposition nodes in order
+                    let refNode = endMarker;
+                    for (let i = newItems.length - 1; i >= 0; i--) {
+                        const item = newItems[i];
+                        const key = childNode.getKey(item, i);
+                        let node;
+
+                        if (oldEntries.has(key)) {
+                            node = oldEntries.get(key).node;
+                        } else {
+                            const rendered = childNode.renderItem(item, i);
+                            if (rendered instanceof (typeof Element !== 'undefined' ? Element : Object) || rendered?.nodeType) {
+                                node = rendered;
+                            } else if (typeof rendered === 'string' || typeof rendered === 'number') {
+                                node = doc.createTextNode(String(rendered));
+                            } else {
+                                node = doc.createTextNode('');
+                            }
+                        }
+
+                        if (node) {
+                            if (node.nextSibling !== refNode || node.parentNode !== el) {
+                                if (el.insertBefore) {
+                                    el.insertBefore(node, refNode);
+                                }
+                            }
+                            refNode = node;
+                            newEntries.unshift({ key, item, index: i, node });
+                        }
+                    }
+
+                    oldEntries = new Map(newEntries.map(e => [e.key, e]));
+                    if (startTime) logDomUpdate(tag, performance.now() - startTime);
+                });
+            } else if (el.appendChild) {
+                el.appendChild(childNode);
+            }
             return;
         }
 
@@ -226,10 +517,11 @@ export function h(tag, ...args) {
                     });
                     currentNodes = [];
 
-                    if (res === null || res === undefined) return;
+                    if (res === null || res === undefined || typeof res === 'boolean') return;
 
                     if (Array.isArray(res)) {
                         res.forEach(item => {
+                            if (item === null || item === undefined || typeof item === 'boolean') return;
                             let nodeToInsert = item;
                             if (typeof item === 'string' || typeof item === 'number') {
                                 nodeToInsert = doc.createTextNode(String(item));
@@ -239,7 +531,7 @@ export function h(tag, ...args) {
                                 currentNodes.push(nodeToInsert);
                             }
                         });
-                    } else if (res instanceof (typeof Element !== 'undefined' ? Element : Object) || res.nodeType) {
+                    } else if (res instanceof (typeof Element !== 'undefined' ? Element : Object) || res?.nodeType) {
                         if (anchor.parentNode) {
                             anchor.parentNode.insertBefore(res, anchor);
                             currentNodes.push(res);
@@ -258,7 +550,8 @@ export function h(tag, ...args) {
             if (doc) {
                 const textNode = doc.createTextNode('');
                 effect(() => {
-                    textNode.textContent = String(childNode.value);
+                    const val = childNode.value;
+                    textNode.textContent = (val === null || val === undefined || typeof val === 'boolean') ? '' : String(val);
                 });
                 if (el.appendChild) el.appendChild(textNode);
             }
@@ -290,7 +583,12 @@ export const h5 = (...args) => h('h5', ...args);
 export const h6 = (...args) => h('h6', ...args);
 export const button = (...args) => h('button', ...args);
 export const input = (props = {}) => h('input', props);
-export const img = (src, props = {}) => h('img', { src, ...props });
+export const img = (src, props = {}) => {
+    if (typeof src === 'object' && src !== null) {
+        return h('img', src);
+    }
+    return h('img', { src, ...props });
+};
 export const a = (...args) => {
     if (typeof args[0] === 'string' && (args[0].startsWith('http') || args[0].startsWith('/') || args[0].startsWith('#'))) {
         const href = args[0];

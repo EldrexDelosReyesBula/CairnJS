@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Suspense / Async Boundary
+ * @eldrex/cairnjs - Suspense / Async Boundary
  * Shows a loading fallback while async child resources are resolving.
  * Works natively with Cairn's resource() async signal primitive.
  */

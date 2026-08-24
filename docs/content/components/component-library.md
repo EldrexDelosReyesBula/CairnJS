@@ -1,13 +1,13 @@
 # Cairn UI Component Library
 
-`@eldrex/cairn/ui` provides 50+ pre-built, accessible, zero-dependency UI component primitives.
+`@eldrex/cairnjs/ui` provides 50+ pre-built, accessible, zero-dependency UI component primitives.
 
 ---
 
 ## Layout Components (10)
 
 ```js
-import { Box, Container, Grid, Stack, Divider, Spacer, Center, Cluster, Split, AspectRatio } from '@eldrex/cairn/ui';
+import { Box, Container, Grid, Stack, Divider, Spacer, Center, Cluster, Split, AspectRatio } from '@eldrex/cairnjs/ui';
 
 // Stack
 Stack({ gap: 4, direction: 'column' },
@@ -28,7 +28,7 @@ Grid({ columns: 3, gap: '1rem' },
 ## Form Components (18)
 
 ```js
-import { Input, Textarea, Select, Checkbox, Radio, Toggle, Slider, DatePicker, Form, Field, Label } from '@eldrex/cairn/ui';
+import { Input, Textarea, Select, Checkbox, Radio, Toggle, Slider, DatePicker, Form, Field, Label } from '@eldrex/cairnjs/ui';
 
 Form({ onSubmit: (e) => console.log('Form submitted!') },
     Field({ label: 'Email Address' },
@@ -43,7 +43,7 @@ Form({ onSubmit: (e) => console.log('Form submitted!') },
 ## Navigation Components (8)
 
 ```js
-import { Navbar, Sidebar, Menu, Breadcrumbs, Pagination, Tabs, Stepper, Dropdown } from '@eldrex/cairn/ui';
+import { Navbar, Sidebar, Menu, Breadcrumbs, Pagination, Tabs, Stepper, Dropdown } from '@eldrex/cairnjs/ui';
 
 Navbar({
     brand: 'Cairn App',
@@ -56,7 +56,7 @@ Navbar({
 ## Data Display Components (12)
 
 ```js
-import { Table, List, Card, Badge, Avatar, Tag, Tooltip, Accordion } from '@eldrex/cairn/ui';
+import { Table, List, Card, Badge, Avatar, Tag, Tooltip, Accordion } from '@eldrex/cairnjs/ui';
 
 Card({ style: { maxWidth: '400px' } },
     Avatar({ src: 'user.jpg' }),
@@ -70,7 +70,7 @@ Card({ style: { maxWidth: '400px' } },
 ## Feedback Components (8)
 
 ```js
-import { Modal, Toast, Alert, Progress, Spinner, Skeleton, EmptyState } from '@eldrex/cairn/ui';
+import { Modal, Toast, Alert, Progress, Spinner, Skeleton, EmptyState } from '@eldrex/cairnjs/ui';
 
 Toast.success('Saved successfully!');
 
@@ -82,7 +82,7 @@ Alert({ message: 'Warning: Unsaved changes' });
 ## Advanced Components (3)
 
 ```js
-import { VirtualList, DragDrop, Charts } from '@eldrex/cairn/ui';
+import { VirtualList, DragDrop, Charts } from '@eldrex/cairnjs/ui';
 
 VirtualList({
     data: Array.from({ length: 1000 }, (_, i) => `Item #${i}`),

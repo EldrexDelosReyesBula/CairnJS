@@ -1,6 +1,6 @@
 # Extensibility & Developer Experience Architecture
 
-Cairn (`@eldrex/cairn`) is designed with a zero-configuration extensibility architecture. You can add new components, utility functions, animations, styling adapters, and middleware interceptors without modifying core files or dealing with complex setup boilerplate.
+Cairn (`@eldrex/cairnjs`) is designed with a zero-configuration extensibility architecture. You can add new components, utility functions, animations, styling adapters, and middleware interceptors without modifying core files or dealing with complex setup boilerplate.
 
 ---
 
@@ -9,7 +9,7 @@ Cairn (`@eldrex/cairn`) is designed with a zero-configuration extensibility arch
 Plugins in Cairn are simple functions that receive the `cairn` context object containing `components`, `utils`, `animations`, `hooks`, and `middleware`.
 
 ```javascript
-import { cairn } from '@eldrex/cairn';
+import { cairn } from '@eldrex/cairnjs';
 
 const myPlugin = (cairnCtx) => {
     // 1. Register new reusable components
@@ -94,7 +94,7 @@ cairn.middleware.add({
 Cairn supports multiple styling solutions concurrently. You do not need to choose a single styling paradigm.
 
 ```javascript
-import { cairn, tailwind } from '@eldrex/cairn';
+import { cairn, tailwind } from '@eldrex/cairnjs';
 
 // Use Tailwind CSS Adapter
 cairn.use(tailwind);
@@ -141,7 +141,7 @@ cairn.register('Card', CardComponent, {
 
 ---
 
-## 5. CLI Tooling (`@eldrex/cairn-cli`)
+## 5. CLI Tooling (`@eldrex/cairnjs-cli`)
 
 Cairn includes a zero-dependency scaffolding CLI for component creation, prototyping, building, and analysis.
 
@@ -175,7 +175,7 @@ npx cairn test
 Add the zero-config Component Explorer drawer to any page for live component inspection, props tweaking, and real-time state change logging:
 
 ```html
-<script src="node_modules/@eldrex/cairn/cairn-explorer.js"></script>
+<script src="node_modules/@eldrex/cairnjs/cairn-explorer.js"></script>
 ```
 
 ---

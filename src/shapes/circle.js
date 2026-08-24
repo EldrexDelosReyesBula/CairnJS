@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Shape Utilities: Circle
+ * @eldrex/cairnjs - Shape Utilities: Circle
  * Mathematical SVG circle shape generator.
  */
 

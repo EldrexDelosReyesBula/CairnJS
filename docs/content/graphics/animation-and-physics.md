@@ -10,7 +10,7 @@ Simulates mass-spring physical motion without fixed duration frames.
 
 ### Custom Spring Configuration
 ```js
-import { spring } from '@eldrex/cairn';
+import { spring } from '@eldrex/cairnjs';
 
 spring({
     from: 0,
@@ -54,7 +54,7 @@ button('⚡ Bounce', {
 High-performance 2D particle simulation with velocity, mass, damping, force accumulation, and boundary collision:
 
 ```js
-import { physics } from '@eldrex/cairn';
+import { physics } from '@eldrex/cairnjs';
 
 // 1. Create a particle
 const particle = physics.particle({
@@ -92,7 +92,7 @@ well.attract(particle);
 ## DOM Transitions & Gestures
 
 ```js
-import { transition, gesture } from '@eldrex/cairn';
+import { transition, gesture } from '@eldrex/cairnjs';
 
 // Apply enter CSS transition
 transition(element, {
@@ -116,7 +116,7 @@ const detach = gesture(element, {
 Generates mathematical SVG paths and shapes cleanly:
 
 ```js
-import { shapes } from '@eldrex/cairn';
+import { shapes } from '@eldrex/cairnjs';
 
 const rectSvg = shapes.rect({ w: 100, h: 60, rx: 8, fill: '#6366f1' });
 const circleSvg = shapes.circle({ r: 40, fill: '#22c55e' });
@@ -131,7 +131,7 @@ const polySvg = shapes.polygon({ points: '50,10 90,90 10,90', fill: '#38bdf8' })
 Runs massive particle physics logic in WASM/SIMD memory buffers (`Float32Array`) at 60fps:
 
 ```js
-import { physics } from '@eldrex/cairn';
+import { physics } from '@eldrex/cairnjs';
 
 const balls = physics.grid(500, {
     gravity: 0.5,

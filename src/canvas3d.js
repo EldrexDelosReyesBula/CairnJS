@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - 3D WebGL Scene Graph
+ * @eldrex/cairnjs - 3D WebGL Scene Graph
  * Lightweight, dependency-free WebGL 3D engine built into Cairn.
  * Supports mesh, camera, lighting, materials, geometry, and an animation loop.
  * No Three.js required.

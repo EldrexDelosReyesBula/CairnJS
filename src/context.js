@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Reactive Context / Dependency Injection
+ * @eldrex/cairnjs - Reactive Context / Dependency Injection
  * React Context-style provide/inject with scoped subtree providers for sharing values across component trees.
  * Zero external dependencies.
  */

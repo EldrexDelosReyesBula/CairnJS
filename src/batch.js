@@ -1,32 +1,24 @@
 /**
- * @eldrex/cairn - Batched Updates
+ * @eldrex/cairnjs - Batched Updates & Microtask Auto-Batching
  * Collects multiple reactive state writes and flushes them in a single
- * synchronous pass, preventing intermediate re-renders.
+ * pass, preventing intermediate re-renders.
  */
 
 let _isBatching = false;
+let _autoBatching = false;
+let _microtaskQueued = false;
 const _pendingEffects = new Set();
 
 /**
  * Batches multiple reactive state mutations, flushing all queued
  * effects in a single pass after the callback completes.
  *
- * Without batch(), each `.value =` write triggers a separate update cycle.
- * With batch(), all writes flush together — one render pass, zero intermediate states.
- *
- * @param {Function} fn Synchronous function containing state mutations
- *
- * @example
- * batch(() => {
- *   user.name.value = 'Eldrex';
- *   user.role.value = 'admin';
- *   user.active.value = true;
- * });
- * // Components update exactly once, not three times.
+ * @param {Function} fn Function containing state mutations
  */
 export function batch(fn) {
+    if (typeof fn !== 'function') return;
+
     if (_isBatching) {
-        // Already inside a batch — just run
         fn();
         return;
     }
@@ -36,13 +28,31 @@ export function batch(fn) {
         fn();
     } finally {
         _isBatching = false;
-        // Flush all queued effects
-        const toFlush = Array.from(_pendingEffects);
-        _pendingEffects.clear();
-        toFlush.forEach(effect => {
-            try { effect(); } catch (e) { console.error('[Cairn Batch Flush Error]:', e); }
-        });
+        flushBatch();
     }
+}
+
+/**
+ * Flush all currently pending batched effects.
+ */
+export function flushBatch() {
+    const toFlush = Array.from(_pendingEffects);
+    _pendingEffects.clear();
+    toFlush.forEach(effect => {
+        try {
+            effect();
+        } catch (e) {
+            console.error('[Cairn Batch Flush Error]:', e);
+        }
+    });
+}
+
+/**
+ * Enable or disable automatic microtask batching across state writes.
+ * @param {boolean} enable
+ */
+export function setAutoBatch(enable = true) {
+    _autoBatching = enable;
 }
 
 /**
@@ -52,9 +62,26 @@ export function batch(fn) {
 export function _queueEffect(effectFn) {
     if (_isBatching) {
         _pendingEffects.add(effectFn);
-        return true; // Signal is being batched
+        return true;
     }
-    return false; // Run immediately
+
+    if (_autoBatching) {
+        _pendingEffects.add(effectFn);
+        if (!_microtaskQueued) {
+            _microtaskQueued = true;
+            const schedule = typeof queueMicrotask === 'function'
+                ? queueMicrotask
+                : (cb) => Promise.resolve().then(cb);
+            
+            schedule(() => {
+                _microtaskQueued = false;
+                flushBatch();
+            });
+        }
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -65,4 +92,4 @@ export function isBatching() {
     return _isBatching;
 }
 
-export default { batch, isBatching };
+export default { batch, flushBatch, setAutoBatch, isBatching, _queueEffect };

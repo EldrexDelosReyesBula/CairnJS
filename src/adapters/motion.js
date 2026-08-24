@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/adapters - Framer / Motion Adapter
+ * @eldrex/cairnjs/adapters - Framer / Motion Adapter
  * Maps `motion: { animate, duration, delay, easing }` into Cairn animation properties.
  */
 

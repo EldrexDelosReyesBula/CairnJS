@@ -7,13 +7,28 @@ export interface State<T> {
     _isCairnState: boolean;
     value: T;
     peek(): T;
-    subscribe(fn: (val: T) => void): () => void;
+    subscribe(fn: (val: T) => void, propName?: string | null): () => void;
+    next(value: T): this;
+    commit(): this;
+    rollback(): this;
+    snapshot(): any;
+    restore(snapshotData: any): this;
     toString(): string;
     valueOf(): T;
+    [key: string]: any;
 }
 
+export function state<T extends object>(initialValue: T): T & State<T>;
 export function state<T>(initialValue: T): State<T>;
 export function state<T>(getter: () => T): State<T>;
+
+export function memory(options?: {
+    autoDispose?: boolean;
+    weakRefs?: boolean;
+    pooling?: boolean;
+    gcHints?: boolean;
+    maxMemory?: number;
+}): Record<string, any>;
 
 export function computed<T>(getter: () => T): State<T>;
 export function effect(fn: () => void | (() => void)): () => void;
@@ -400,6 +415,46 @@ export function useInView(target: HTMLElement | (() => HTMLElement), options?: I
 export function useMediaQuery(query: string): State<boolean>;
 export function useHotkeys(combo: string | string[], callback: (e: KeyboardEvent) => void, options?: { target?: any; preventDefault?: boolean }): () => void;
 
+// Keyed List Reconciler & Templating
+export interface CairnEachDescriptor {
+    _isCairnEach: true;
+    listSource: any;
+    getKey: (item: any, index: number) => any;
+    renderItem: (item: any, index: number) => any;
+}
+export function each<T>(
+    listSource: State<T[]> | T[] | (() => T[]),
+    keyOrRender: ((item: T, index: number) => any) | ((item: T, index: number) => HTMLElement | string),
+    maybeRender?: (item: T, index: number) => HTMLElement | string
+): CairnEachDescriptor;
+export function For<T>(props: {
+    each: State<T[]> | T[] | (() => T[]);
+    key?: (item: T, index: number) => any;
+    children: (item: T, index: number) => any;
+}): CairnEachDescriptor;
+export function reconcile(parent: HTMLElement, oldItems: any[], newItems: any[], renderItem: Function, getKey?: Function): void;
+export function createList(parent: HTMLElement, listSignal: State<any[]>, renderItem: Function, getKey?: Function): () => void;
+export function patchProps(el: HTMLElement, oldProps?: any, newProps?: any): void;
+
+// Server-Side Rendering (SSR) & Hydration
+export function renderToString(node: any): string;
+export function hydrate(container: HTMLElement | string, componentFn: Function | HTMLElement, props?: any): void;
+export const ssr: {
+    renderToString: typeof renderToString;
+    hydrate: typeof hydrate;
+};
+
+// Universal Web Component Bridge
+export function cairnToCustomElement(
+    CairnComponent: Function | HTMLElement,
+    options?: string[] | { observedAttributes?: string[]; shadow?: boolean | 'open' | 'closed'; styles?: string }
+): typeof HTMLElement;
+export function defineCustomElement(
+    tagName: string,
+    CairnComponent: Function | HTMLElement,
+    options?: string[] | { observedAttributes?: string[]; shadow?: boolean | 'open' | 'closed'; styles?: string }
+): typeof HTMLElement;
+
 // SVG Shapes
 export const shapes: {
     svg(opts?: any, ...children: any[]): HTMLElement;
@@ -420,15 +475,124 @@ export const shapes: {
     [key: string]: any;
 };
 
+export interface DevTools {
+    isEnabled(): boolean;
+    enable(): this;
+    inspect(component: any): any;
+    profile(): any;
+    trace(label?: string, fn?: Function): any;
+    log(category: string, ...messages: any[]): void;
+    stateViewer: {
+        timeline: State<any[]>;
+        record(key: string, oldVal: any, newVal: any): any;
+        export(): string;
+        import(jsonString: string): boolean;
+        clear(): void;
+    };
+    generateComponent(config?: { name?: string; props?: string[]; tags?: string }): string;
+}
+
+export const devtools: DevTools;
+
+export interface PluginRegistry {
+    register(meta: Record<string, any>): any;
+    install(plugin: string | Function | object | any[], context?: any): any;
+    list(): any[];
+    search(query?: string): any[];
+    featured(): any[];
+    popular(): any[];
+    new(): any[];
+    category(categoryName: string): any[];
+}
+
+export const plugins: PluginRegistry;
+
+export function sandbox(options?: any): { options: any; run(fn: Function): Promise<any> };
+export function experiment(options: any): Promise<any>;
+export const features: {
+    (flags?: Record<string, any>): State<Record<string, any>>;
+    flags: State<Record<string, any>>;
+    isEnabled(flagName: string): boolean;
+    set(flagName: string, val: any): void;
+    rollout(config: Record<string, number>): State<Record<string, any>>;
+    abTest(experiments: Record<string, any>): Record<string, any>;
+};
+
+export const benchmark: {
+    (config: any): any;
+    compare(options?: any): any;
+};
+
+export const test: {
+    describe(suiteName: string, fn: Function): void;
+    it(testName: string, fn: Function): any;
+    expect(actual: any): {
+        toBe(expected: any): void;
+        toEqual(expected: any): void;
+        toBeTruthy(): void;
+        toBeFalsy(): void;
+        toContain(item: any): void;
+    };
+    fireEvent: {
+        click(element: any): void;
+        input(element: any, value: any): void;
+        change(element: any, value: any): void;
+        keydown(element: any, key: string): void;
+    };
+    coverage(options?: any): any;
+    visual(options?: any): any;
+    getResults(): any[];
+    clearResults(): void;
+};
+
+export function deprecate(oldMethod: string, message?: string, targetVersion?: string): void;
+export function migrate(plan: { from?: string; to?: string; changes?: Array<{ old: string; new: string }> }): any;
+export function compat(compatConfig: Record<string, boolean>): Record<string, boolean>;
+export function learn(options: { course?: string; lessons?: any[] }): any;
+export function roadmap(options: { features?: any[]; vote?: boolean; propose?: boolean }): any;
+export function ci(options?: any): any;
+export function triage(options?: any): any;
+export function dependabot(options?: any): any;
+
+export function createElement(type: any, props?: any, ...children: any[]): any;
+export function Fragment(props?: any): any;
+export const composer: {
+    (options?: any): any;
+    languages(config?: any): any;
+};
+
+export function graphics2D(options?: any): any;
+export function shapes2D(options?: any): any;
+export function sprites(options?: any): any;
+export function particles2D(options?: any): any;
+export function physics2D(options?: any): any;
+export function shapes3D(options?: any): any;
+export function models(options?: any): any;
+export function materials(options?: any): any;
+export function webgpu(options?: any): any;
+export function particles3D(options?: any): any;
+export function quality(options?: any): any;
+export function LOD(options?: any): any;
+export function culling(options?: any): any;
+export function renderOptimize(options?: any): any;
+export function postprocessing(options?: any): any;
+export const components3D: Record<string, Function>;
+export const components2D: Record<string, Function>;
+
 export const cairn: {
-    state: typeof state;
+    version: string;
+    state: typeof state & { extend(ext: any): any };
     computed: typeof computed;
     effect: typeof effect;
     collection: typeof collection;
     resource: typeof resource;
-    component: typeof component;
+    memory: typeof memory;
+    component: typeof component & { extend(ext: any): any };
     mount: typeof mount;
     h: typeof h;
+    dom: { extend(ext: any): any };
+    events: { extend(ext: any): any };
+    style: { extend(ext: any): any };
     div: typeof div;
     span: typeof span;
     p: typeof p;
@@ -440,6 +604,26 @@ export const cairn: {
     spring: typeof spring;
     transition: typeof transition;
     gesture: typeof gesture;
+    timeline: (options?: any) => any;
+    viewTransition: any;
+    coat: (rules: any) => any;
+    animation: typeof animation & { extend(ext: any): any };
+    router: typeof router & { extend(ext: any): any };
+    devtools: typeof devtools;
+    plugins: typeof plugins;
+    sandbox: typeof sandbox;
+    experiment: typeof experiment;
+    features: typeof features;
+    benchmark: typeof benchmark;
+    test: typeof test;
+    deprecate: typeof deprecate;
+    migrate: typeof migrate;
+    compat: typeof compat;
+    learn: typeof learn;
+    roadmap: typeof roadmap;
+    ci: typeof ci;
+    triage: typeof triage;
+    dependabot: typeof dependabot;
     UI: typeof UI;
     ui: typeof UI;
     useCairn: typeof useCairn;
@@ -449,6 +633,35 @@ export const cairn: {
     cairnToSvelte: typeof cairnToSvelte;
     toCustomElement: typeof cairnToCustomElement;
     defineCustomElement: typeof defineCustomElement;
+    each: typeof each;
+    For: typeof For;
+    reconcile: typeof reconcile;
+    createList: typeof createList;
+    renderToString: typeof renderToString;
+    hydrate: typeof hydrate;
+    composer: typeof composer;
+    createElement: typeof createElement;
+    Fragment: typeof Fragment;
+    graphics2D: typeof graphics2D;
+    shapes2D: typeof shapes2D;
+    sprites: typeof sprites;
+    particles2D: typeof particles2D;
+    physics2D: typeof physics2D;
+    shapes3D: typeof shapes3D;
+    models: typeof models;
+    materials: typeof materials;
+    webgpu: typeof webgpu;
+    particles3D: typeof particles3D;
+    quality: typeof quality;
+    LOD: typeof LOD;
+    culling: typeof culling;
+    renderOptimize: typeof renderOptimize;
+    postprocessing: typeof postprocessing;
+    components3D: typeof components3D;
+    components2D: typeof components2D;
+    agentDocs: any;
+    cairnAgentDocs: any;
+    getAgentDocs: (level?: string) => string;
     [key: string]: any;
 };
 

@@ -9,7 +9,7 @@ Cairn provides HTML tag builders and component wrappers that convert pure JavaSc
 Every HTML element is available as a lowercase function name:
 
 ```js
-import { div, button, input, h1, p, span, a, img } from '@eldrex/cairn';
+import { div, button, input, h1, p, span, a, img } from '@eldrex/cairnjs';
 
 div(
     h1('Welcome'),
@@ -41,7 +41,7 @@ Cairn components are simple, reusable functions wrapped by `cairn.component()`.
 
 ### Function Setup (Simple)
 ```js
-import { component, state, button, div } from '@eldrex/cairn';
+import { component, state, button, div } from '@eldrex/cairnjs';
 
 const Counter = component(({ initial = 0 }) => {
     let count = state(initial);
@@ -57,7 +57,7 @@ Counter({ initial: 5 });
 
 ### Object Declaration (Advanced)
 ```js
-import { component, button } from '@eldrex/cairn';
+import { component, button } from '@eldrex/cairnjs';
 
 const PrimaryButton = component({
     props: {
@@ -82,7 +82,7 @@ PrimaryButton({ label: 'Save', onClick: (e) => console.log('Saved!') });
 Mounts components into any selector or DOM node across frameworks:
 
 ```js
-import { mount, cairn } from '@eldrex/cairn';
+import { mount, cairn } from '@eldrex/cairnjs';
 
 const unmount = mount('#app', Counter({ initial: 0 }));
 

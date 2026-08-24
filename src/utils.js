@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Utility Toolbox
+ * @eldrex/cairnjs - Utility Toolbox
  * Color, clipboard, localStorage (reactive), fullscreen, IntersectionObserver,
  * resize observer, debounce, throttle, and miscellaneous browser utilities.
  */

@@ -8,7 +8,7 @@ Cairn uses fine-grained reactivity signals that update target DOM nodes directly
 Creates a reactive state signal.
 
 ```js
-import { state } from '@eldrex/cairn';
+import { state } from '@eldrex/cairnjs';
 
 let count = state(0);
 
@@ -36,7 +36,7 @@ let double = state(() => count.value * 2); // 20
 Creates a derived state signal that caches its value until dependencies mutate.
 
 ```js
-import { state, computed } from '@eldrex/cairn';
+import { state, computed } from '@eldrex/cairnjs';
 
 let price = state(100);
 let tax = state(0.2);
@@ -54,7 +54,7 @@ console.log(total.value); // 240
 Executes a side-effect function whenever dependent states change.
 
 ```js
-import { state, effect } from '@eldrex/cairn';
+import { state, effect } from '@eldrex/cairnjs';
 
 let count = state(0);
 
@@ -80,7 +80,7 @@ count.value = 2;
 Creates a reactive proxy wrapper around objects or arrays allowing granular mutation tracking.
 
 ```js
-import { collection, effect } from '@eldrex/cairn';
+import { collection, effect } from '@eldrex/cairnjs';
 
 let todos = collection([
     { id: 1, text: 'Buy groceries', done: false }
@@ -100,7 +100,7 @@ todos[0].done = true;
 Manages asynchronous data fetching states with auto-polling and caching.
 
 ```js
-import { resource } from '@eldrex/cairn';
+import { resource } from '@eldrex/cairnjs';
 
 const userResource = resource(async () => {
     const res = await fetch('https://api.example.com/user');

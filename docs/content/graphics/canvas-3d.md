@@ -18,7 +18,7 @@ Creates a 3D WebGL scene attached to a `<canvas>` element.
 | `clearColor` | `[0.035, 0.05, 0.09, 1.0]` | RGBA background color |
 
 ```js
-import { createScene3D } from '@eldrex/cairn';
+import { createScene3D } from '@eldrex/cairnjs';
 
 const scene = createScene3D('#canvas3d', {
   width: 800,
@@ -138,7 +138,7 @@ Cancels the animation loop.
 ## Full Example — Rotating Cube
 
 ```js
-import { createScene3D } from '@eldrex/cairn';
+import { createScene3D } from '@eldrex/cairnjs';
 
 const scene = createScene3D('#canvas3d', { width: 800, height: 500 });
 
@@ -222,7 +222,7 @@ scene.remove(sphere);
 Combine with Cairn's `state()` for fully reactive 3D:
 
 ```js
-import { state, effect, createScene3D } from '@eldrex/cairn';
+import { state, effect, createScene3D } from '@eldrex/cairnjs';
 
 const scene = createScene3D('#canvas3d', { width: 800, height: 500 });
 scene.camera({ position: [0, 0, 5] });

@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Lifecycle Hooks
+ * @eldrex/cairnjs - Lifecycle Hooks
  * onMount, onUnmount, onUpdate — component lifecycle hooks that fire
  * when DOM elements are inserted, removed, or reactively updated.
  */

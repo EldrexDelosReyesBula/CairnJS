@@ -112,7 +112,7 @@ const providerEl = ThemeCtx.Provider('cyberpunk', cairn.div('Nested Child'));
 assert.ok(providerEl instanceof Object, 'Provider element generated');
 
 // 11. CodeBlock Syntax Highlighting & Theme Tests
-const codeSample = 'import { state } from "@eldrex/cairn";\nconst count = state(42);';
+const codeSample = 'import { state } from "@eldrex/cairnjs";\nconst count = state(42);';
 const highlightedDracula = cairn.docs.highlight(codeSample, 'js', 'dracula');
 assert.ok(highlightedDracula.includes('#ff79c6'), 'Dracula keyword color #ff79c6 present');
 assert.ok(highlightedDracula.includes('#f1fa8c'), 'Dracula string color #f1fa8c present');
@@ -615,7 +615,613 @@ const playground = cairn.createPlayground({
 });
 assert.ok(playground, 'Component playground generated successfully');
 
+// ==========================================
+// 8. NEW ARCHITECTURAL UPGRADE SUITE TESTS
+// ==========================================
+
+// 8.1 Keyed List Reconciler (each & For)
+const todoList = state([
+    { id: 1, text: 'Clean Code' },
+    { id: 2, text: 'Deploy to Edge' }
+]);
+
+const eachDesc = cairn.each(todoList, (t) => t.id, (t) => cairn.div(t.text));
+assert.strictEqual(eachDesc._isCairnEach, true, 'each() returns valid Cairn descriptor');
+assert.strictEqual(typeof eachDesc.getKey, 'function', 'each() attaches key function');
+assert.strictEqual(typeof eachDesc.renderItem, 'function', 'each() attaches renderItem');
+
+const forComp = cairn.For({
+    each: todoList,
+    key: (t) => t.id,
+    children: (t) => cairn.div(t.text)
+});
+assert.strictEqual(forComp._isCairnEach, true, 'For() returns valid Cairn descriptor');
+
+// 8.2 Ergonomic Dynamic Class & Style Object Bindings
+const isPrimary = state(true);
+const isHovered = state(false);
+
+const dynamicEl = cairn.div({
+    class: {
+        'btn': true,
+        'btn-primary': () => isPrimary.value,
+        'btn-hover': () => isHovered.value
+    },
+    style: {
+        color: '#ffffff',
+        opacity: () => isPrimary.value ? 1 : 0.5
+    }
+});
+assert.ok(dynamicEl, 'Dynamic class and style element created');
+
+// 8.3 Isomorphic Server-Side String Pre-Renderer (renderToString)
+const ssrApp = cairn.div(
+    { class: { 'app-shell': true, 'dark-mode': true }, id: 'root' },
+    cairn.h1('SSR Header'),
+    cairn.input({ type: 'text', placeholder: 'Search...' }),
+    cairn.each(todoList, (t) => t.id, (t) => cairn.div({ class: 'todo-item' }, t.text))
+);
+
+const htmlString = cairn.renderToString(ssrApp);
+assert.ok(htmlString.includes('class="app-shell dark-mode"'), 'SSR renders dynamic class dictionaries correctly');
+assert.ok(htmlString.includes('<input') && htmlString.includes('placeholder="Search..."') && !htmlString.includes('</input>'), 'SSR renders HTML5 void tags properly');
+assert.ok(htmlString.includes('SSR Header'), 'SSR renders child text');
+assert.ok(htmlString.includes('Clean Code') && htmlString.includes('Deploy to Edge'), 'SSR renders each() list items');
+
+// 9. CairnJS Docs Generator & Syntax Highlighter Tests
+const docHeading = cairn.docs.Heading(1, 'CairnJS Guide');
+assert.ok(docHeading, 'Heading element created');
+
+const docCode = cairn.docs.Code('const a = 1;', { lang: 'javascript', theme: 'cairn' });
+assert.ok(docCode, 'Syntax-highlighted code element created');
+
+const docCallout = cairn.docs.Callout('info', 'This is a built-in CairnJS callout.');
+assert.ok(docCallout, 'Callout element created');
+
+const docPlayground = cairn.createPlayground({
+    title: 'Cairn Interactive Playground',
+    components: [
+        { name: 'Button', render: () => cairn.button('Playground Button') }
+    ]
+});
+assert.ok(docPlayground, 'Playground element created');
+
+// Anti-Crash: Falsy & Boolean Child Suppression Tests
+const showExtra = state(false);
+const boolTestContainer = cairn.div(
+    'Always Visible',
+    false,
+    true,
+    null,
+    undefined,
+    () => showExtra.value && cairn.span('Extra Content')
+);
+assert.ok(boolTestContainer, 'Container with boolean and conditional children renders safely');
+
+// --- BLUEPRINT CAPABILITY VERIFICATIONS ---
+
+console.log('🧪 Running CairnJS Blueprint Capability Verifications...');
+
+// 1. Granular Proxy Object Reactivity & History
+const user = state({ name: 'Alice', age: 30, email: 'alice@example.com' });
+assert.strictEqual(user.name, 'Alice');
+assert.strictEqual(user.age, 30);
+
+let nameUpdateCount = 0;
+let ageUpdateCount = 0;
+
+user.subscribe(() => { nameUpdateCount++; }, 'name');
+user.subscribe(() => { ageUpdateCount++; }, 'age');
+
+user.name = 'Bob';
+assert.strictEqual(user.name, 'Bob');
+assert.strictEqual(nameUpdateCount, 1, 'Subscribed to name triggered');
+assert.strictEqual(ageUpdateCount, 0, 'Subscribed to age was NOT triggered (surgical update)');
+
+// State time-travel / predictability
+const counterState = state(10);
+counterState.next(20);
+assert.strictEqual(counterState.value, 10, 'Value not committed yet');
+counterState.commit();
+assert.strictEqual(counterState.value, 20, 'Value committed');
+
+const snap = counterState.snapshot();
+counterState.value = 30;
+assert.strictEqual(counterState.value, 30);
+counterState.rollback();
+assert.strictEqual(counterState.value, 20, 'Rollback restores previous state');
+counterState.restore(snap);
+assert.strictEqual(counterState.value, 20, 'Snapshot restore works');
+
+// 2. Performance Measurement
+const perfResult = cairn.perf.measure(() => {
+    const arr = [];
+    for (let i = 0; i < 1000; i++) arr.push({ id: i });
+    return arr.length;
+});
+assert.strictEqual(perfResult.result, 1000);
+assert.ok(perfResult.time.endsWith('ms'), 'Returns formatted time');
+assert.ok(perfResult.fps > 0, 'Returns fps');
+
+// 3. Memory Optimization & Auto-cleanup Effects
+const mem = cairn.memory({ autoDispose: true, weakRefs: true, maxMemory: 150 });
+assert.strictEqual(mem.autoDispose, true);
+assert.strictEqual(mem.maxMemory, 150);
+
+let effectCleanedUp = false;
+const disposeEffect = cairn.effect(() => {
+    return () => { effectCleanedUp = true; };
+});
+disposeEffect();
+assert.strictEqual(effectCleanedUp, true, 'Effect auto-cleanup callback executed on dispose');
+
+// 4. Stability & Error Handling
+let caughtError = null;
+cairn.error({
+    onError: (err) => { caughtError = err; }
+});
+
+const BadComponent = () => { throw new Error('Crash!'); };
+const SafeComponent = cairn.safe(BadComponent, {
+    fallback: (err) => ({ type: 'fallback', message: err.message })
+});
+const safeOutput = SafeComponent();
+assert.strictEqual(safeOutput.message, 'Crash!', 'Safe component caught error and returned fallback');
+
+// 5. Real-time Capabilities
+assert.strictEqual(typeof cairn.realtime, 'function');
+assert.strictEqual(typeof cairn.sse, 'function');
+assert.strictEqual(typeof cairn.collab, 'function');
+assert.strictEqual(typeof cairn.poll, 'function');
+assert.strictEqual(typeof cairn.live, 'function');
+
+const poller = cairn.poll({
+    interval: 10000,
+    onPoll: async () => 'poll-data'
+});
+assert.strictEqual(typeof poller.stop, 'function');
+poller.stop();
+
+const shared = cairn.sharedState({ id: 'doc-1', state: { title: 'Draft' } });
+assert.strictEqual(shared.get().title, 'Draft');
+shared.update({ title: 'Published' });
+assert.strictEqual(shared.get().title, 'Published');
+
+// 6. Advanced Component Model (Object Config, Compound, HOC)
+const AdvancedComp = cairn.component({
+    name: 'AdvancedTestComp',
+    props: { count: { default: 5 } },
+    state: { active: true },
+    computed: {
+        doubled: (s, p) => p.count * 2
+    },
+    methods: {
+        toggle() { this.state.active = !this.state.active; }
+    },
+    render({ props, state, computed }) {
+        return { tag: 'div', count: props.count, doubled: computed.doubled, active: state.active };
+    }
+});
+
+const advNode = AdvancedComp({ count: 10 });
+assert.strictEqual(advNode.count, 10);
+assert.strictEqual(advNode.doubled, 20);
+
+// Compound components
+const Card = cairn.component(({ children }) => ({ tag: 'card', children }));
+Card.Header = cairn.component(({ children }) => ({ tag: 'card-header', children }));
+Card.Body = cairn.component(({ children }) => ({ tag: 'card-body', children }));
+
+const cardInstance = Card({
+    children: [Card.Header({ children: 'Title' }), Card.Body({ children: 'Content' })]
+});
+assert.strictEqual(cardInstance.children.length, 2);
+
+// HOCs
+const AuthenticatedComp = cairn.withAuth(AdvancedComp, { isAuth: () => true });
+assert.ok(AuthenticatedComp({ count: 2 }));
+
+// 7. Theme Engine
+cairn.theme({
+    light: { colors: { primary: '#667eea' } },
+    dark: { colors: { primary: '#8b9cf5' } }
+});
+cairn.setTheme('dark');
+assert.strictEqual(cairn.theme(), 'dark');
+
+// 8. Animation System
+cairn.animation.define('scale-rotate', [
+    { opacity: 0, transform: 'scale(0.5)' },
+    { opacity: 1, transform: 'scale(1)' }
+]);
+assert.strictEqual(typeof cairn.animation.define, 'function');
+
+// 9. Personalization & Accessibility
+const prefs = cairn.personalize({
+    fontSize: { default: 18 }
+});
+assert.strictEqual(prefs.get('fontSize'), 18);
+prefs.set('fontSize', 20);
+assert.strictEqual(prefs.get('fontSize'), 20);
+
+const a11yAuditRes = cairn.accessibility.audit();
+assert.strictEqual(a11yAuditRes.passed, true);
+
+// 10. Live Data Visualization & Dashboards
+const testChart = cairn.chart({ type: 'line', realtime: false });
+testChart.push({ timestamp: 1, value: 50 });
+assert.strictEqual(testChart.data.value.length, 1);
+
+const testDashboard = cairn.dashboard({ widgets: ['stats', 'chart'] });
+assert.strictEqual(testDashboard.widgets.value.length, 2);
+
+// 11. Blog Suite
+assert.ok(cairn.blog.PostCard);
+assert.ok(cairn.blog.PostContent);
+assert.ok(cairn.blog.CommentSection);
+
+const postCardNode = cairn.blog.PostCard({ title: 'Testing Cairn', excerpt: 'Amazing speed' });
+assert.ok(postCardNode);
+
+// 12. Documentation Suite
+assert.ok(cairn.docs.Heading);
+assert.ok(cairn.docs.Paragraph);
+assert.ok(cairn.docs.Code);
+assert.ok(cairn.docs.Callout);
+assert.ok(cairn.docs.Table);
+assert.ok(cairn.docs.Example);
+
+// 13. Open DevTools Suite Verifications
+assert.ok(cairn.devtools);
+cairn.devtools.enable();
+assert.strictEqual(cairn.devtools.isEnabled(), true);
+
+const inspectRes = cairn.devtools.inspect({ name: 'HeaderComp', props: { title: 'Test' } });
+assert.strictEqual(inspectRes.name, 'HeaderComp');
+
+const traceRes = cairn.devtools.trace('Calculate', () => 42 * 2);
+assert.strictEqual(traceRes.result, 84);
+
+cairn.devtools.stateViewer.record('count', 1, 2);
+assert.strictEqual(cairn.devtools.stateViewer.timeline.value.length, 1);
+
+const generatedCompCode = cairn.devtools.generateComponent({ name: 'CustomCard', props: ['title'] });
+assert.ok(generatedCompCode.includes('export const CustomCard'));
+
+// 14. Plugin Architecture & Marketplace
+assert.ok(cairn.plugins);
+cairn.plugins.register({
+    name: 'custom-anim',
+    description: 'Custom community animation engine',
+    category: 'animation'
+});
+
+const searchPluginRes = cairn.plugins.search('anim');
+assert.ok(searchPluginRes.length > 0, 'Found animation plugin');
+
+const installedPlugin = cairn.plugins.install('custom-anim');
+assert.strictEqual(installedPlugin.name, 'custom-anim');
+
+const featuredPlugins = cairn.plugins.featured();
+assert.ok(featuredPlugins.length > 0);
+
+// 15. Experimentation & Sandbox Engine
+const testSandbox = cairn.sandbox({ timeout: 1000 });
+const sandboxRes = await testSandbox.run(() => 100 + 200);
+assert.strictEqual(sandboxRes.passed, true);
+assert.strictEqual(sandboxRes.result, 300);
+
+const expRes = await cairn.experiment({
+    name: 'loop-optimization',
+    code: () => { let s = 0; for (let i = 0; i < 1000; i++) s += i; return s; },
+    compare: () => { let s = 0; for (let i = 0; i < 1000; i++) s += i; return s; },
+    iterations: 50
+});
+assert.strictEqual(expRes.passed, true);
+
+cairn.features({ 'experimental-grid': true });
+assert.strictEqual(cairn.features.isEnabled('experimental-grid'), true);
+
+const abRes = cairn.features.abTest({
+    'cta-button': { variantA: 'primary', variantB: 'danger' }
+});
+assert.ok(abRes['cta-button'].variant);
+
+const benchRes = cairn.benchmark({
+    name: 'DOM Benchmark',
+    tests: [{ name: 'array-fill', fn: () => new Array(100).fill(1) }],
+    iterations: 10,
+    warmup: 2
+});
+assert.strictEqual(benchRes.results.length, 1);
+
+// 16. Testing Infrastructure Suite
+assert.ok(cairn.test);
+cairn.test.describe('Sample Suite', () => {
+    cairn.test.it('asserts correctly', () => {
+        cairn.test.expect(1 + 1).toBe(2);
+        cairn.test.expect({ a: 1 }).toEqual({ a: 1 });
+        cairn.test.expect([1, 2, 3]).toContain(2);
+    });
+});
+const executedTestResults = cairn.test.getResults();
+assert.ok(executedTestResults.some(r => r.name === 'asserts correctly' && r.passed));
+
+const testCoverageRes = cairn.test.coverage({ threshold: 80 });
+assert.strictEqual(testCoverageRes.passedThreshold, true);
+
+// 17. Community Extensibility, API Stability & CI
+assert.strictEqual(typeof cairn.state.extend, 'function');
+assert.strictEqual(typeof cairn.dom.extend, 'function');
+assert.strictEqual(typeof cairn.component.extend, 'function');
+
+cairn.deprecate('oldMethod', 'Use newMethod', '2.0.0');
+
+const migrationPlan = cairn.migrate({
+    from: '1.x',
+    to: '2.x',
+    changes: [{ old: 'cairn.render', new: 'cairn.mount' }]
+});
+assert.strictEqual(migrationPlan.changesCount, 1);
+
+const learnRes = cairn.learn({
+    course: 'plugin-dev',
+    lessons: [{ title: 'Intro', task: 'Create plugin' }]
+});
+assert.strictEqual(learnRes.lessonsCount, 1);
+
+const roadmapRes = cairn.roadmap({
+    features: [{ name: 'Native WebGPU', votes: 10 }]
+});
+roadmapRes.vote('Native WebGPU');
+assert.strictEqual(roadmapRes.features.find(f => f.name === 'Native WebGPU').votes, 11);
+
+// 18. CairnJS Effect Disposal & Memory Leak Prevention Verifications
+const triggerState = state(1);
+let effectExecutionCount = 0;
+const stopEffect = effect(() => {
+    effectExecutionCount += triggerState.value;
+});
+assert.strictEqual(effectExecutionCount, 1, 'Initial effect execution');
+
+triggerState.value = 2;
+assert.strictEqual(effectExecutionCount, 3, 'Effect re-ran on state update');
+
+// Stop / dispose effect
+stopEffect();
+triggerState.value = 10;
+assert.strictEqual(effectExecutionCount, 3, 'Disposed effect was NOT re-executed after disposal');
+
+// 19. CairnJS Composer & JSX Runtime Verifications
+assert.ok(cairn.createElement);
+assert.ok(cairn.Fragment);
+assert.ok(cairn.composer);
+
+const jsxBtn = cairn.createElement('button', { className: 'btn-primary', onClick: () => {} }, 'Click JSX');
+assert.ok(jsxBtn, 'JSX button created');
+
+const jsxCustom = cairn.createElement(({ children }) => cairn.div(children), null, jsxBtn);
+assert.ok(jsxCustom, 'JSX functional component created');
+
+const langs = cairn.composer.languages();
+assert.ok(langs.javascript);
+assert.ok(langs.typescript);
+
+// 20. CairnJS Keyed List Reconciliation & DOM Resilience Verifications
+const testReconcileList = state([
+    { id: '1', title: 'Task 1' },
+    { id: '2', title: 'Task 2' }
+]);
+
+const listContainer = cairn.div(
+    cairn.For(testReconcileList, (item) => item.id, (item) => cairn.span(item.title))
+);
+assert.ok(listContainer, 'Keyed list container rendered safely');
+
+// Swap order & remove
+testReconcileList.value = [
+    { id: '2', title: 'Task 2 Updated' },
+    { id: '3', title: 'Task 3' }
+];
+assert.strictEqual(testReconcileList.value.length, 2, 'Keyed list updated properly');
+
+// 21. CairnJS Lifecycle Hooks & Unmount Cleanup Verifications
+let mountedEl = null;
+let unmountedCount = 0;
+
+const LifecycleComp = component(() => {
+    cairn.onMount((el) => {
+        mountedEl = el;
+        return () => {
+            unmountedCount++;
+        };
+    });
+    return cairn.div('Lifecycle Element');
+});
+
+const renderedLifecycle = LifecycleComp();
+assert.ok(renderedLifecycle, 'Lifecycle component returned valid node');
+
+// 22. CairnJS ErrorBoundary & Safe Component Crash Resilience
+const CrashingSubtree = () => {
+    throw new Error('Simulated subtree failure');
+};
+
+const safeRendered = cairn.errorBoundary({
+    children: () => CrashingSubtree(),
+    fallback: (err) => cairn.div({ class: 'error-banner' }, `Handled: ${err.message}`)
+});
+assert.ok(safeRendered, 'ErrorBoundary caught error and returned fallback');
+
+// 23. CairnJS 2D/3D Graphics Engine Verifications
+assert.ok(cairn.graphics2D, 'graphics2D API exists');
+const g2d = cairn.graphics2D({ mode: 'gpu' });
+assert.strictEqual(g2d.mode, 'gpu');
+assert.strictEqual(g2d.performance.fps, 60);
+
+const s2d = cairn.shapes2D();
+const rectShape = s2d.rect({ width: 200, height: 100 });
+assert.strictEqual(rectShape.type, 'rect');
+assert.strictEqual(rectShape.width, 200);
+
+const starShape = s2d.star({ points: 5 });
+assert.strictEqual(starShape.type, 'star');
+assert.strictEqual(starShape.points, 5);
+
+const blobShape = s2d.blob({ radius: 60 });
+assert.strictEqual(blobShape.type, 'blob');
+
+const spEngine = cairn.sprites();
+const playerSprite = spEngine.create('player', { width: 48, height: 48 });
+assert.strictEqual(playerSprite.name, 'player');
+
+const p2d = cairn.particles2D({ emitter: { count: 500 } });
+assert.strictEqual(p2d.activeParticles, 500);
+
+const phys = cairn.physics2D({ gravity: 9.8 });
+assert.strictEqual(phys.gravity, 9.8);
+phys.addBody({ id: 1, mass: 10 });
+assert.strictEqual(phys.bodies.length, 1);
+
+// 3D Shapes & Primitives
+const s3d = cairn.shapes3D();
+const boxMesh = s3d.box({ size: 2 });
+assert.strictEqual(boxMesh.geometry, 'box');
+
+const torusKnotMesh = s3d.torusKnot({ radius: 2 });
+assert.strictEqual(torusKnotMesh.geometry, 'torusKnot');
+
+const dodecaMesh = s3d.dodecahedron({ radius: 1 });
+assert.strictEqual(dodecaMesh.geometry, 'dodecahedron');
+
+// Models & Materials
+const mdl = cairn.models();
+const gltfObj = mdl.gltf({ url: 'hero.glb' });
+assert.strictEqual(gltfObj.format, 'gltf');
+
+const mat = cairn.materials();
+const stdMat = mat.standard({ roughness: 0.4 });
+assert.strictEqual(stdMat.type, 'MeshStandardMaterial');
+
+// WebGPU & 3D Particles
+const wgpu = cairn.webgpu({ pipeline: { primitive: 'triangle-list' } });
+assert.strictEqual(wgpu.pipeline.primitive, 'triangle-list');
+const buf = wgpu.createBuffer('vbo', 'vertex', 1024);
+assert.strictEqual(buf.allocated, true);
+
+const p3d = cairn.particles3D({ emitter: { count: 2000 } });
+assert.strictEqual(p3d.count, 2000);
+
+// Performance & Quality
+const qual = cairn.quality({ override: 'ultra' });
+assert.strictEqual(qual.currentTier, 'ultra');
+
+const lodSys = cairn.LOD({ levels: [{ distance: 0, detail: 'high' }, { distance: 50, detail: 'low' }] });
+assert.strictEqual(lodSys.resolve(10).detail, 'high');
+assert.strictEqual(lodSys.resolve(60).detail, 'low');
+
+const cullSys = cairn.culling({ frustum: true });
+assert.strictEqual(cullSys.frustum, true);
+
+const rOpt = cairn.renderOptimize({ batching: { enabled: true } });
+assert.strictEqual(rOpt.batching.enabled, true);
+
+const postFx = cairn.postprocessing({ bloom: { enabled: true, strength: 1.2 } });
+assert.strictEqual(postFx.bloom.strength, 1.2);
+
+// Ready-made Components
+assert.ok(cairn.components3D.Carousel3D);
+assert.ok(cairn.components2D.Chart);
+const carousel3d = cairn.components3D.Carousel3D({ items: ['item1', 'item2'] });
+assert.strictEqual(carousel3d.name, 'Carousel3D');
+
+// 24. CairnJS Agent-Optimized Documentation System Verifications
+assert.ok(cairn.agentDocs, 'cairn.agentDocs exists');
+assert.strictEqual(cairn.agentDocs.package, '@eldrex/cairnjs');
+assert.ok(cairn.agentDocs.rules.length > 0);
+
+const minDocs = cairn.getAgentDocs('minimal');
+assert.ok(minDocs.includes('state(x)'), 'Contains state in minimal docs');
+
+const stdDocs = cairn.getAgentDocs('standard');
+assert.ok(stdDocs.includes('STATE:'), 'Contains state in standard docs');
+
+// 25. CairnJS Animation, Transition & Coat Styling System Verifications
+assert.ok(cairn.coat, 'cairn.coat exists');
+const coatClass = cairn.coat({
+    color: '#3b82f6',
+    fontSize: '16px',
+    '&:hover': { color: '#ef4444' }
+});
+assert.ok(typeof coatClass === 'string' && coatClass.startsWith('cairn-coat-'), 'Generates coat class');
+
+// Coat Composition & Variants
+const baseCoat = { padding: '8px 16px' };
+const primaryCoat = { background: 'blue', color: 'white' };
+const composed = cairn.coat.compose(baseCoat, primaryCoat);
+assert.strictEqual(composed.padding, '8px 16px');
+assert.strictEqual(composed.background, 'blue');
+
+const getVariant = cairn.coat.variants({
+    primary: { background: 'blue' },
+    secondary: { background: 'gray' }
+});
+assert.strictEqual(getVariant('primary').background, 'blue');
+assert.strictEqual(getVariant('secondary').background, 'gray');
+
+// DOM Elements with coat, animate, transition
+const styledEl = cairn.div('Styled Element', {
+    coat: {
+        borderRadius: '8px',
+        padding: '12px 24px'
+    },
+    animate: 'fade-up',
+    transition: { property: 'all', duration: 300 }
+});
+assert.ok(styledEl);
+
+// Spring Presets & Timeline
+const gentleSpring = cairn.spring('gentle');
+assert.ok(gentleSpring.stop, 'Gentle spring created');
+
+const tl = cairn.timeline();
+tl.add(styledEl, 'fade-in', 0, 300)
+  .add(styledEl, 'zoom-in', '+=100', 400);
+assert.ok(tl.play, 'Timeline play method exists');
+
+// 26. CairnJS Form Validation & Reactive Store Verifications
+const formState = cairn.createForm({
+    fields: {
+        username: { required: true, default: '' },
+        email: { rules: [(val) => (!val || !val.includes('@') ? 'Invalid email' : null)], default: '' }
+    }
+});
+
+assert.strictEqual(typeof formState.validate, 'function', 'Form exposes validate method');
+const isInitiallyValid = formState.validate();
+assert.strictEqual(isInitiallyValid, false, 'Initial empty form is invalid');
+assert.ok(formState.errors.value.username, 'Username error detected');
+
+formState.values.username.value = 'eldrex';
+formState.values.email.value = 'eldrex@cairnjs.org';
+const isNowValid = formState.validate();
+assert.strictEqual(isNowValid, true, 'Populated form is valid');
+
+// 27. CairnJS Overlay & Focus Trap Verifications
+assert.ok(cairn.overlayStack, 'overlayStack exists');
+assert.strictEqual(typeof cairn.createFocusTrap, 'function', 'createFocusTrap helper exists');
+assert.strictEqual(typeof cairn.useEscapeKey, 'function', 'useEscapeKey helper exists');
+
 console.log('✅ ALL CAIRN TEST SUITE VERIFICATIONS PASSED PERFECTLY!');
+
+
+
+
+
+
+
+
+
 
 
 

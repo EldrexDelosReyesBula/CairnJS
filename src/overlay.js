@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Overlay & Accessibility Focus Management
+ * @eldrex/cairnjs - Overlay & Accessibility Focus Management
  * Focus trapping, click-outside detection, escape-key overlay stack, and anchored floating positioning.
  */
 

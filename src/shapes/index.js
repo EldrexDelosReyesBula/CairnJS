@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - SVG Shape Library (Expanded)
+ * @eldrex/cairnjs - SVG Shape Library (Expanded)
  * Reactive SVG primitives: rect, circle, bezier, polygon, ellipse,
  * line, path, text, group, arrow, star, and triangle.
  */
@@ -117,7 +117,7 @@ const path = (opts = {}) => svgEl('path', {
  * @param {string} content Text content
  * @param {object} opts { x, y, fill, fontSize, fontFamily, textAnchor, fontWeight }
  */
-const text = (content = '', opts = {}) => {
+const svgText = (content = '', opts = {}) => {
     const el = svgEl('text', {
         x: opts.x || 0,
         y: opts.y || 0,
@@ -180,58 +180,77 @@ const linearGradient = (opts = {}) => {
 };
 
 /**
- * Creates an arrow shape (line + arrowhead triangle).
- * @param {object} opts { x1, y1, x2, y2, color, size }
+ * Creates an SVG directional arrow indicator.
+ * @param {object} opts { from: [x,y], to: [x,y], stroke, strokeWidth, arrowSize }
  */
 const arrow = (opts = {}) => {
-    const { x1 = 0, y1 = 50, x2 = 90, y2 = 50, color = 'currentColor', size = 8 } = opts;
+    const [x1, y1] = opts.from || [0, 0];
+    const [x2, y2] = opts.to || [100, 0];
     const angle = Math.atan2(y2 - y1, x2 - x1);
-    const g = group({});
+    const size = opts.arrowSize || 10;
+    const stroke = opts.stroke || 'currentColor';
+    const strokeWidth = opts.strokeWidth || 2;
 
-    // Line body
-    const l = line({ x1, y1, x2: x2 - Math.cos(angle) * size, y2: y2 - Math.sin(angle) * size, stroke: color, strokeWidth: 2 });
-    g.appendChild(l);
+    const headX1 = x2 - size * Math.cos(angle - Math.PI / 6);
+    const headY1 = y2 - size * Math.sin(angle - Math.PI / 6);
+    const headX2 = x2 - size * Math.cos(angle + Math.PI / 6);
+    const headY2 = y2 - size * Math.sin(angle + Math.PI / 6);
 
-    // Arrowhead
-    const head = polygon({
-        points: [
-            [x2, y2],
-            [x2 - Math.cos(angle - Math.PI / 6) * size, y2 - Math.sin(angle - Math.PI / 6) * size],
-            [x2 - Math.cos(angle + Math.PI / 6) * size, y2 - Math.sin(angle + Math.PI / 6) * size]
-        ],
-        fill: color
-    });
-    g.appendChild(head);
-
-    return g;
+    return group({},
+        line({ x1, y1, x2, y2, stroke, strokeWidth }),
+        path({ d: `M ${headX1} ${headY1} L ${x2} ${y2} L ${headX2} ${headY2}`, stroke, strokeWidth, fill: 'none' })
+    );
 };
 
 /**
- * Creates an SVG star shape.
- * @param {object} opts { cx, cy, outerRadius, innerRadius, points, fill, stroke }
+ * Creates an SVG 5-pointed star.
+ * @param {object} opts { cx, cy, spikes, outerRadius, innerRadius, fill, stroke }
  */
 const star = (opts = {}) => {
-    const { cx = 50, cy = 50, outerRadius = 40, innerRadius = 18, points: numPts = 5, fill = 'currentColor', stroke } = opts;
-    const pts = [];
-    for (let i = 0; i < numPts * 2; i++) {
-        const radius = i % 2 === 0 ? outerRadius : innerRadius;
-        const angle = (Math.PI / numPts) * i - Math.PI / 2;
-        pts.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
+    const cx = opts.cx || 50;
+    const cy = opts.cy || 50;
+    const spikes = opts.spikes || 5;
+    const outerRadius = opts.outerRadius || 40;
+    const innerRadius = opts.innerRadius || 20;
+
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
+    const step = Math.PI / spikes;
+    const points = [];
+
+    for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        points.push([x, y]);
+        rot += step;
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        points.push([x, y]);
+        rot += step;
     }
-    return polygon({ points: pts, fill, stroke });
+
+    return polygon({ points, fill: opts.fill, stroke: opts.stroke, strokeWidth: opts.strokeWidth });
 };
 
 /**
- * Creates an SVG triangle.
- * @param {object} opts { x, y, size, fill, stroke }
+ * Creates an equilateral SVG triangle centered at (cx, cy).
+ * @param {object} opts { cx, cy, size, fill, stroke }
  */
 const triangle = (opts = {}) => {
-    const { x = 50, y = 10, size = 80, fill = 'currentColor', stroke } = opts;
-    return polygon({
-        points: [[x, y], [x - size / 2, y + size * 0.866], [x + size / 2, y + size * 0.866]],
-        fill,
-        stroke
-    });
+    const cx = opts.cx || 50;
+    const cy = opts.cy || 50;
+    const s = opts.size || 40;
+    const h = s * Math.sqrt(3) / 2;
+
+    const points = [
+        [cx, cy - h / 2],
+        [cx - s / 2, cy + h / 2],
+        [cx + s / 2, cy + h / 2]
+    ];
+
+    return polygon({ points, fill: opts.fill, stroke: opts.stroke, strokeWidth: opts.strokeWidth });
 };
 
 export const shapes = {
@@ -245,7 +264,7 @@ export const shapes = {
     ellipse,
     line,
     path,
-    text,
+    text: svgText,
     group,
     defs,
     linearGradient,

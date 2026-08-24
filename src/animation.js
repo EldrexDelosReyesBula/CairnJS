@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Animation & Motion System
+ * @eldrex/cairnjs - Animation & Motion System
  * Spring physics solver, DOM transitions, gesture handlers, page transitions,
  * scroll progress/parallax, particle systems, timeline sequencing, and one-line element animate prop handling.
  */
@@ -13,16 +13,128 @@ if (typeof document !== 'undefined') {
         style.textContent = `
             @keyframes cairn-fade-in { from { opacity: 0; } to { opacity: 1; } }
             @keyframes cairn-fade-out { from { opacity: 1; } to { opacity: 0; } }
+            @keyframes cairn-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes cairn-fade-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes cairn-fade-left { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-fade-right { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-zoom-in { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+            @keyframes cairn-zoom-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.8); } }
             @keyframes cairn-slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes cairn-slide-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-            @keyframes cairn-scale-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+            @keyframes cairn-slide-left { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-slide-right { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+            @keyframes cairn-slide-out-up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
+            @keyframes cairn-slide-out-down { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+            @keyframes cairn-flip-in { from { opacity: 0; transform: perspective(400px) rotateY(90deg); } to { opacity: 1; transform: perspective(400px) rotateY(0deg); } }
+            @keyframes cairn-scale-in { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+            @keyframes cairn-rotate-in { from { opacity: 0; transform: rotate(-180deg) scale(0.7); } to { opacity: 1; transform: rotate(0deg) scale(1); } }
+            @keyframes cairn-bounce-in { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+            @keyframes cairn-elastic-in { 0% { transform: scale(0); } 55% { transform: scale(1.15); } 75% { transform: scale(0.95); } 100% { transform: scale(1); } }
+            @keyframes cairn-collapse { from { max-height: 500px; opacity: 1; } to { max-height: 0; opacity: 0; } }
             @keyframes cairn-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             @keyframes cairn-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+            @keyframes cairn-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+            @keyframes cairn-wobble { 0%, 100% { transform: translateX(0) rotate(0); } 15% { transform: translateX(-15px) rotate(-4deg); } 30% { transform: translateX(12px) rotate(3deg); } 45% { transform: translateX(-8px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(1deg); } 75% { transform: translateX(-2px) rotate(-1deg); } }
+            @keyframes cairn-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-16px); } 60% { transform: translateY(-8px); } }
+            @keyframes cairn-flash { 0%, 50%, 100% { opacity: 1; } 25%, 75% { opacity: 0.2; } }
+            @keyframes cairn-ping { 75%, 100% { transform: scale(1.6); opacity: 0; } }
             @keyframes cairn-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
             @keyframes cairn-typing { from { width: 0; } to { width: 100%; } }
             .cairn-animated { will-change: transform, opacity; }
         `;
         document.head.appendChild(style);
+    }
+}
+
+const _customAnimations = new Map();
+
+/**
+ * Define and register a custom animation by name using Web Animations API or CSS keyframes.
+ * @param {string} name
+ * @param {Array|object} keyframesDef
+ */
+export function define(name, keyframesDef) {
+    _customAnimations.set(name, keyframesDef);
+    return keyframesDef;
+}
+
+export const defineAnimation = define;
+
+/**
+ * Applies animate prop configuration to an element.
+ */
+export function applyAnimateProp(el, animateProp, duration = 400, delay = 0, easing = 'cubic-bezier(0.16, 1, 0.3, 1)') {
+    if (!el || !el.style) return;
+
+    if (accessibility.reducedMotion) return;
+
+    if (typeof animateProp === 'string') {
+        const animName = animateProp.replace(/^cairn-/, '');
+        if (_customAnimations.has(animName) && typeof el.animate === 'function') {
+            const def = _customAnimations.get(animName);
+            el.animate(def, { duration, delay, easing, fill: 'forwards' });
+            return;
+        }
+        el.style.animation = `cairn-${animName} ${duration}ms ${easing} ${delay}ms both`;
+        if (el.classList) {
+            el.classList.add('cairn-animated');
+        } else if (el.className !== undefined) {
+            el.className = (el.className + ' cairn-animated').trim();
+        }
+    } else if (typeof animateProp === 'object' && animateProp !== null) {
+        const { type, hover, tap, focus, scroll: isScroll, animation = 'fade-up', threshold = 0.1, once = true } = animateProp;
+
+        if (type === 'stagger') {
+            const staggerDelay = animateProp.delay || 100;
+            const staggerDuration = animateProp.duration || 400;
+            if (el.children) {
+                Array.from(el.children).forEach((child, idx) => {
+                    applyAnimateProp(child, animateProp.animation || 'fade-up', staggerDuration, idx * staggerDelay, easing);
+                });
+            }
+            return;
+        }
+
+        if (type === 'scroll' || isScroll) {
+            if (typeof IntersectionObserver !== 'undefined') {
+                el.style.opacity = '0';
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            applyAnimateProp(el, animation, duration, delay, easing);
+                            if (once !== false) observer.unobserve(el);
+                        }
+                    });
+                }, { threshold });
+                observer.observe(el);
+            }
+            return;
+        }
+
+        if (hover && el.addEventListener) {
+            el.style.transition = `transform ${duration}ms ${easing}, opacity ${duration}ms ${easing}`;
+            el.addEventListener('mouseenter', () => {
+                if (typeof hover === 'string') {
+                    if (hover.includes('scale')) el.style.transform = 'scale(1.05)';
+                    if (hover.includes('lift')) el.style.transform = 'translateY(-4px)';
+                } else if (typeof hover === 'object') {
+                    if (hover.scale) el.style.transform = `scale(${hover.scale})`;
+                    if (hover.lift) el.style.transform = `translateY(${hover.lift}px)`;
+                }
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'none';
+            });
+        }
+
+        if (tap && el.addEventListener) {
+            el.addEventListener('mousedown', () => {
+                el.style.transform = 'scale(0.95)';
+            });
+            el.addEventListener('mouseup', () => {
+                el.style.transform = 'none';
+            });
+        }
     }
 }
 
@@ -38,10 +150,23 @@ export const accessibility = {
     }
 };
 
+const springPresets = {
+    gentle: { stiffness: 120, damping: 14, mass: 1 },
+    default: { stiffness: 170, damping: 26, mass: 1 },
+    bouncy: { stiffness: 200, damping: 10, mass: 1 },
+    stiff: { stiffness: 300, damping: 20, mass: 1 }
+};
+
 /**
  * Animates a target value using spring physics logic.
+ * @param {string|object} options
  */
 export function spring(options = {}) {
+    let resolvedOpts = options;
+    if (typeof options === 'string') {
+        resolvedOpts = springPresets[options] || springPresets.default;
+    }
+
     const {
         from = 0,
         to = 1,
@@ -50,7 +175,7 @@ export function spring(options = {}) {
         mass = 1,
         onUpdate = () => {},
         onComplete = () => {}
-    } = options;
+    } = resolvedOpts;
 
     let position = from;
     let velocity = 0;
@@ -99,6 +224,14 @@ export function spring(options = {}) {
         }
     };
 }
+
+Object.assign(spring, {
+    gentle: (opts = {}) => spring({ ...springPresets.gentle, ...opts }),
+    default: (opts = {}) => spring({ ...springPresets.default, ...opts }),
+    bouncy: (opts = {}) => spring({ ...springPresets.bouncy, ...opts }),
+    stiff: (opts = {}) => spring({ ...springPresets.stiff, ...opts }),
+    presets: springPresets
+});
 
 // Spring physics presets for effortless zero-boilerplate motion
 spring.bouncy = (options = {}) => spring({ stiffness: 220, damping: 10, mass: 1, ...options });
@@ -178,66 +311,6 @@ export function gesture(el, handlers = {}) {
         el.removeEventListener('touchstart', handleTouchStart);
         el.removeEventListener('touchend', handleTouchEnd);
     };
-}
-
-/**
- * One-Line Animate Prop Handler for DOM Elements.
- */
-export function applyAnimateProp(el, animateProp, duration = 400, delay = 0, easing = 'ease-out') {
-    if (!el || !el.style) return;
-
-    if (accessibility.reducedMotion) {
-        el.style.opacity = '1';
-        return;
-    }
-
-    if (typeof animateProp === 'string') {
-        const animName = `cairn-${animateProp.replace(/^fade-up$/, 'slide-up')}`;
-        el.style.animation = `${animName} ${duration}ms ${easing} ${delay}ms forwards`;
-    } else if (Array.isArray(animateProp)) {
-        const anims = animateProp.map(a => `cairn-${a.replace(/^fade-up$/, 'slide-up')}`).join(', ');
-        el.style.animation = `${anims} ${duration}ms ${easing} ${delay}ms forwards`;
-    } else if (typeof animateProp === 'object' && animateProp !== null) {
-        const { hover, tap, focus, scroll } = animateProp;
-
-        if (hover && el.addEventListener) {
-            el.style.transition = `transform ${duration}ms ${easing}, opacity ${duration}ms ${easing}`;
-            el.addEventListener('mouseenter', () => {
-                if (typeof hover === 'string') {
-                    if (hover.includes('scale')) el.style.transform = 'scale(1.05)';
-                    if (hover.includes('lift')) el.style.transform = 'translateY(-4px)';
-                } else if (typeof hover === 'object') {
-                    if (hover.scale) el.style.transform = `scale(${hover.scale})`;
-                    if (hover.lift) el.style.transform = `translateY(${hover.lift}px)`;
-                }
-            });
-            el.addEventListener('mouseleave', () => {
-                el.style.transform = 'none';
-            });
-        }
-
-        if (tap && el.addEventListener) {
-            el.addEventListener('mousedown', () => {
-                el.style.transform = 'scale(0.95)';
-            });
-            el.addEventListener('mouseup', () => {
-                el.style.transform = 'none';
-            });
-        }
-
-        if (scroll && typeof IntersectionObserver !== 'undefined') {
-            el.style.opacity = '0';
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        el.style.animation = `cairn-slide-up ${duration}ms ${easing} ${delay}ms forwards`;
-                        if (animateProp.once !== false) observer.unobserve(el);
-                    }
-                });
-            }, { threshold: animateProp.threshold || 0.1 });
-            observer.observe(el);
-        }
-    }
 }
 
 /**
@@ -453,21 +526,148 @@ export const particles = Object.assign(
  * Timeline Sequencing Engine
  */
 export function timeline() {
-    const queue = [];
-    return {
-        add(element, animation, delay = 0, duration = 400) {
+    let queue = [];
+    let isPlaying = false;
+    let isPaused = false;
+    let playbackRate = 1;
+    let timeouts = [];
+    let completeCallbacks = [];
+    let updateCallbacks = [];
+
+    const self = {
+        add(element, animation, offset = 0, duration = 400) {
+            let delay = 0;
+            if (typeof offset === 'string') {
+                const prev = queue[queue.length - 1];
+                const prevEnd = prev ? (prev.delay + prev.duration) : 0;
+                if (offset.startsWith('+=')) {
+                    delay = prevEnd + (parseFloat(offset.slice(2)) || 0);
+                } else if (offset.startsWith('-=')) {
+                    delay = Math.max(0, prevEnd - (parseFloat(offset.slice(2)) || 0));
+                } else {
+                    delay = parseFloat(offset) || 0;
+                }
+            } else if (typeof offset === 'number') {
+                delay = offset;
+            }
             queue.push({ element, animation, delay, duration });
-            return this;
+            return self;
         },
         play() {
+            isPlaying = true;
+            isPaused = false;
+            timeouts.forEach(clearTimeout);
+            timeouts = [];
+            const totalDuration = queue.reduce((max, item) => Math.max(max, item.delay + item.duration), 0);
+
             queue.forEach(item => {
-                setTimeout(() => {
-                    applyAnimateProp(item.element, item.animation, item.duration);
-                }, item.delay);
+                const timer = setTimeout(() => {
+                    if (isPlaying && !isPaused) {
+                        applyAnimateProp(item.element, item.animation, item.duration / playbackRate);
+                        updateCallbacks.forEach(cb => cb({ item, progress: (item.delay + item.duration) / (totalDuration || 1) }));
+                    }
+                }, item.delay / playbackRate);
+                timeouts.push(timer);
             });
+
+            if (totalDuration > 0) {
+                const endTimer = setTimeout(() => {
+                    completeCallbacks.forEach(cb => cb());
+                }, totalDuration / playbackRate);
+                timeouts.push(endTimer);
+            } else {
+                completeCallbacks.forEach(cb => cb());
+            }
+            return self;
+        },
+        pause() {
+            isPaused = true;
+            return self;
+        },
+        resume() {
+            isPaused = false;
+            return self;
+        },
+        reverse() {
+            queue.reverse();
+            return self.play();
+        },
+        seek(timeMs) {
+            queue.forEach(item => {
+                if (item.delay <= timeMs) {
+                    applyAnimateProp(item.element, item.animation, item.duration);
+                }
+            });
+            return self;
+        },
+        speed(rate = 1) {
+            playbackRate = rate;
+            return self;
+        },
+        onComplete(cb) {
+            if (typeof cb === 'function') completeCallbacks.push(cb);
+            return self;
+        },
+        onUpdate(cb) {
+            if (typeof cb === 'function') updateCallbacks.push(cb);
+            return self;
+        }
+    };
+    return self;
+}
+
+/**
+ * View Transitions API Controller
+ */
+export function viewTransition(config = {}) {
+    return {
+        enabled: config.enabled !== false,
+        type: config.type || 'fade',
+        enter: config.enter,
+        exit: config.exit,
+        fallback: config.fallback || 'css',
+        duration: config.duration || 300,
+        start(updateFn) {
+            return viewTransition.start(updateFn);
         }
     };
 }
+
+viewTransition.start = function(updateFn) {
+    if (typeof document !== 'undefined' && typeof document.startViewTransition === 'function') {
+        return document.startViewTransition(updateFn);
+    }
+    if (typeof updateFn === 'function') {
+        const res = updateFn();
+        return Promise.resolve(res);
+    }
+    return Promise.resolve();
+};
+
+/**
+ * Animation Optimization and Accessibility Engine
+ */
+export const animation = {
+    optimize(opts = {}) {
+        return {
+            gpuProperties: opts.gpuProperties || ['transform', 'opacity', 'filter'],
+            batchLayout: opts.batchLayout !== false,
+            compositor: opts.compositor !== false,
+            promoteLayers: opts.promoteLayers !== false
+        };
+    },
+    accessibility(opts = {}) {
+        return {
+            reducedMotion: opts.reducedMotion || 'auto',
+            fallback: opts.fallback || { fade: true, duration: 100, transform: false },
+            detect: opts.detect !== false,
+            override: opts.override || { essential: true, decorative: false }
+        };
+    },
+    spring(presetOrConfig) {
+        return spring(presetOrConfig);
+    }
+};
 
 export function sequence(items = []) {
     let delayAcc = 0;
@@ -498,8 +698,12 @@ export default {
     scroll,
     particles,
     timeline,
+    viewTransition,
+    animation,
     sequence,
     stagger,
     loop,
-    accessibility
+    accessibility,
+    define,
+    defineAnimation
 };

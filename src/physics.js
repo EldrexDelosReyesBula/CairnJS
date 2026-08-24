@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Built-in Physics Engine
+ * @eldrex/cairnjs - Built-in Physics Engine
  * High-performance Verlet & kinematic particle physics engine.
  */
 

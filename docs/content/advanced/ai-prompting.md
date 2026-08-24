@@ -88,7 +88,7 @@ const table = DataTable({ columns: [...], data: [...], searchable: true });
 Copy and paste this prompt snippet into any AI chat to start generating Cairn apps instantly:
 
 ```markdown
-You are an expert Cairn (@eldrex/cairn) engineer. Follow these strict rules:
+You are an expert Cairn (@eldrex/cairnjs) engineer. Follow these strict rules:
 1. NEVER output JSX. Always use Cairn procedural element builder functions: div(), p(), h1(), button(), input().
 2. State is created with state(initialValue) and read/written using .value (e.g. count.value++).
 3. Dynamic text and conditional children MUST be wrapped in getter functions: p(() => `Count: ${count.value}`) and div(() => isVisible.value ? p('Hi') : null).

@@ -3,8 +3,8 @@
  * Build reactive, framework-agnostic web components. Zero dependencies.
  */
 
-import { state, computed, effect, collection, resource } from './state.js';
-import { component } from './component.js';
+import { state, computed, effect, collection, resource, memory } from './state.js';
+import { component, withAuth, withLoading } from './component.js';
 import { mount } from './mount.js';
 import {
     h,
@@ -29,13 +29,17 @@ import {
     scroll,
     particles,
     timeline,
+    viewTransition,
+    animation as animationCore,
     sequence,
     stagger,
     loop,
-    accessibility
+    accessibility as motionA11y,
+    define as defineAnimation,
+    defineAnimation as defineAnimAlias
 } from './animation.js';
 import { shapes } from './shapes/index.js';
-import { tokens, createTokens, createTheme, setTheme, activeTheme, fluid, keyframes, css, media, styleHelper, Show, Hide } from './styling.js';
+import { tokens, createTokens, createTheme, setTheme, activeTheme, theme as themeMaster, fluid, keyframes, css, coat, media, styleHelper, Show, Hide } from './styling.js';
 import { wasmEngine, isWasmSupported, engine, perf, SharedStateBuffer, DomRef } from './wasm.js';
 import { physics } from './physics.js';
 import { UI, Icon, IconButton, Toast, Modal, ConfirmDialog, Drawer, Autocomplete, Combobox, Tree, Field, Label, ErrorMessage, HelperText, NumberInput, PasswordInput, Tabs, SegmentedControl, Pagination, Stepper, Table, DataTable, DataGrid, DropZone, Rating, ColorPicker, Accordion, Timeline, CommandPalette, ContextMenu, NotificationCenter } from './ui/index.js';
@@ -45,6 +49,60 @@ import { ai } from './ai.js';
 import { figmaToCairn } from './figma.js';
 import { debug } from './debug.js';
 import { router, Link, currentPath, currentQuery, currentParams } from './router.js';
+
+// Real-time, Collaboration & Live Updates
+import {
+    realtime,
+    sse,
+    poll,
+    live,
+    collab,
+    document as createLiveDocument,
+    sharedState,
+    notifications,
+    feed,
+    chat
+} from './realtime.js';
+
+// Personalization, Accessibility, Voice & Shortcuts
+import {
+    personalize,
+    settings,
+    accessibility as a11yEngine,
+    voice,
+    shortcuts
+} from './personalize.js';
+
+// Live Data Visualization & Dashboards
+import { chart, dashboard } from './data-viz.js';
+
+// Blog Suite
+import { blog, PostCard, PostContent, CommentSection } from './blog.js';
+
+// DevTools Suite & Inspector
+import { devtools } from './devtools.js';
+
+// Plugin Architecture & Marketplace
+import { plugins } from './plugins.js';
+
+// Experimentation, Sandbox & Benchmarking
+import { sandbox, experiment, features, benchmark } from './experiment.js';
+
+// Testing Infrastructure
+import { test } from './testing.js';
+
+// Community Extensibility, API Stability, Learning & CI Platform
+import {
+    extensions,
+    deprecate,
+    migrate,
+    compat,
+    learn,
+    roadmap,
+    ci,
+    triage,
+    dependabot
+} from './community.js';
 
 // Extensibility, Configuration & Engine Overrides
 import {
@@ -62,9 +120,10 @@ import { adapters, createAdapter, registerAdapter, useAdapter, listAdapters, tai
 import { VirtualList } from './virtual-list.js';
 import { mobile } from './mobile.js';
 import { three } from './three.js';
-import { docs, createPlayground } from './docs.js';
+import { docs, createPlayground, Heading, Paragraph, Code, Callout, Table as DocsTable, Example } from './docs.js';
 import { iteration } from './iteration.js';
 import buildPlugins from './build-plugins.js';
+import { composer, createElement, Fragment } from './composer.js';
 import {
     cairnToReact,
     cairnToVue,
@@ -79,14 +138,34 @@ import {
 import { createStore, useStore, listStores } from './store.js';
 import { createContext, provideContext, useContext, removeContext, hasContext, resetContexts } from './context.js';
 import { onMount, onUnmount, onUpdate, withLifecycle, attachLifecycle } from './lifecycle.js';
-import { batch, isBatching } from './batch.js';
+import { batch, flushBatch, setAutoBatch, isBatching } from './batch.js';
 import { watch, watchEffect } from './watch.js';
 import { portal } from './portal.js';
-import { errorBoundary } from './error-boundary.js';
+import { error, safe, errorBoundary } from './error-boundary.js';
 import { suspense } from './suspense.js';
 import { createI18n } from './i18n.js';
 import { createCanvas2D } from './canvas2d.js';
 import { createScene3D } from './canvas3d.js';
+import {
+    graphics2D,
+    shapes2D,
+    sprites,
+    particles2D,
+    physics2D,
+    shapes3D,
+    models,
+    materials,
+    webgpu,
+    particles3D,
+    quality,
+    LOD,
+    culling,
+    renderOptimize,
+    postprocessing,
+    components3D,
+    components2D
+} from './graphics.js';
+import { cairnAgentDocs, getAgentDocs } from './agent-docs.js';
 import { Charts } from './charts.js';
 import { keyboard } from './keyboard.js';
 import {
@@ -106,8 +185,8 @@ import {
     uuid,
     sleep
 } from './utils.js';
-import { renderToString, hydrate } from './ssr.js';
-import { reconcile, createList, patchProps, reconciler } from './reconciler.js';
+import { renderToString, hydrate, ssr } from './ssr.js';
+import { reconcile, each, For, createList, patchProps, reconciler } from './reconciler.js';
 
 // Merge baseUtils into utilsRegistry
 Object.assign(utilsRegistry, baseUtils);
@@ -119,10 +198,10 @@ export const canvas = Object.assign(canvasFactory, {
 });
 
 export {
-    // Core reactivity
-    state, computed, effect, collection, resource,
+    // Core reactivity & Memory
+    state, computed, effect, collection, resource, memory,
     // Component model & lifecycle
-    component, mount,
+    component, mount, withAuth, withLoading,
     // DOM builder & Escape Hatches
     h,
     div, span, p,
@@ -137,9 +216,9 @@ export {
     text,
     raw, element,
     // Motion & Animation Suite
-    spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility, physics,
+    spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, motionA11y as accessibility, defineAnimation, physics, viewTransition, animationCore as animation,
     // Shapes & Styling
-    shapes, tokens, createTokens, createTheme, setTheme, activeTheme, fluid, keyframes, css, media, styleHelper, Show, Hide,
+    shapes, tokens, createTokens, createTheme, setTheme, activeTheme, themeMaster as theme, fluid, keyframes, css, coat, media, styleHelper, Show, Hide,
     // WASM Engine, Zero-Traffic & Performance
     wasmEngine, isWasmSupported, engine, perf, SharedStateBuffer, DomRef, VirtualList,
     // UI, Icons & Overlay
@@ -147,30 +226,53 @@ export {
     NumberInput, PasswordInput, Tabs, SegmentedControl, Pagination, Stepper, Table, DataTable, DataGrid, DropZone, Rating, ColorPicker, Accordion, Timeline, CommandPalette, ContextMenu, NotificationCenter,
     createFocusTrap, useClickOutside, useEscapeKey, overlayStack, updateFloatingPosition, a11yAudit, a11y,
     studio, ai, figmaToCairn, debug, router, Link, currentPath, currentQuery, currentParams,
+    // Real-time, Collaboration & Live Queries
+    realtime, sse, poll, live, collab, createLiveDocument as document, sharedState, notifications, feed, chat,
+    // Personalization, Accessibility, Voice & Shortcuts
+    personalize, settings, a11yEngine, voice, shortcuts,
+    // Real-time Data Visualization
+    chart, dashboard,
+    // Blog Suite
+    blog, PostCard, PostContent, CommentSection,
+    // DevTools, Plugins, Experimentation, Testing & Community
+    devtools, plugins, sandbox, experiment, features, benchmark, test,
+    extensions, deprecate, migrate, compat, learn, roadmap, ci, triage, dependabot,
     // Extensibility, Config & Middleware
     use, componentsRegistry, utilsRegistry, animationRegistry, hooksBus, middlewareEngine, registerComponent, config, engineOverrides,
     // Styling Adapters
     adapters, createAdapter, registerAdapter, useAdapter, listAdapters, resolveAdapters,
-    // Framework Bridges
+    // Framework Bridges & Multi-Language Composer
     cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement, defineCustomElement, useCairn,
-    // Mobile, 3D, Docs, Iteration & Build Plugins
-    mobile, three, docs, createPlayground, iteration, buildPlugins,
+    composer, createElement, Fragment,
+    // Mobile, 3D, Docs & Build Plugins
+    mobile, three, docs, Heading, Paragraph, Code, Callout, DocsTable, Example, createPlayground, iteration,
     // Advanced state & utils
     createStore, useStore, listStores,
     createContext, provideContext, useContext, removeContext, hasContext, resetContexts,
     onMount, onUnmount, onUpdate, withLifecycle, attachLifecycle,
-    batch, isBatching, watch, watchEffect,
-    portal, errorBoundary, suspense, createI18n,
+    batch, flushBatch, setAutoBatch, isBatching, watch, watchEffect,
+    portal, error, safe, errorBoundary, suspense, createI18n,
     createCanvas2D, createScene3D, Charts, keyboard,
+    // 2D/3D Graphics & WebGPU Engine
+    graphics2D, shapes2D, sprites, particles2D, physics2D, shapes3D, models, materials, webgpu, particles3D, quality, LOD, culling, renderOptimize, postprocessing, components3D, components2D,
+    // Agent-Optimized Docs Engine
+    cairnAgentDocs, getAgentDocs, cairnAgentDocs as agentDocs,
     baseUtils as utils, color, clipboard, useClipboard, storage, fullscreen, onVisible, useInView, useMediaQuery, useHotkeys, useResize, debounce, throttle, uuid, sleep,
-    renderToString, hydrate, reconcile, createList, patchProps, reconciler
+    renderToString, hydrate, ssr,
+    reconcile, each, For, createList, patchProps, reconciler
 };
 
 export const cairn = {
+    version: '1.2.0',
     // Core reactivity & DOM builder
-    state, computed, effect, collection, resource,
-    component, mount,
+    state: Object.assign(state, { extend: extensions.state }),
+    computed, effect, collection, resource, memory,
+    component: Object.assign(component, { extend: extensions.component }),
+    mount, withAuth, withLoading,
     h,
+    dom: { extend: extensions.dom },
+    events: { extend: extensions.events },
+    style: { extend: extensions.style },
     div, span, p,
     h1, h2, h3, h4, h5, h6,
     button, input, img, a,
@@ -184,10 +286,16 @@ export const cairn = {
     // Escape Hatches
     raw, element, canvas,
     // Motion & Animation Suite
-    spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility, physics,
-    animation: { spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility },
-    shapes, tokens, createTokens, createTheme, setTheme, activeTheme, fluid, keyframes, css, media, styleHelper, Show, Hide,
-    theme: { createTheme, setTheme, activeTheme, createTokens, tokens },
+    spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility: motionA11y, physics,
+    viewTransition,
+    animation: Object.assign(animationCore, {
+        spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility: motionA11y,
+        define: defineAnimation,
+        defineAnimation,
+        extend: extensions.animation
+    }),
+    shapes, tokens, createTokens, createTheme, setTheme, activeTheme, fluid, keyframes, css, coat, media, styleHelper, Show, Hide,
+    theme: Object.assign(themeMaster, { createTheme, setTheme, activeTheme, createTokens, tokens }),
     // Extensibility Architecture & Configuration
     use,
     config,
@@ -205,6 +313,49 @@ export const cairn = {
     SharedStateBuffer,
     DomRef,
     VirtualList,
+    // DevTools & Playground
+    devtools,
+    // Plugin Marketplace
+    plugins,
+    // Experimentation & Sandbox
+    sandbox,
+    experiment,
+    features,
+    benchmark,
+    // Testing Framework
+    test,
+    // Community, Stability & CI
+    extensions,
+    deprecate,
+    migrate,
+    compat,
+    learn,
+    roadmap,
+    ci,
+    triage,
+    dependabot,
+    // Real-time, Collaboration & Live Queries
+    realtime,
+    sse,
+    poll,
+    live,
+    collab,
+    document: createLiveDocument,
+    sharedState,
+    notifications,
+    feed,
+    chat,
+    // Personalization, Accessibility, Voice & Shortcuts
+    personalize,
+    settings,
+    accessibility: a11yEngine,
+    voice,
+    shortcuts,
+    // Real-time Data Visualization
+    chart,
+    dashboard,
+    // Blog Suite
+    blog: Object.assign(blog, { PostCard, PostContent, CommentSection }),
     // Overlay & Focus
     overlay: { createFocusTrap, useClickOutside, useEscapeKey, overlayStack, updateFloatingPosition, a11yAudit, a11y },
     overlayStack,
@@ -217,10 +368,10 @@ export const cairn = {
     // Extension Libraries
     mobile,
     three,
-    docs: { ...docs, createPlayground },
+    docs: Object.assign(docs, { Heading, Paragraph, Code, Callout, Table: DocsTable, Example, createPlayground }),
     createPlayground,
     buildPlugins,
-    // Framework Bridges
+    // Framework Bridges & Multi-Language Composer
     toReact: cairnToReact,
     toVue: cairnToVue,
     toAngular: cairnToAngular,
@@ -229,10 +380,13 @@ export const cairn = {
     defineCustomElement,
     useCairn,
     cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement,
+    composer,
+    createElement,
+    Fragment,
     // Iteration & Dev Tools
     iteration,
     hmr: iteration.hmr,
-    live: iteration.live,
+    liveQuery: live,
     version: iteration.version,
     abTest: iteration.abTest,
     // UI & Tools
@@ -241,19 +395,28 @@ export const cairn = {
     useClipboard, useInView, useMediaQuery, useHotkeys,
     studio, ai,
     figma: { figmaToCairn },
-    debug, router, Link, currentPath, currentQuery, currentParams,
+    debug,
+    router: Object.assign(router, { extend: extensions.router }),
+    Link, currentPath, currentQuery, currentParams,
     // Extensibility & Plugins
     adapters, createAdapter, registerAdapter, useAdapter, listAdapters, resolveAdapters,
-    // Advanced Capabilities
+    // Advanced Capabilities & Error Boundaries
+    error,
+    safe,
+    errorBoundary,
     createStore, useStore, listStores, store: { createStore, useStore, listStores },
     createContext, provideContext, useContext, removeContext, hasContext, resetContexts, context: { createContext, provideContext, useContext, removeContext, hasContext, resetContexts },
     onMount, onUnmount, onUpdate, withLifecycle, attachLifecycle,
-    batch, isBatching, watch, watchEffect, portal, errorBoundary, suspense,
+    batch, flushBatch, setAutoBatch, isBatching, watch, watchEffect, portal, suspense,
     createI18n, i18n: { createI18n },
     createCanvas2D, createScene3D, Charts,
+    // 2D/3D Graphics & WebGPU Engine
+    graphics2D, shapes2D, sprites, particles2D, physics2D, shapes3D, models, materials, webgpu, particles3D, quality, LOD, culling, renderOptimize, postprocessing, components3D, components2D,
+    // Agent-Optimized Docs Engine
+    agentDocs: cairnAgentDocs, cairnAgentDocs, getAgentDocs,
     keyboard, color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep,
     renderToString, hydrate, ssr: { renderToString, hydrate },
-    reconcile, createList, patchProps, reconciler
+    reconcile, each, For, createList, patchProps, reconciler
 };
 
 export default cairn;

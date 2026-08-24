@@ -9,7 +9,7 @@ Cairn Studio (`studio` / `cairn.studio`) provides a visual editing, component in
 Enable Cairn Studio mode inside any existing HTML page or application mount target:
 
 ```javascript
-import { studio } from '@eldrex/cairn';
+import { studio } from '@eldrex/cairnjs';
 
 // Activate embedded visual studio workspace
 studio.enable({
@@ -81,4 +81,4 @@ const htmlCode = studio.export({ format: 'html', componentName: 'PricingCard' })
 ## 5. Live Interactive Studio Playground Demo
 
 Test the visual builder, themes, physics, and multi-framework exporter interactively:
-- Open [`examples/studio-demo.html`](file:///c:/Users/Eldrex/Downloads/classhost/Needs/PapyrusJS/examples/studio-demo.html) in your browser.
+- Open the [Interactive Playground](playground.html) to test components live.

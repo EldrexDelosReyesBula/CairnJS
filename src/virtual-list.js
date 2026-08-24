@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Virtual List Component
+ * @eldrex/cairnjs - Virtual List Component
  * High-performance virtualized list rendering (100k+ items at 60fps) accelerated by WASM/JS engine.
  */
 

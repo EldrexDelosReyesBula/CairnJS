@@ -32,8 +32,7 @@ const docsSidebar = [
         icon: 'fa-solid fa-cubes-stacked',
         items: [
             { id: 'social-feed', title: 'Social Community Feed', file: 'content/examples/social-feed.md' },
-            { id: 'ecommerce-cart', title: 'E-Commerce Store & Cart', file: 'content/examples/ecommerce-cart.md' },
-            { id: 'studio-designer', title: 'Studio Visual Designer', file: 'content/examples/studio-designer.md' }
+            { id: 'ecommerce-cart', title: 'E-Commerce Store & Cart', file: 'content/examples/ecommerce-cart.md' }
         ]
     },
     {
@@ -49,6 +48,7 @@ const docsSidebar = [
         title: 'Architecture & System',
         icon: 'fa-solid fa-microchip',
         items: [
+            { id: 'monolithic-spa-scaling', title: 'Monolithic SPA & Scaling', file: 'content/architecture/monolithic-spa-scaling.md' },
             { id: 'dom-and-components', title: 'DOM & Component System', file: 'content/architecture/dom-and-components.md' },
             { id: 'extensibility-and-dx', title: 'Extensibility & DX', file: 'content/architecture/extensibility-and-dx.md' },
             { id: 'low-level-access', title: 'Low-Level DOM Access', file: 'content/architecture/low-level-access.md' },
@@ -82,6 +82,8 @@ const docsSidebar = [
         title: 'Features',
         icon: 'fa-solid fa-wand-magic-sparkles',
         items: [
+            { id: 'realtime-and-collab', title: 'Real-Time & Collaboration', file: 'content/features/realtime-and-collab.md' },
+            { id: 'personalize-and-voice', title: 'Personalization & Voice', file: 'content/features/personalize-and-voice.md' },
             { id: 'i18n-and-rtl', title: 'i18n, RTL & Formatters', file: 'content/features/i18n-and-rtl.md' },
             { id: 'keyboard-and-i18n', title: 'Keyboard & Hotkeys', file: 'content/features/keyboard-and-i18n.md' },
             { id: 'utilities', title: 'Utilities & Hooks', file: 'content/features/utilities.md' },
@@ -92,6 +94,8 @@ const docsSidebar = [
         title: 'Advanced & Testing',
         icon: 'fa-solid fa-layer-group',
         items: [
+            { id: 'devtools', title: 'DevTools Suite & Inspector', file: 'content/advanced/devtools.md' },
+            { id: 'plugins-and-marketplace', title: 'Plugins & Community', file: 'content/advanced/plugins-and-marketplace.md' },
             { id: 'ai-prompting', title: 'AI Assistant Prompting', file: 'content/advanced/ai-prompting.md' },
             { id: 'ai-training', title: 'AI Training Patterns', file: 'content/advanced/ai-training.md' },
             { id: 'testing', title: 'Automated Testing & QA', file: 'content/advanced/testing.md' },

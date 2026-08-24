@@ -41,7 +41,7 @@ div(show.value ? p('Visible') : null);       // ❌ WRONG - evaluated once
 
 ## 4. PATTERN: Declarative Form Validation & Dynamic Arrays
 ```javascript
-import { createForm, validators, useFieldArray, div, button, input, mount } from '@eldrex/cairn';
+import { createForm, validators, useFieldArray, div, button, input, mount } from '@eldrex/cairnjs';
 
 // 1. Schema-based Form Validation
 const userForm = createForm({
@@ -74,7 +74,7 @@ lineItems.remove(0); // Removes first row
 
 ## 5. PATTERN: Overlays, Modals & Promise Confirmations
 ```javascript
-import { Modal, ConfirmDialog, Drawer, Toast, NotificationCenter } from '@eldrex/cairn';
+import { Modal, ConfirmDialog, Drawer, Toast, NotificationCenter } from '@eldrex/cairnjs';
 
 // 1. Accessible Dialog Modal
 const modal = Modal({
@@ -107,7 +107,7 @@ sidebar.open();
 
 ## 6. PATTERN: Command Palette (`Cmd+K`) & Context Menus
 ```javascript
-import { CommandPalette, ContextMenu, div, mount } from '@eldrex/cairn';
+import { CommandPalette, ContextMenu, div, mount } from '@eldrex/cairnjs';
 
 // 1. Global Spotlight Launcher
 const palette = CommandPalette({
@@ -134,7 +134,7 @@ const menu = ContextMenu({
 
 ## 7. PATTERN: Interactive DataTable / DataGrid
 ```javascript
-import { DataTable, mount } from '@eldrex/cairn';
+import { DataTable, mount } from '@eldrex/cairnjs';
 
 const grid = DataTable({
     columns: [
@@ -158,7 +158,7 @@ mount('#app', grid);
 
 ## 8. PATTERN: Device & Interaction Hooks
 ```javascript
-import { useMediaQuery, useHotkeys, useClipboard, useInView } from '@eldrex/cairn';
+import { useMediaQuery, useHotkeys, useClipboard, useInView } from '@eldrex/cairnjs';
 
 // 1. Media Query Signal
 const isMobile = useMediaQuery('(max-width: 768px)');
@@ -182,7 +182,7 @@ const { inView } = useInView(myElement, { once: true });
 
 ## 9. PATTERN: Internationalization (i18n) & RTL Auto-Sync
 ```javascript
-import { createI18n } from '@eldrex/cairn';
+import { createI18n } from '@eldrex/cairnjs';
 
 const i18n = createI18n({
     locale: 'en',
@@ -201,7 +201,7 @@ console.log(i18n.dir.value); // 'rtl'
 
 ## 10. PATTERN: Framework Bridges & Web Components
 ```javascript
-import { defineCustomElement, cairnToReact, cairnToVue, cairnToSvelte, cairnToAngular } from '@eldrex/cairn';
+import { defineCustomElement, cairnToReact, cairnToVue, cairnToSvelte, cairnToAngular } from '@eldrex/cairnjs';
 
 // 1. Native W3C Web Component (<my-widget title="...">)
 defineCustomElement('my-widget', MyWidget, ['title']);
@@ -223,7 +223,7 @@ export const AngularWidget = cairnToAngular(MyWidget);
 
 ## 11. PATTERN: Springs & Kinematic Physics
 ```javascript
-import { spring, physics } from '@eldrex/cairn';
+import { spring, physics } from '@eldrex/cairnjs';
 
 // Spring presets
 spring.bouncy({ from: 0.9, to: 1.0, onUpdate: (val) => el.style.transform = `scale(${val})` });
@@ -238,7 +238,7 @@ p.step(0.016, { minX: 0, maxX: 500, minY: 0, maxY: 500 });
 
 ## 12. PATTERN: Component Showcase & Playground
 ```javascript
-import { createPlayground, button, UI, mount } from '@eldrex/cairn';
+import { createPlayground, button, UI, mount } from '@eldrex/cairnjs';
 
 const showcase = createPlayground({
     title: 'UI Design System',

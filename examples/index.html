@@ -234,6 +234,49 @@
             flex: 1;
             justify-content: center;
         }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 0.85rem 1.25rem;
+            }
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1.25rem;
+                padding: 0 1rem;
+            }
+            .hero {
+                padding: 2.5rem 1rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            .nav-links {
+                justify-content: space-between;
+                width: 100%;
+            }
+            .nav-links .btn {
+                flex: 1;
+                justify-content: center;
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .filter-bar {
+                padding: 0 0.75rem;
+                gap: 0.35rem;
+            }
+            .filter-btn {
+                font-size: 0.8rem;
+                padding: 0.35rem 0.75rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -256,14 +299,184 @@
         </section>
 
         <section class="filter-bar">
-            <button class="filter-btn active" data-filter="all">All Examples (12)</button>
+            <button class="filter-btn active" data-filter="all">All Examples (23)</button>
             <button class="filter-btn" data-filter="core">Fundamentals & Reactivity</button>
+            <button class="filter-btn" data-filter="graphics">2D & 3D Graphics</button>
+            <button class="filter-btn" data-filter="app">Real-Time & Full Apps</button>
             <button class="filter-btn" data-filter="framework">Framework Integrations</button>
-            <button class="filter-btn" data-filter="app">Full Demos & Apps</button>
         </section>
 
         <section class="grid" id="examples-grid">
-            <!-- 0. Social Feed & Post Cards -->
+            <!-- 1. 3D Solar System & Planetary Orbits -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-earth-americas"></i> 3D Astronomy</span>
+                    <h3>3D Solar System & Planetary Orbits</h3>
+                    <p>Hierarchical multi-body 3D planetary physics, orbiting satellites, glowing sun mesh, and 3D camera controls.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=galaxy3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=galaxy3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 2. 3D Kinetic Helix & Parametric Ring -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-dna"></i> Parametric 3D</span>
+                    <h3>3D Kinetic Helix & Parametric Ring</h3>
+                    <p>18 synchronized polyhedra meshes rotating in wave harmonics with orbiting dynamic lights and central glowing core.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=torus_matrix3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=torus_matrix3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 3. 3D Interactive Product Studio -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-vr-cardboard"></i> 3D Studio</span>
+                    <h3>3D Interactive Product Studio</h3>
+                    <p>360° mouse orbit controls, pedestal floor, dynamic studio lighting presets (Cyberpunk/Gold/Arctic), and wireframe toggle.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=product_viewer3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=product_viewer3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 4. 3D Flippable Interactive Cards -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-cube"></i> 3D Perspective</span>
+                    <h3>3D Flippable Interactive Cards</h3>
+                    <p>CSS 3D perspective transform with smooth flip transitions, backface-visibility, and signal toggles.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=flipcard" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=flipcard" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 2. Touch & Drag Gesture Physics -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-hand-pointer"></i> Gesture Physics</span>
+                    <h3>Touch & Drag Gesture Physics</h3>
+                    <p>Interactive draggable cards with dynamic rotation angle, fling-out velocity detection, and spring snap-back.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=gestures" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=gestures" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 2. N-Body Gravitational Physics -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-atom"></i> Particle Physics</span>
+                    <h3>N-Body Gravitational Physics</h3>
+                    <p>Verlet kinematic particles with elastic wall bounce, cursor attractor gravity well, and click repulsion burst.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=physics" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=physics" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 3. Fluid View Transitions & Morph -->
+            <article class="card" data-cat="core">
+                <div>
+                    <span class="card-tag tag-core"><i class="fa-solid fa-wand-magic-sparkles"></i> Transitions</span>
+                    <h3>Fluid View Transitions & Morph</h3>
+                    <p>Smooth animated element expansion, staggered entry badges, and 60fps view transitions.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=transitions" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=transitions" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 4. 3D WebGL Scene Graph -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-cube"></i> 3D WebGL</span>
+                    <h3>3D WebGL Scene Graph Engine</h3>
+                    <p>Lightweight 3D meshes, directional lighting, orbiting camera, rotating shaded cubes, and sphere geometries.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=canvas3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=canvas3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 2. 2D Canvas & Particle Kinematics -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-palette"></i> 2D Graphics</span>
+                    <h3>2D Canvas & Particle Kinematics</h3>
+                    <p>Hardware accelerated Canvas 2D scene graph, 60fps glowing particle halo, and parametric kinematics.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=canvas2d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=canvas2d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 3. Real-Time Collaboration & Chat -->
+            <article class="card" data-cat="app">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-comments"></i> Real-Time</span>
+                    <h3>Real-Time Collab & Chat Room</h3>
+                    <p>Multi-user reactive message stream with shared state synchronization, dynamic typing, and instant updates.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=realtime" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=realtime" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 4. Real-Time Streaming Charts -->
+            <article class="card" data-cat="graphics">
+                <div>
+                    <span class="card-tag tag-app"><i class="fa-solid fa-chart-line"></i> Data Viz</span>
+                    <h3>Real-Time Streaming Charts</h3>
+                    <p>Reactive Canvas bar & line charting engine that re-renders dynamically on signal mutations without dependencies.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=charts" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=charts" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 5. DevTools Inspector & Time-Travel -->
+            <article class="card" data-cat="core">
+                <div>
+                    <span class="card-tag tag-core"><i class="fa-solid fa-bug"></i> Developer Tools</span>
+                    <h3>DevTools & State Time-Travel</h3>
+                    <p>Inspect component tree, monitor signal changes, record state timeline snapshots, and benchmark execution traces.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=devtools" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=devtools" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 6. Keyed List Reconciler -->
+            <article class="card" data-cat="core">
+                <div>
+                    <span class="card-tag tag-core"><i class="fa-solid fa-arrows-rotate"></i> Reconciler</span>
+                    <h3>Keyed List Reconciler (`For`)</h3>
+                    <p>Surgical DOM diffing that swaps, reorders, inserts, and removes list items without destroying DOM elements.</p>
+                </div>
+                <div class="card-actions">
+                    <a href="../docs/playground.html?template=reconciler" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
+                    <a href="../docs/playground.html?template=reconciler" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                </div>
+            </article>
+
+            <!-- 7. Social Feed & Post Cards -->
             <article class="card" data-cat="app">
                 <div>
                     <span class="card-tag tag-app"><i class="fa-solid fa-camera"></i> Social Media</span>
@@ -276,7 +489,7 @@
                 </div>
             </article>
 
-            <!-- 0.1 E-Commerce Cart -->
+            <!-- 8. E-Commerce Cart -->
             <article class="card" data-cat="app">
                 <div>
                     <span class="card-tag tag-app"><i class="fa-solid fa-cart-shopping"></i> E-Commerce</span>
@@ -288,7 +501,8 @@
                     <a href="../docs/playground.html?template=store" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
                 </div>
             </article>
-            <!-- 1. Counter -->
+
+            <!-- 9. Counter -->
             <article class="card" data-cat="core">
                 <div>
                     <span class="card-tag tag-core"><i class="fa-solid fa-bolt"></i> Fundamentals</span>
@@ -301,7 +515,7 @@
                 </div>
             </article>
 
-            <!-- 2. Todos -->
+            <!-- 10. Filterable Todo Application -->
             <article class="card" data-cat="core">
                 <div>
                     <span class="card-tag tag-core"><i class="fa-solid fa-list-check"></i> Collections</span>
@@ -314,7 +528,7 @@
                 </div>
             </article>
 
-            <!-- 3. Kitchen Sink -->
+            <!-- 11. Kitchen Sink -->
             <article class="card" data-cat="app">
                 <div>
                     <span class="card-tag tag-app"><i class="fa-solid fa-kitchen-set"></i> Showcase</span>
@@ -327,20 +541,7 @@
                 </div>
             </article>
 
-            <!-- 4. Studio Demo -->
-            <article class="card" data-cat="app">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-wand-magic-sparkles"></i> Visual Tool</span>
-                    <h3>Cairn Studio Visual Builder</h3>
-                    <p>Interactive drag-and-drop live component designer with DOM tree inspector and code export.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./studio-demo.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/index.html#/examples/studio-designer" class="btn"><i class="fa-solid fa-book"></i> Guide</a>
-                </div>
-            </article>
-
-            <!-- 5. Custom Elements -->
+            <!-- 12. Custom Elements -->
             <article class="card" data-cat="framework">
                 <div>
                     <span class="card-tag tag-framework"><i class="fa-solid fa-cube"></i> W3C Standards</span>
@@ -349,11 +550,11 @@
                 </div>
                 <div class="card-actions">
                     <a href="./custom-elements.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                    <a href="../docs/playground.html?template=bridges" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
                 </div>
             </article>
 
-            <!-- 6. React 18/19 -->
+            <!-- 13. React 18/19 -->
             <article class="card" data-cat="framework">
                 <div>
                     <span class="card-tag tag-framework"><i class="fa-brands fa-react"></i> React Bridge</span>
@@ -366,7 +567,7 @@
                 </div>
             </article>
 
-            <!-- 7. Vue 3 -->
+            <!-- 14. Vue 3 -->
             <article class="card" data-cat="framework">
                 <div>
                     <span class="card-tag tag-framework"><i class="fa-brands fa-vuejs"></i> Vue Bridge</span>
@@ -379,7 +580,7 @@
                 </div>
             </article>
 
-            <!-- 8. Svelte -->
+            <!-- 15. Svelte -->
             <article class="card" data-cat="framework">
                 <div>
                     <span class="card-tag tag-framework"><i class="fa-solid fa-fire"></i> Svelte Bridge</span>
@@ -392,7 +593,7 @@
                 </div>
             </article>
 
-            <!-- 9. SolidJS -->
+            <!-- 16. SolidJS -->
             <article class="card" data-cat="framework">
                 <div>
                     <span class="card-tag tag-framework"><i class="fa-solid fa-bolt"></i> SolidJS Bridge</span>
@@ -401,19 +602,6 @@
                 </div>
                 <div class="card-actions">
                     <a href="./with-solid/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 10. Vanilla Sandbox -->
-            <article class="card" data-cat="core">
-                <div>
-                    <span class="card-tag tag-core"><i class="fa-brands fa-js"></i> Vanilla JS</span>
-                    <h3>Vanilla JS Minimal Sandbox</h3>
-                    <p>Bare-metal zero-config vanilla JavaScript template demonstrating atomic mounting and teardown.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./vanilla/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
                     <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
                 </div>
             </article>

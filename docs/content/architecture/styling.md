@@ -26,7 +26,7 @@ div("Hello", {
 Define and switch themes on the fly. Themes automatically inject CSS custom properties (`--cairn-*`) on `:root`:
 
 ```js
-import { createTheme, setTheme, activeTheme } from '@eldrex/cairn';
+import { createTheme, setTheme, activeTheme } from '@eldrex/cairnjs';
 
 // 1. Create a custom theme
 createTheme('cyberpunk', {
@@ -50,7 +50,7 @@ console.log(activeTheme.value.name); // 'cyberpunk'
 Generate scoped class names with automatic stylesheet injection:
 
 ```js
-import { css } from '@eldrex/cairn';
+import { css } from '@eldrex/cairnjs';
 
 const cardClass = css({
     padding: '24px',
@@ -74,7 +74,7 @@ const myCard = div({ class: cardClass }, 'Glassmorphism Card');
 Generate mathematical CSS `clamp()` expressions for seamless responsive scaling:
 
 ```js
-import { fluid, div } from '@eldrex/cairn';
+import { fluid, div } from '@eldrex/cairnjs';
 
 const heroText = div('Fluid Scaling Title', {
     style: {
@@ -89,7 +89,7 @@ const heroText = div('Fluid Scaling Title', {
 ## Comprehensive Design Tokens (`tokens`)
 
 ```js
-import { tokens } from '@eldrex/cairn';
+import { tokens } from '@eldrex/cairnjs';
 
 // 1. Typography Hierarchy
 tokens.typography.fontFamily.display  // "'Cairn', system-ui, sans-serif"
@@ -117,7 +117,7 @@ tokens.gradients.cyberpunk // 'linear-gradient(135deg, #ec4899, #8b5cf6)'
 Pass a function getter `() => ({ ... })` to bind styles reactively to state:
 
 ```js
-import { state, div } from '@eldrex/cairn';
+import { state, div } from '@eldrex/cairnjs';
 
 const isOnline = state(true);
 
@@ -138,7 +138,7 @@ const statusBadge = div('Status', {
 ## Keyframes & Media Queries
 
 ```js
-import { keyframes, media, div } from '@eldrex/cairn';
+import { keyframes, media, div } from '@eldrex/cairnjs';
 
 const pulse = keyframes({
     '0%, 100%': { transform: 'scale(1)', opacity: 1 },

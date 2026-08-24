@@ -11,7 +11,7 @@ Cairn supports rendering component trees to HTML strings in Node.js environments
 Serializes a Cairn DOM node (or any `HTMLElement`) to an HTML string.
 
 ```js
-import { div, p, h1, renderToString } from '@eldrex/cairn';
+import { div, p, h1, renderToString } from '@eldrex/cairnjs';
 
 const html = renderToString(
   div({ class: 'hero' },
@@ -28,7 +28,7 @@ console.log(html);
 
 ```js
 import express from 'express';
-import { renderToString, div, h1, p } from '@eldrex/cairn';
+import { renderToString, div, h1, p } from '@eldrex/cairnjs';
 
 const app = express();
 
@@ -71,7 +71,7 @@ app.listen(3000);
 Mounts a Cairn component onto server-rendered HTML, attaching reactivity without a full re-render.
 
 ```js
-import { hydrate } from '@eldrex/cairn';
+import { hydrate } from '@eldrex/cairnjs';
 
 // client.js
 hydrate('#app', MyApp, {
@@ -93,7 +93,7 @@ hydrate('#app', MyApp, {
 
 **server.js**
 ```js
-import { renderToString, div, p } from '@eldrex/cairn';
+import { renderToString, div, p } from '@eldrex/cairnjs';
 
 export function renderPage(data) {
   return renderToString(
@@ -106,7 +106,7 @@ export function renderPage(data) {
 
 **client.js**
 ```js
-import { hydrate } from '@eldrex/cairn';
+import { hydrate } from '@eldrex/cairnjs';
 import { App } from './App.js';
 
 hydrate('#content', App, window.__INIT_DATA__);
@@ -125,7 +125,7 @@ The reconciler performs surgical, key-based DOM patching for large reactive list
 Key-based list reconciliation.
 
 ```js
-import { reconcile, state, effect, ul, li } from '@eldrex/cairn';
+import { reconcile, state, effect, ul, li } from '@eldrex/cairnjs';
 
 const todos = state([
   { id: 1, text: 'Write docs' },
@@ -165,7 +165,7 @@ todos.value = [...todos.value, { id: 3, text: 'Ship it' }];
 A convenience wrapper that sets up a reactive list with auto-reconciliation.
 
 ```js
-import { createList, state, ul, li } from '@eldrex/cairn';
+import { createList, state, ul, li } from '@eldrex/cairnjs';
 
 const todos = state([
   { id: 1, text: 'Buy milk' },
@@ -189,7 +189,7 @@ todos.value = [
 Surgically patches a DOM element's attributes by diffing old and new prop objects. Only modifies attributes that actually changed.
 
 ```js
-import { patchProps } from '@eldrex/cairn';
+import { patchProps } from '@eldrex/cairnjs';
 
 const el = document.querySelector('#card');
 

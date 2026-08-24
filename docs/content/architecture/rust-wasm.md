@@ -25,7 +25,7 @@ JS ───(Shared Memory)─── Rust/WASM
 Instead of serializing state values across the JS/WASM boundary, Cairn allocates a shared `ArrayBuffer` / `SharedArrayBuffer` where state primitive values live in contiguous memory. Both JavaScript and WASM read and write directly to this memory with zero copy overhead.
 
 ```javascript
-import { SharedStateBuffer, wasmEngine } from '@eldrex/cairn';
+import { SharedStateBuffer, wasmEngine } from '@eldrex/cairnjs';
 
 // Allocate 1,000 shared state slots
 const sharedState = new SharedStateBuffer(1000);
@@ -45,7 +45,7 @@ console.log(sharedState.get(0)); // 42.5
 Instead of executing 10,000 boundary crossings for 10,000 state changes, Cairn packages updates into a single typed array and flushes them in **one boundary pass**:
 
 ```javascript
-import { wasmEngine, SharedStateBuffer } from '@eldrex/cairn';
+import { wasmEngine, SharedStateBuffer } from '@eldrex/cairnjs';
 
 const updates = new Float32Array(10000);
 // Populate updates array in JS...
@@ -61,7 +61,7 @@ wasmEngine.batchUpdate(updates, sharedState);
 Cairn maintains direct DOM node pointers (`DomRef`), allowing WASM engine routines to update `textContent` and `style` attributes directly without round-tripping through intermediate JavaScript reactivity loops.
 
 ```javascript
-import { cairn, DomRef } from '@eldrex/cairn';
+import { cairn, DomRef } from '@eldrex/cairnjs';
 
 const buttonNode = cairn.button("Initial Text");
 const domRef = new DomRef(buttonNode);

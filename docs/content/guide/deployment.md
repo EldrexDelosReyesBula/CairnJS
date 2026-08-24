@@ -6,7 +6,7 @@ How to deploy CairnJS applications, documentation, and standalone components to 
 
 ## 1. Deploying to Vercel (Recommended)
 
-CairnJS is optimized for zero-config Vercel edge deployment with the included [`vercel.json`](file:///c:/Users/Eldrex/Downloads/classhost/Needs/PapyrusJS/vercel.json).
+CairnJS is optimized for zero-config Vercel edge deployment with the included [`vercel.json`](vercel.json).
 
 ### `vercel.json` Configuration:
 ```json

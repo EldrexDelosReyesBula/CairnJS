@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Shape Utilities: Rect
+ * @eldrex/cairnjs - Shape Utilities: Rect
  * Mathematical SVG rectangle & rounded rect path generator.
  */
 

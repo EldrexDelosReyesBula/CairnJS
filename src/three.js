@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/three - WebGL 3D Component Integration Layer
+ * @eldrex/cairnjs/three - WebGL 3D Component Integration Layer
  * Production WebGL 3D rendering loop, perspective matrices, geometry mesh calculations, and reactive DOM integration.
  */
 

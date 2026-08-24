@@ -1,0 +1,15 @@
+{
+    "name": "cairnjs",
+    "version": "1.2.0",
+    "framework": "cairnjs",
+    "docs_source": "cairn-agent-docs.md",
+    "quick_ref": "docs/agent-quick-ref.md",
+    "api_reference": "docs/agent-api.json",
+    "patterns": "docs/agent-patterns.json",
+    "guidelines": {
+        "zero_hallucination": true,
+        "format": "compact",
+        "syntax": "vanilla-js",
+        "reactivity_model": "signal-proxy"
+    }
+}

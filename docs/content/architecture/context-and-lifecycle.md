@@ -13,7 +13,7 @@ Context lets you share reactive values deep in a component tree without passing 
 Defines a named context slot with an optional default.
 
 ```js
-import { createContext } from '@eldrex/cairn';
+import { createContext } from '@eldrex/cairnjs';
 
 const ThemeContext = createContext('theme', 'dark');
 ```
@@ -25,7 +25,7 @@ const ThemeContext = createContext('theme', 'dark');
 Makes a value available to all components below the provider. Accepts any value or a Cairn reactive signal.
 
 ```js
-import { provideContext } from '@eldrex/cairn';
+import { provideContext } from '@eldrex/cairnjs';
 
 provideContext(ThemeContext, 'light');
 
@@ -41,7 +41,7 @@ provideContext(ThemeContext, themeSignal);
 Retrieves the nearest provided value as a **reactive signal**. Falls back to the default value if no provider exists.
 
 ```js
-import { useContext, effect } from '@eldrex/cairn';
+import { useContext, effect } from '@eldrex/cairnjs';
 
 const theme = useContext(ThemeContext);
 // theme is a reactive signal
@@ -56,7 +56,7 @@ effect(() => {
 ### Full Example
 
 ```js
-import { createContext, provideContext, useContext, state, div, p, button } from '@eldrex/cairn';
+import { createContext, provideContext, useContext, state, div, p, button } from '@eldrex/cairnjs';
 
 const LangContext = createContext('lang', 'en');
 const langSignal  = state('en');
@@ -86,7 +86,7 @@ Lifecycle hooks let you run code at specific points in a component's lifespan.
 Fires after the component's DOM node is inserted into the page. Receives the element as its argument.
 
 ```js
-import { onMount, component, div } from '@eldrex/cairn';
+import { onMount, component, div } from '@eldrex/cairnjs';
 
 const FocusInput = component(() => {
   onMount((el) => {
@@ -107,7 +107,7 @@ const FocusInput = component(() => {
 Fires when the component's element is removed from the DOM. Use for cleanup (intervals, subscriptions, resize observers).
 
 ```js
-import { onUnmount, state, effect, component, div } from '@eldrex/cairn';
+import { onUnmount, state, effect, component, div } from '@eldrex/cairnjs';
 
 const LiveTimer = component(() => {
   const time = state(new Date().toLocaleTimeString());
@@ -128,7 +128,7 @@ const LiveTimer = component(() => {
 Fires each time the component re-renders due to reactive state changes.
 
 ```js
-import { onUpdate, component, state, div, p } from '@eldrex/cairn';
+import { onUpdate, component, state, div, p } from '@eldrex/cairnjs';
 
 const Tracker = component(() => {
   const count = state(0);
@@ -151,7 +151,7 @@ const Tracker = component(() => {
 Wraps any setup function with lifecycle context active. Automatically captures `onMount`/`onUnmount`/`onUpdate` calls and attaches them to the returned node via MutationObserver.
 
 ```js
-import { withLifecycle, onMount, div } from '@eldrex/cairn';
+import { withLifecycle, onMount, div } from '@eldrex/cairnjs';
 
 const MyWidget = withLifecycle(() => {
   onMount((el) => el.classList.add('mounted'));
@@ -166,6 +166,6 @@ const MyWidget = withLifecycle(() => {
 Removes a provided context (useful for cleanup when a provider unmounts):
 
 ```js
-import { removeContext } from '@eldrex/cairn';
+import { removeContext } from '@eldrex/cairnjs';
 removeContext(LangContext);
 ```

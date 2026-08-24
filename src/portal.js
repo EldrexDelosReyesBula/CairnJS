@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - DOM Portal
+ * @eldrex/cairnjs - DOM Portal
  * Renders Cairn component trees into any arbitrary DOM target,
  * outside the current component's DOM hierarchy.
  * Equivalent to React.createPortal().

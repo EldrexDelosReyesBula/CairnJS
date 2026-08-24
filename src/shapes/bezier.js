@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Shape Utilities: Bezier Path Generator
+ * @eldrex/cairnjs - Shape Utilities: Bezier Path Generator
  * Generates custom SVG curves and Bezier path shapes.
  */
 

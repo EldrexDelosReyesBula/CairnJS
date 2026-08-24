@@ -1,9 +1,9 @@
 /**
- * @eldrex/cairn/adapters - Design Tokens Adapter
+ * @eldrex/cairnjs/adapters - Design Tokens Adapter
  * Maps `tokens: { color, size, variant, radius }` to CSS variables and inline styles.
  */
 
-export const tokens = {
+export const tokensAdapter = {
     name: 'tokens',
     transform(props = {}) {
         const resolved = { ...props };
@@ -35,4 +35,4 @@ export const tokens = {
     }
 };
 
-export default tokens;
+export default tokensAdapter;

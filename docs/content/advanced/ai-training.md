@@ -6,7 +6,7 @@ Verified patterns and code recipes for Cairn applications. Useful for developers
 
 ## 1. Signals & Reactivity
 ```javascript
-import { state, computed, effect, watch, batch } from '@eldrex/cairn';
+import { state, computed, effect, watch, batch } from '@eldrex/cairnjs';
 
 const count = state(0);
 const double = computed(() => count.value * 2);
@@ -23,7 +23,7 @@ count.value++;
 
 ## 2. Dynamic Reactive DOM Bindings
 ```javascript
-import { div, p, button, state, mount } from '@eldrex/cairn';
+import { div, p, button, state, mount } from '@eldrex/cairnjs';
 
 const name = state('Alice');
 const show = state(true);
@@ -41,7 +41,7 @@ mount('#app', app);
 
 ## 3. Two-Way Form Binding & Validation
 ```javascript
-import { createForm, validators, useFieldArray, div, mount } from '@eldrex/cairn';
+import { createForm, validators, useFieldArray, div, mount } from '@eldrex/cairnjs';
 
 const myForm = createForm({
     fields: {
@@ -66,7 +66,7 @@ rows.append({ title: 'Task 2' });
 
 ## 4. Accessible Dialogs, Confirmations & Drawers
 ```javascript
-import { Modal, ConfirmDialog, Drawer, Toast, button, mount } from '@eldrex/cairn';
+import { Modal, ConfirmDialog, Drawer, Toast, button, mount } from '@eldrex/cairnjs';
 
 // 1. Modal Dialog
 const settingsModal = Modal({
@@ -93,7 +93,7 @@ const menuDrawer = Drawer({ title: 'Navigation', placement: 'left' });
 
 ## 5. Command Palette (`Cmd+K`) & Context Menu
 ```javascript
-import { CommandPalette, ContextMenu, div, mount } from '@eldrex/cairn';
+import { CommandPalette, ContextMenu, div, mount } from '@eldrex/cairnjs';
 
 // 1. Global Launcher
 const palette = CommandPalette({
@@ -119,7 +119,7 @@ const menu = ContextMenu({
 
 ## 6. Interactive DataTable / DataGrid
 ```javascript
-import { DataTable, mount } from '@eldrex/cairn';
+import { DataTable, mount } from '@eldrex/cairnjs';
 
 const table = DataTable({
     columns: [
@@ -142,7 +142,7 @@ mount('#app', table);
 
 ## 7. Device & Keyboard Interaction Hooks
 ```javascript
-import { useMediaQuery, useHotkeys, useClipboard, useInView } from '@eldrex/cairn';
+import { useMediaQuery, useHotkeys, useClipboard, useInView } from '@eldrex/cairnjs';
 
 const isMobile = useMediaQuery('(max-width: 768px)');
 const unbind = useHotkeys('ctrl+k', () => console.log('Cmd+K'));
@@ -154,7 +154,7 @@ const { inView } = useInView(document.getElementById('footer'), { once: true });
 
 ## 8. Internationalization (i18n) & RTL
 ```javascript
-import { createI18n } from '@eldrex/cairn';
+import { createI18n } from '@eldrex/cairnjs';
 
 const i18n = createI18n({
     locale: 'en',
@@ -171,7 +171,7 @@ i18n.setLocale('ar'); // Automatically flips document to RTL
 
 ## 9. Framework Bridges & Custom Elements
 ```javascript
-import { defineCustomElement, cairnToReact, cairnToVue } from '@eldrex/cairn';
+import { defineCustomElement, cairnToReact, cairnToVue } from '@eldrex/cairnjs';
 
 // 1. W3C Custom Element
 defineCustomElement('my-card', MyCardComponent, ['title']);

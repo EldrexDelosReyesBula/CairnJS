@@ -22,7 +22,7 @@ watch(source, handler, { immediate?, deep? })
 ### Basic Example
 
 ```js
-import { state, watch } from '@eldrex/cairn';
+import { state, watch } from '@eldrex/cairnjs';
 
 const count = state(0);
 
@@ -75,7 +75,7 @@ config.value = { theme: 'light', lang: 'fr' };
 Alias for `watch()` with an array of sources. Fires handler when any of the tracked sources change.
 
 ```js
-import { watchEffect, state } from '@eldrex/cairn';
+import { watchEffect, state } from '@eldrex/cairnjs';
 
 const x = state(0);
 const y = state(0);
@@ -92,7 +92,7 @@ watchEffect([x, y], ([newX, newY]) => {
 Batches multiple state mutations into a single render flush. Without `batch()`, each `.value =` write triggers a separate effect cycle. With `batch()`, all writes flush together — **one render pass**.
 
 ```js
-import { state, batch, effect } from '@eldrex/cairn';
+import { state, batch, effect } from '@eldrex/cairnjs';
 
 const x = state(0);
 const y = state(0);
@@ -118,7 +118,7 @@ batch(() => {
 Renders Cairn nodes into any DOM target — including elements outside the current component tree. Perfect for modals, tooltips, and notification containers.
 
 ```js
-import { portal, div, p } from '@eldrex/cairn';
+import { portal, div, p } from '@eldrex/cairnjs';
 
 const modalContent = div({ class: 'modal' }, p('Hello from a portal!'));
 const p = portal('#modal-root', modalContent);
@@ -141,7 +141,7 @@ portal(document.getElementById('overlay-container'), ModalDialog());
 Wraps a render function in a try/catch. If the child throws during render, the fallback UI is shown instead.
 
 ```js
-import { errorBoundary, div, p } from '@eldrex/cairn';
+import { errorBoundary, div, p } from '@eldrex/cairnjs';
 
 const SafeWidget = errorBoundary({
   children: () => BrokenComponent(),
@@ -164,7 +164,7 @@ If no `fallback` is provided, Cairn renders a built-in red error card with the e
 Shows a loading fallback while async `resource()` signals are resolving. Switches to the `children` render function once all resources finish loading.
 
 ```js
-import { suspense, resource, div, p } from '@eldrex/cairn';
+import { suspense, resource, div, p } from '@eldrex/cairnjs';
 
 const posts = resource(() => fetch('/api/posts').then(r => r.json()));
 

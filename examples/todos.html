@@ -138,8 +138,16 @@
             color: #94a3b8;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             padding-top: 0.75rem;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 0.5rem; }
+            .todo-card { padding: 1.25rem 1rem; }
+            .input-row { flex-direction: column; }
+            .btn-add { width: 100%; text-align: center; }
         }
     </style>
 </head>

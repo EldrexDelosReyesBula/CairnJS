@@ -82,7 +82,7 @@
 ## 3. Complete One-Shot Runnable Template
 
 ```javascript
-import { state, createForm, validators, DataTable, Toast, div, h1, mount } from '@eldrex/cairn';
+import { state, createForm, validators, DataTable, Toast, div, h1, mount } from '@eldrex/cairnjs';
 
 const App = () => {
     const form = createForm({

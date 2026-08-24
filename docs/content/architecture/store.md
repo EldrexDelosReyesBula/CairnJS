@@ -9,7 +9,7 @@ Cairn includes a Pinia-style global reactive store via `createStore()`. Unlike V
 Creates a **named** global store that can be retrieved anywhere in your app.
 
 ```js
-import { createStore } from '@eldrex/cairn';
+import { createStore } from '@eldrex/cairnjs';
 
 const counter = createStore('counter', {
   state: {
@@ -48,7 +48,7 @@ console.log(counter.doubled); // 2
 Retrieves a previously registered store by name — useful for accessing stores across module boundaries.
 
 ```js
-import { useStore } from '@eldrex/cairn';
+import { useStore } from '@eldrex/cairnjs';
 
 const counter = useStore('counter');
 counter.increment();
@@ -103,7 +103,7 @@ user.$subscribe('name', (newName) => {
 Store values are plain JavaScript via proxied getters — you can read them reactively inside Cairn DOM builders:
 
 ```js
-import { createStore, div, p, button, effect } from '@eldrex/cairn';
+import { createStore, div, p, button, effect } from '@eldrex/cairnjs';
 
 const auth = createStore('auth', {
   state: { user: null },
@@ -130,7 +130,7 @@ const App = div(
 Returns an array of all currently registered store names.
 
 ```js
-import { listStores } from '@eldrex/cairn';
+import { listStores } from '@eldrex/cairnjs';
 
 console.log(listStores()); // ['counter', 'auth', 'user']
 ```

@@ -18,7 +18,7 @@ Creates a Cairn Canvas2D controller attached to an HTML `<canvas>` element.
 | `pixelRatio` | `devicePixelRatio` | Pixel density for HiDPI screens |
 
 ```js
-import { createCanvas2D } from '@eldrex/cairn';
+import { createCanvas2D } from '@eldrex/cairnjs';
 
 const canvas = createCanvas2D('#myCanvas', { width: 800, height: 600, background: '#090d16' });
 ```
@@ -242,7 +242,7 @@ ctx.save()
 Bind a Cairn signal so the canvas redraws whenever state changes:
 
 ```js
-import { state, createCanvas2D } from '@eldrex/cairn';
+import { state, createCanvas2D } from '@eldrex/cairnjs';
 
 const pos = state({ x: 100, y: 100 });
 
@@ -263,7 +263,7 @@ document.addEventListener('mousemove', (e) => {
 ## Particle System Example
 
 ```js
-import { createCanvas2D, physics } from '@eldrex/cairn';
+import { createCanvas2D, physics } from '@eldrex/cairnjs';
 
 const canvas = createCanvas2D('#particles', { width: 800, height: 600 });
 const grid = physics.grid(300, { bounds: { x: 800, y: 600 } });

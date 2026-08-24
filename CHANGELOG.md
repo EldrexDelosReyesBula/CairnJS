@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+
+## [1.2.0] - 2026-08-24
+
+### 🌟 Added
+- **Real-Time Collaboration & Live Queries Engine (`src/realtime.js`)**:
+  - `realtime`: Unified engine for real-time WebSocket, Server-Sent Events (`sse`), and smart polling (`poll`).
+  - `collab`: Multi-user cursor tracking, presence awareness, and collaborative editing with conflict resolution.
+  - `live`: Live query signals that automatically synchronize with server state.
+  - `sharedState`: Distributed reactive state synchronization across clients and tabs.
+  - `chat` & `feed`: Plug-and-play reactive chat channels, presence rosters, and live activity streams.
+- **Personalization, Voice Commands & Accessibility (`src/personalize.js`)**:
+  - `personalize`: Dynamic user preferences engine with persistent settings storage.
+  - `voice`: Web Speech API voice command recognition and audio feedback.
+  - `shortcuts`: Global user-configurable shortcut bindings with collision detection.
+  - `accessibility` (`a11yEngine`): Enhanced WCAG 2.1 AA audit suite, contrast ratios, and automated ARIA landmark checks.
+- **Advanced 2D/3D Graphics & WebGPU Engine (`src/graphics.js`)**:
+  - `graphics2D`, `shapes2D`, `sprites`, `particles2D`, `physics2D`: 60fps canvas 2D graphics with hardware acceleration.
+  - `shapes3D`, `models` (GLTF/GLB loader), `materials`, `webgpu`, `particles3D`: Next-generation WebGPU & WebGL rendering pipelines.
+  - `LOD` (Level of Detail), `culling` (Frustum culling), `renderOptimize`, `quality` tiers, and `postprocessing` (Bloom, FXAA, Tone mapping).
+  - Pre-built 3D UI components (`Carousel3D`, `Chart`).
+- **Live Data Visualization & Dashboards (`src/data-viz.js`, `src/charts.js`)**:
+  - `chart` & `dashboard`: Real-time streaming charts (Line, Bar, Area, Pie, Scatter, Gauge) with interactive tooltips and dynamic scales.
+- **Developer Tools, Sandbox & Benchmarking (`src/devtools.js`, `src/experiment.js`, `src/testing.js`)**:
+  - `devtools`: Real-time state tree inspector, signal dependency visualizer, and time-travel debugging.
+  - `sandbox` & `experiment`: Safe component experimentation sandbox with A/B testing splits and feature flags (`features`).
+  - `benchmark`: Performance profiler tracking FPS, memory usage, DOM mutations, and signal latency.
+  - `test`: Integrated zero-dependency assertion and test runner suite.
+- **Plugin Marketplace & Community Platform (`src/plugins.js`, `src/community.js`)**:
+  - `plugins`: Secure extensible plugin registry with lifecycle hooks.
+  - `extensions`, `deprecate`, `migrate`, `compat`: Backwards-compatibility layers, automated migration helpers, and deprecation warnings.
+  - `learn`, `roadmap`, `ci`, `triage`, `dependabot`: Developer onboarding and CI workflow automation.
+- **JSX & Multi-Language Composer Bridge (`src/composer.js`)**:
+  - `createElement` and `Fragment`: Native JSX pragma support (`/** @jsx cairn.createElement */`).
+  - `composer`: Polyglot code generator targeting JavaScript, TypeScript, React, Vue, Svelte, and Angular.
+- **Blog & Content Suite (`src/blog.js`)**:
+  - `blog`, `PostCard`, `PostContent`, `CommentSection`: Reactive markdown-ready blogging and discussion engine.
+- **Agent-Optimized Documentation Engine (`src/agent-docs.js`)**:
+  - `cairnAgentDocs` and `getAgentDocs(level)`: Dynamic machine-readable documentation generator providing minimal, standard, and full context for AI agents.
+
+### 🛠️ Fixed & Refined
+- **Package Import Accuracy (`llms.txt`)**: Corrected package import in `llms.txt` template to `@eldrex/cairnjs`.
+- **Clean Documentation Links**: Replaced local file URI paths with clean relative paths in `docs/content/guide/deployment.md` and `docs/content/advanced/studio-and-prototyping.md`.
+- **Unified Version Alignment**: Synchronized package version to `1.2.0` across `package.json`, `README.md`, `src/index.js`, `cairn.d.ts`, and CLI templates.
+
+---
+
 ## [1.1.0] - 2026-08-19
 
 ### 🌟 Added

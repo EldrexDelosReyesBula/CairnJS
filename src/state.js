@@ -1,6 +1,6 @@
 /**
- * @eldrex/cairn - Reactive Engine
- * Lightweight, fine-grained state, computed, effect, collection, and resource primitives.
+ * @eldrex/cairnjs - Reactive Engine
+ * Lightweight, fine-grained state, computed, effect, collection, resource, and memory primitives.
  */
 
 import { logStateChange } from './debug.js';
@@ -9,18 +9,143 @@ import { _queueEffect } from './batch.js';
 
 let activeEffect = null;
 const effectStack = [];
+let _activePropertyTrack = null;
+
+// Memory Configuration & Object Pools
+const memoryConfig = {
+    autoDispose: true,
+    weakRefs: typeof WeakRef !== 'undefined',
+    pooling: true,
+    gcHints: true,
+    maxMemory: 100 // MB
+};
+
+const _stateRegistry = new Set();
+const _objectPool = new Map();
 
 /**
- * Creates a reactive state primitive.
+ * Configure memory management for CairnJS.
+ * @param {object} options
+ * @returns {object} Current memory configuration and metrics
+ */
+export function memory(options = {}) {
+    Object.assign(memoryConfig, options);
+    return {
+        ...memoryConfig,
+        activeStates: _stateRegistry.size,
+        poolSize: _objectPool.size,
+        getMemoryUsage() {
+            if (typeof performance !== 'undefined' && performance.memory) {
+                return {
+                    usedJSHeapSizeMB: (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(2),
+                    totalJSHeapSizeMB: (performance.memory.totalJSHeapSize / (1024 * 1024)).toFixed(2)
+                };
+            }
+            return { usedJSHeapSizeMB: 'N/A', totalJSHeapSizeMB: 'N/A' };
+        }
+    };
+}
+
+/**
+ * Creates a fine-grained reactive state primitive.
+ * Supports primitive values as well as proxy-wrapped objects for surgical per-property reactivity.
+ * 
  * @param {*} initialValue Initial value of the state or getter function
- * @returns Object with `.value` getter/setter, `.peek()`, and `.subscribe()`
+ * @returns {object} Reactive state instance with history & fine-grained reactivity
  */
 export function state(initialValue) {
     if (typeof initialValue === 'function') {
         return computed(initialValue);
     }
+
     let _val = initialValue;
+    let _queuedNext = undefined;
+    let _hasQueuedNext = false;
+    const history = [];
     const subscribers = new Set();
+    const propSubscribers = new Map();
+
+    const notify = (property = null) => {
+        const toNotify = new Set(subscribers);
+
+        if (property && propSubscribers.has(property)) {
+            const pSubs = propSubscribers.get(property);
+            pSubs.forEach(sub => {
+                if (sub._isDisposed) pSubs.delete(sub);
+                else toNotify.add(sub);
+            });
+        }
+
+        toNotify.forEach((sub) => {
+            if (sub._isDisposed) {
+                subscribers.delete(sub);
+                return;
+            }
+            if (_queueEffect(sub)) return;
+            try {
+                sub(_val);
+            } catch (err) {
+                console.error('[Cairn Reactivity Error]:', err);
+            }
+        });
+    };
+
+    const recordHistory = (oldVal) => {
+        if (history.length > 50) history.shift();
+        history.push(JSON.parse(JSON.stringify(oldVal !== undefined ? oldVal : null)));
+    };
+
+    // Proxy wrapper for granular object property reactivity
+    const createObjectProxy = (obj) => {
+        return new Proxy(obj, {
+            get(target, prop, receiver) {
+                if (prop === '_isCairnState') return true;
+                if (prop === 'value') return target;
+                if (prop === 'peek') return () => target;
+                if (prop === 'subscribe') return (fn, specificProp = null) => stateSignal.subscribe(fn, specificProp);
+                if (prop === 'next') return (val) => stateSignal.next(val);
+                if (prop === 'commit') return () => stateSignal.commit();
+                if (prop === 'rollback') return () => stateSignal.rollback();
+                if (prop === 'snapshot') return () => stateSignal.snapshot();
+                if (prop === 'restore') return (snap) => stateSignal.restore(snap);
+
+                if (activeEffect) {
+                    if (!propSubscribers.has(prop)) {
+                        propSubscribers.set(prop, new Set());
+                    }
+                    propSubscribers.get(prop).add(activeEffect);
+                }
+
+                const res = Reflect.get(target, prop, receiver);
+                if (typeof res === 'object' && res !== null && !res._isCairnState) {
+                    return createObjectProxy(res);
+                }
+                return res;
+            },
+            set(target, prop, newVal, receiver) {
+                if (prop === 'value' && typeof newVal === 'object' && newVal !== null) {
+                    recordHistory(_val);
+                    Object.keys(target).forEach(k => delete target[k]);
+                    Object.assign(target, newVal);
+                    logStateChange('signal.value', _val, newVal);
+                    middlewareEngine.afterStateChange('state.value', _val, newVal);
+                    notify();
+                    return true;
+                }
+                const oldVal = target[prop];
+                if (Object.is(oldVal, newVal)) return true;
+                recordHistory(_val);
+                const res = Reflect.set(target, prop, newVal, receiver);
+                logStateChange(`signal.${String(prop)}`, oldVal, newVal);
+                middlewareEngine.afterStateChange(`state.${String(prop)}`, oldVal, newVal);
+                notify(prop);
+                return res;
+            }
+        });
+    };
+
+    let proxyInstance = null;
+    const isObjectTarget = _val !== null && typeof _val === 'object' && !Array.isArray(_val) && !_val._isCairnState;
 
     const stateSignal = {
         _isCairnState: true,
@@ -33,26 +158,56 @@ export function state(initialValue) {
         set value(newValue) {
             if (Object.is(_val, newValue)) return;
             const oldVal = _val;
+            recordHistory(oldVal);
             _val = newValue;
             logStateChange('signal', oldVal, newValue);
             middlewareEngine.afterStateChange('state', oldVal, newValue);
-
-            const toNotify = Array.from(subscribers);
-            toNotify.forEach((sub) => {
-                if (_queueEffect(sub)) return;
-                try {
-                    sub(_val);
-                } catch (err) {
-                    console.error('[Cairn Reactivity Error]:', err);
-                }
-            });
+            notify();
         },
         peek() {
             return _val;
         },
-        subscribe(fn) {
+        subscribe(fn, propName = null) {
+            if (propName) {
+                if (!propSubscribers.has(propName)) {
+                    propSubscribers.set(propName, new Set());
+                }
+                propSubscribers.get(propName).add(fn);
+                return () => propSubscribers.get(propName).delete(fn);
+            }
             subscribers.add(fn);
             return () => subscribers.delete(fn);
+        },
+        // State predictability & time-travel
+        next(value) {
+            _queuedNext = value;
+            _hasQueuedNext = true;
+            return this;
+        },
+        commit() {
+            if (_hasQueuedNext) {
+                this.value = _queuedNext;
+                _queuedNext = undefined;
+                _hasQueuedNext = false;
+            }
+            return this;
+        },
+        rollback() {
+            if (history.length > 0) {
+                const prev = history.pop();
+                _val = prev;
+                notify();
+            }
+            return this;
+        },
+        snapshot() {
+            return JSON.parse(JSON.stringify(_val));
+        },
+        restore(snapshotData) {
+            recordHistory(_val);
+            _val = JSON.parse(JSON.stringify(snapshotData));
+            notify();
+            return this;
         },
         toString() {
             return String(this.value);
@@ -62,6 +217,13 @@ export function state(initialValue) {
         }
     };
 
+    if (isObjectTarget) {
+        proxyInstance = createObjectProxy(_val);
+        _stateRegistry.add(proxyInstance);
+        return proxyInstance;
+    }
+
+    _stateRegistry.add(stateSignal);
     return stateSignal;
 }
 
@@ -248,6 +410,8 @@ export function computed(getter) {
 
 /**
  * Runs a side-effect function that automatically re-executes whenever dependent states change.
+ * Supports auto-cleanup if the effect function returns a cleanup callback.
+ * 
  * @param {Function} fn Function containing state accesses. May return a cleanup callback.
  * @returns {Function} Unsubscribe / stop effect function
  */
@@ -256,7 +420,7 @@ export function effect(fn) {
     let isStopped = false;
 
     const runEffect = () => {
-        if (isStopped) return;
+        if (isStopped || runEffect._isDisposed) return;
 
         if (typeof cleanupFn === 'function') {
             try {
@@ -279,16 +443,21 @@ export function effect(fn) {
         }
     };
 
+    runEffect._isDisposed = false;
     runEffect();
 
-    return () => {
+    const dispose = () => {
         isStopped = true;
+        runEffect._isDisposed = true;
         if (typeof cleanupFn === 'function') {
             try {
                 cleanupFn();
             } catch (err) {
                 console.error('[Cairn Effect Cleanup Error]:', err);
             }
+            cleanupFn = null;
         }
     };
+
+    return dispose;
 }

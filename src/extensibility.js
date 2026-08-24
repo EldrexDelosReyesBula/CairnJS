@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Extensibility & Middleware Architecture
+ * @eldrex/cairnjs - Extensibility & Middleware Architecture
  * Plugin System, Middleware Engine, Hook Lifecycles, Deep Configuration, and Engine Overrides.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn/adapters - Bootstrap 5 Adapter
+ * @eldrex/cairnjs/adapters - Bootstrap 5 Adapter
  * Maps `bs: '...'` or `bootstrap: '...'` classes directly into the class list.
  */
 

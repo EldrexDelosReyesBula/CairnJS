@@ -1,5 +1,5 @@
 /**
- * @eldrex/cairn - Internationalization (i18n)
+ * @eldrex/cairnjs - Internationalization (i18n)
  * Reactive locale switching, nested key translations, pluralization, and interpolation.
  * Zero dependencies — works in browser and Node.js.
  */
