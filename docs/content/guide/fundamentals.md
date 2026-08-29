@@ -90,14 +90,14 @@ Whenever you write Cairn code, keep these **three simple rules** in mind:
 
 ### Rule 1: Static Things? Pass Direct Values.
 If something never changes (like a card title, a fixed color, or a constant class name), just pass it directly:
-```javascript
+```javascript static
 h1('Welcome to Dashboard')
 div({ class: 'container', style: { padding: '20px' } })
 ```
 
 ### Rule 2: Dynamic Things that Change? Wrap in a Function `() => ...`
 Whenever text, a style, a class, or child elements depend on a reactive signal, pass a **zero-argument getter function**:
-```javascript
+```javascript static
 // ✅ Dynamic Text:
 p(() => `Score: ${score.value}`)
 
@@ -109,7 +109,7 @@ div(() => isLoggedIn.value ? UserDashboard() : LoginForm())
 ```
 
 ### Rule 3: Form Inputs? Bind `value` + `oninput`.
-```javascript
+```javascript static
 const email = state('');
 input({
     type: 'email',
@@ -127,7 +127,7 @@ Use these battle-tested, zero-boilerplate recipes in your apps right away:
 
 ### Recipe 1: Toggle Switch Button
 ```javascript
-import { state, div, button } from '@eldrex/cairnjs';
+import { state, div, button, mount } from '@eldrex/cairnjs';
 
 export const ToggleSwitch = () => {
     const active = state(false);
@@ -146,13 +146,15 @@ export const ToggleSwitch = () => {
         onclick: () => active.value = !active.value
     });
 };
+
+mount('#app', ToggleSwitch());
 ```
 
 ---
 
 ### Recipe 2: Modal Popup with Backdrop Blur
 ```javascript
-import { state, div, h2, p, button } from '@eldrex/cairnjs';
+import { state, div, h2, p, button, mount } from '@eldrex/cairnjs';
 
 export const ModalDemo = () => {
     const isOpen = state(false);
@@ -186,13 +188,15 @@ export const ModalDemo = () => {
         : null)
     );
 };
+
+mount('#app', ModalDemo());
 ```
 
 ---
 
 ### Recipe 3: Accordion / Collapsible Section
 ```javascript
-import { state, div, button, p } from '@eldrex/cairnjs';
+import { state, div, button, p, mount } from '@eldrex/cairnjs';
 
 export const AccordionItem = ({ title, content }) => {
     const open = state(false);
@@ -205,13 +209,15 @@ export const AccordionItem = ({ title, content }) => {
         div(() => open.value ? p(content, { style: { padding: '14px 16px', background: '#0f172a', color: '#cbd5e1', margin: 0 } }) : null)
     );
 };
+
+mount('#app', AccordionItem({ title: 'System Architecture', content: 'Cairn fine-grained reactive core with zero dependencies.' }));
 ```
 
 ---
 
 ### Recipe 4: Tabs Switcher
 ```javascript
-import { state, div, button } from '@eldrex/cairnjs';
+import { state, div, button, mount } from '@eldrex/cairnjs';
 
 export const TabsDemo = () => {
     const activeTab = state('overview');
@@ -237,13 +243,15 @@ export const TabsDemo = () => {
         div(() => div({ style: { padding: '1rem 0', color: '#cbd5e1' } }, tabs.find(t => t.id === activeTab.value).content))
     );
 };
+
+mount('#app', TabsDemo());
 ```
 
 ---
 
 ### Recipe 5: Live Search Filterable List
 ```javascript
-import { state, computed, collection, div, input, ul, li } from '@eldrex/cairnjs';
+import { state, computed, collection, div, input, ul, li, mount } from '@eldrex/cairnjs';
 
 export const SearchableList = () => {
     const search = state('');
@@ -266,13 +274,15 @@ export const SearchableList = () => {
         ))
     );
 };
+
+mount('#app', SearchableList());
 ```
 
 ---
 
 ### Recipe 6: Toast Notification Banner
 ```javascript
-import { state, div, button } from '@eldrex/cairnjs';
+import { state, div, button, mount } from '@eldrex/cairnjs';
 
 export const ToastDemo = () => {
     const message = state('');
@@ -300,13 +310,15 @@ export const ToastDemo = () => {
         : null)
     );
 };
+
+mount('#app', ToastDemo());
 ```
 
 ---
 
 ### Recipe 7: Async Data Loader with Loading Spinner
 ```javascript
-import { resource, div, h4, p, button } from '@eldrex/cairnjs';
+import { resource, div, h4, p, button, mount } from '@eldrex/cairnjs';
 
 export const UserProfile = () => {
     const userResource = resource(async () => {
@@ -335,13 +347,15 @@ export const UserProfile = () => {
         })
     );
 };
+
+mount('#app', UserProfile());
 ```
 
 ---
 
 ### Recipe 8: Dark / Light Mode Theme Switcher
 ```javascript
-import { createTheme, setTheme, activeTheme, div, button, h3, p } from '@eldrex/cairnjs';
+import { createTheme, setTheme, state, div, button, h3, p, mount } from '@eldrex/cairnjs';
 
 createTheme('dark', { colors: { background: '#0f172a', text: '#f8fafc', card: '#1e293b' } });
 createTheme('light', { colors: { background: '#f8fafc', text: '#0f172a', card: '#ffffff' } });
@@ -369,13 +383,15 @@ export const ThemeToggleApp = () => {
         })
     );
 };
+
+mount('#app', ThemeToggleApp());
 ```
 
 ---
 
 ### Recipe 9: Spring-Animated Bouncy Action Button
 ```javascript
-import { spring, button } from '@eldrex/cairnjs';
+import { spring, state, button, mount } from '@eldrex/cairnjs';
 
 export const BouncyButton = ({ label, onClick }) => {
     const scale = state(1);
@@ -402,13 +418,15 @@ export const BouncyButton = ({ label, onClick }) => {
         }
     });
 };
+
+mount('#app', BouncyButton({ label: '⚡ Bounce Me!', onClick: () => console.log('Bounced!') }));
 ```
 
 ---
 
 ### Recipe 10: Form with Live Validation
 ```javascript
-import { state, computed, div, input, button, p } from '@eldrex/cairnjs';
+import { state, computed, div, input, button, p, mount } from '@eldrex/cairnjs';
 
 export const ValidatedForm = () => {
     const email = state('');
@@ -455,6 +473,8 @@ export const ValidatedForm = () => {
         })
     );
 };
+
+mount('#app', ValidatedForm());
 ```
 
 ---

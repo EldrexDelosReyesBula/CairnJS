@@ -42,7 +42,7 @@ import { shapes } from './shapes/index.js';
 import { tokens, createTokens, createTheme, setTheme, activeTheme, theme as themeMaster, fluid, keyframes, css, coat, media, styleHelper, Show, Hide } from './styling.js';
 import { wasmEngine, isWasmSupported, engine, perf, SharedStateBuffer, DomRef } from './wasm.js';
 import { physics } from './physics.js';
-import { UI, Icon, IconButton, Toast, Modal, ConfirmDialog, Drawer, Autocomplete, Combobox, Tree, Field, Label, ErrorMessage, HelperText, NumberInput, PasswordInput, Tabs, SegmentedControl, Pagination, Stepper, Table, DataTable, DataGrid, DropZone, Rating, ColorPicker, Accordion, Timeline, CommandPalette, ContextMenu, NotificationCenter } from './ui/index.js';
+import { UI, Icon, IconButton, Toast, Modal, ConfirmDialog, Drawer, Autocomplete, Combobox, Tree, Field, Label, ErrorMessage, HelperText, NumberInput, PasswordInput, Tabs, SegmentedControl, Pagination, Stepper, Table, DataTable, DataGrid, DropZone, Rating, ColorPicker, Accordion, Timeline, CommandPalette, ContextMenu, NotificationCenter, Box, Container, Grid, MasonryGrid, BentoGrid, Stack, AspectRatio, Spacer, Center, Cluster, Split } from './ui/index.js';
 import { createFocusTrap, useClickOutside, useEscapeKey, overlayStack, updateFloatingPosition, a11yAudit, a11y } from './overlay.js';
 import { studio } from './studio.js';
 import { ai } from './ai.js';
@@ -120,7 +120,7 @@ import { adapters, createAdapter, registerAdapter, useAdapter, listAdapters, tai
 import { VirtualList } from './virtual-list.js';
 import { mobile } from './mobile.js';
 import { three } from './three.js';
-import { docs, createPlayground, Heading, Paragraph, Code, Callout, Table as DocsTable, Example } from './docs.js';
+import { docs, createPlayground, Heading, Paragraph, Code, Callout, Table as DocsTable, Example, CodeBlock } from './docs.js';
 import { iteration } from './iteration.js';
 import buildPlugins from './build-plugins.js';
 import { composer, createElement, Fragment } from './composer.js';
@@ -187,6 +187,20 @@ import {
 } from './utils.js';
 import { renderToString, hydrate, ssr } from './ssr.js';
 import { reconcile, each, For, createList, patchProps, reconciler } from './reconciler.js';
+import { html } from './html.js';
+import { app } from './app-launcher.js';
+import { tool, createTool } from './tool-builder.js';
+import {
+    btn,
+    card,
+    badge,
+    stack,
+    row,
+    grid,
+    title,
+    divider,
+    toggle
+} from './predictive-ui.js';
 
 // Merge baseUtils into utilsRegistry
 Object.assign(utilsRegistry, baseUtils);
@@ -215,6 +229,8 @@ export {
     textarea, select, option,
     text,
     raw, element,
+    // Predictive Zero-Learning-Curve UI Helpers
+    btn, card, badge, stack, row, grid, title, divider, toggle,
     // Motion & Animation Suite
     spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, motionA11y as accessibility, defineAnimation, physics, viewTransition, animationCore as animation,
     // Shapes & Styling
@@ -238,14 +254,14 @@ export {
     devtools, plugins, sandbox, experiment, features, benchmark, test,
     extensions, deprecate, migrate, compat, learn, roadmap, ci, triage, dependabot,
     // Extensibility, Config & Middleware
-    use, componentsRegistry, utilsRegistry, animationRegistry, hooksBus, middlewareEngine, registerComponent, config, engineOverrides,
+    use, componentsRegistry, utilsRegistry, animationRegistry, hooksBus, middlewareEngine, middlewareEngine as middleware, registerComponent, config, engineOverrides,
     // Styling Adapters
-    adapters, createAdapter, registerAdapter, useAdapter, listAdapters, resolveAdapters,
+    adapters, createAdapter, registerAdapter, useAdapter, listAdapters, tailwind, resolveAdapters,
     // Framework Bridges & Multi-Language Composer
     cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement, defineCustomElement, useCairn,
     composer, createElement, Fragment,
     // Mobile, 3D, Docs & Build Plugins
-    mobile, three, docs, Heading, Paragraph, Code, Callout, DocsTable, Example, createPlayground, iteration,
+    mobile, three, docs, Heading, Paragraph, Code, Callout, DocsTable, Example, createPlayground, iteration, CodeBlock, CodeBlock as codeBlock, VirtualList as virtualList,
     // Advanced state & utils
     createStore, useStore, listStores,
     createContext, provideContext, useContext, removeContext, hasContext, resetContexts,
@@ -259,11 +275,28 @@ export {
     cairnAgentDocs, getAgentDocs, cairnAgentDocs as agentDocs,
     baseUtils as utils, color, clipboard, useClipboard, storage, fullscreen, onVisible, useInView, useMediaQuery, useHotkeys, useResize, debounce, throttle, uuid, sleep,
     renderToString, hydrate, ssr,
-    reconcile, each, For, createList, patchProps, reconciler
+    reconcile, each, For, createList, patchProps, reconciler,
+    // Rapid Prototyping & Template String Engine
+    html, app, tool, createTool
 };
 
 export const cairn = {
-    version: '1.2.0',
+    version: '1.3.0',
+    // Rapid Prototyping & Tagged Template Literal Engine
+    html,
+    app,
+    tool,
+    createTool,
+    // Predictive Zero-Learning-Curve UI Helpers
+    btn,
+    card,
+    badge,
+    stack,
+    row,
+    grid,
+    title,
+    divider,
+    toggle,
     // Core reactivity & DOM builder
     state: Object.assign(state, { extend: extensions.state }),
     computed, effect, collection, resource, memory,
@@ -368,8 +401,12 @@ export const cairn = {
     // Extension Libraries
     mobile,
     three,
-    docs: Object.assign(docs, { Heading, Paragraph, Code, Callout, Table: DocsTable, Example, createPlayground }),
+    docs: Object.assign(docs, { Heading, Paragraph, Code, Callout, Table: DocsTable, Example, createPlayground, CodeBlock }),
     createPlayground,
+    CodeBlock,
+    codeBlock: CodeBlock,
+    virtualList: VirtualList,
+    VirtualList,
     buildPlugins,
     // Framework Bridges & Multi-Language Composer
     toReact: cairnToReact,
@@ -392,6 +429,7 @@ export const cairn = {
     // UI & Tools
     ui: UI, UI, Icon, IconButton, Toast, Modal, ConfirmDialog, Drawer, Autocomplete, Combobox, Tree, Field, Label, ErrorMessage, HelperText,
     NumberInput, PasswordInput, Tabs, SegmentedControl, Pagination, Stepper, Table, DataTable, DataGrid, DropZone, Rating, ColorPicker, Accordion, Timeline, CommandPalette, ContextMenu, NotificationCenter,
+    Box, Container, Grid, MasonryGrid, BentoGrid, Stack, AspectRatio, Spacer, Center, Cluster, Split,
     useClipboard, useInView, useMediaQuery, useHotkeys,
     studio, ai,
     figma: { figmaToCairn },

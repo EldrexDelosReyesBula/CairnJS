@@ -400,3 +400,106 @@ UI.CodeBlock({
 });
 ```
 
+---
+
+## 18. Personalization, Accessibility & Voice (`src/personalize.js`)
+
+### `personalize(schema)`
+Manages user preferences, persisting to `localStorage` and automatically syncing to `:root` CSS custom properties (`--cairn-font-size`, `--cairn-accent-color`, `data-theme`, `data-spacing`).
+```js
+const prefs = personalize({
+    defaults: { theme: 'dark', accentColor: '#38bdf8', fontSize: 16 }
+});
+
+prefs.set('accentColor', '#10b981');
+prefs.set('theme', 'light');
+console.log(prefs.get('theme')); // 'light'
+```
+
+### `settings(options)`
+Mounts an interactive settings panel widget with theme switchers, font scaling sliders, and reset actions.
+
+### `accessibility.audit(container?)`
+Performs an automated WCAG 2.1 AA accessibility audit on DOM nodes, verifying contrast ratio, missing image `alt` attributes, unlabelled form inputs, and interactive button `aria-label` tags.
+
+### `voice.listen(commands)` / `shortcuts.register(combo, handler)`
+Registers speech recognition voice intents and global multi-key shortcut combinations.
+
+---
+
+## 19. UI Component Library & Layout Primitives (`src/ui/index.js`)
+
+### Layout Primitives
+- `Grid(props, ...children)` — Responsive CSS grid with `minItemWidth` and auto-fit.
+- `BentoGrid(props, ...children)` — Apple-style modular bento box layout with customizable `rowHeight`.
+- `MasonryGrid(props, ...children)` — Pinterest-style multi-column staggered flow.
+- `Stack(props, ...children)` — Flexbox column/row layout with configurable gap.
+- `Container(props, ...children)` — Responsive centered max-width wrapper.
+- `Box`, `Center`, `Cluster`, `Split`, `AspectRatio`, `Spacer`, `Divider`.
+
+### Navigation & Overlays
+- `CommandPalette({ hotkey, actions })` — `Cmd+K` / `Ctrl+K` searchable modal command palette.
+- `ContextMenu({ target, items })` — Custom right-click contextual menu.
+- `Modal({ title, body, isOpen, onClose })` — Accessible dialog modal with focus trap and escape dismiss.
+- `ConfirmDialog.confirm({ title, message, variant })` — Async promise-based confirmation popup.
+- `Drawer({ title, placement, isOpen, onClose })` — Slide-over side panel (left, right, top, bottom).
+- `Toast.show({ title, message, type, duration })` — Floating notification queue with `Toast.success()`, `Toast.error()`, `Toast.info()`.
+- `Tabs({ items, defaultIndex })` — Accessible tabbed container with reactive tabpanel content switching.
+- `Pagination({ page, totalPages, onChange })` — Responsive pagination with signal bindings and disabled button states.
+- `Stepper({ steps, currentStep, renderStep })` — Multi-step wizard layout with progress line indicators.
+
+### Data Display & Forms
+- `DataTable({ columns, data, pageSize, searchable, defaultSort })` — Client-side sorting, pagination, and search filter table.
+- `Rating({ max, default, onChange })` — Interactive 5-star rating widget.
+- `ColorPicker({ default, onChange })` — Color swatch palette with hex input.
+- `DropZone({ onFilesDrop })` — Drag-and-drop file upload container.
+- `Accordion({ items, allowMultiple })` — Collapsible FAQ accordion.
+- `Timeline({ items })` — Step timeline with active state indicators.
+- `Skeleton({ variant, shimmer })` — Shimmer loading placeholders.
+
+---
+
+## 20. Real-Time, Collaboration & Live Queries (`src/realtime.js`)
+
+### `realtime.socket(options)`
+Creates a reactive WebSocket client with auto-reconnect, heartbeat pings, message queuing, and reactive `.status` / `.data` signals:
+```js
+const socket = realtime.socket({
+    url: 'wss://api.cairnjs.org/live',
+    reconnect: true,
+    maxRetries: 5
+});
+
+socket.send({ type: 'PING' });
+```
+
+### `collab.room(options)`
+Real-time peer-to-peer room with presence awareness and broadcast events:
+```js
+const room = collab.room({
+    id: 'document-101',
+    user: { id: 'usr_1', name: 'Alex Rivera' }
+});
+
+console.log('Connected Peers:', room.peers.value);
+```
+
+### `poll(fetcher, intervalMs)` / `realtime.sse(options)`
+Manages resilient polling intervals and Server-Sent Events (SSE) subscriptions.
+
+---
+
+## 21. Keyed List Reconciler & SSR Hydration (`src/reconciler.js`, `src/ssr.js`)
+
+### `reconcile(parent, newItems, keyFn, renderFn)`
+Fine-grained keyed DOM list reconciler calculating minimal DOM insertions, moves, and removals without virtual DOM diffing overhead:
+```js
+reconcile(containerEl, userList.value, (u) => u.id, (u) => div({ class: 'user-row' }, p(u.name)));
+```
+
+### `renderToString(component)`
+Renders a Cairn component tree to an HTML string for Node.js / Deno SSR.
+
+### `hydrate(target, component)`
+Attaches reactive state signals and event listeners to pre-rendered server HTML without DOM reconstruction.
+

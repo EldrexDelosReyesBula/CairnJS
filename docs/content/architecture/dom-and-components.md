@@ -26,11 +26,15 @@ div(
 Pass a function as a child to create dynamic, auto-updating DOM text nodes or child elements:
 
 ```js
-let count = state(0);
+import { state, div, mount } from '@eldrex/cairnjs';
 
-div(
+const count = state(0);
+
+const app = div(
     () => `Count is: ${count.value}`
 );
+
+mount('#app', app);
 ```
 
 ---
@@ -41,10 +45,10 @@ Cairn components are simple, reusable functions wrapped by `cairn.component()`.
 
 ### Function Setup (Simple)
 ```js
-import { component, state, button, div } from '@eldrex/cairnjs';
+import { component, state, button, div, mount } from '@eldrex/cairnjs';
 
 const Counter = component(({ initial = 0 }) => {
-    let count = state(initial);
+    const count = state(initial);
     return div(
         button(() => `Count: ${count.value}`, {
             onclick: () => count.value++
@@ -52,12 +56,12 @@ const Counter = component(({ initial = 0 }) => {
     );
 });
 
-Counter({ initial: 5 });
+mount('#app', Counter({ initial: 5 }));
 ```
 
 ### Object Declaration (Advanced)
 ```js
-import { component, button } from '@eldrex/cairnjs';
+import { component, button, mount } from '@eldrex/cairnjs';
 
 const PrimaryButton = component({
     props: {
@@ -72,7 +76,7 @@ const PrimaryButton = component({
     }
 });
 
-PrimaryButton({ label: 'Save', onClick: (e) => console.log('Saved!') });
+mount('#app', PrimaryButton({ label: 'Save', onClick: (e) => console.log('Saved!') }));
 ```
 
 ---
@@ -82,10 +86,13 @@ PrimaryButton({ label: 'Save', onClick: (e) => console.log('Saved!') });
 Mounts components into any selector or DOM node across frameworks:
 
 ```js
-import { mount, cairn } from '@eldrex/cairnjs';
+import { mount, button, state } from '@eldrex/cairnjs';
 
-const unmount = mount('#app', Counter({ initial: 0 }));
+const count = state(0);
+const unmount = mount('#app', button(() => `Count: ${count.value}`, {
+    onclick: () => count.value++
+}));
 
 // To unmount:
-unmount();
+// unmount();
 ```

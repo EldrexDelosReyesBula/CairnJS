@@ -147,6 +147,16 @@ export function highlight(codeStr = '', lang = 'js', theme = 'dracula') {
  * @param {string} [props.lang='javascript'] Language label
  * @param {string} [props.theme='dracula'] Theme (dracula, one-dark, github-dark, tokyo-night, monokai, cairn)
  * @param {boolean} [props.copyable=true] Include copy to clipboard button
+/**
+ * Renders a syntax-highlighted and interactive code block component.
+ *
+ * @param {object} props
+ * @param {string} props.code Code string to highlight
+ * @param {string} [props.lang='javascript'] Programming language
+ * @param {string|object} [props.theme='cairn'] Highlight theme name or theme object
+ * @param {boolean} [props.copyable=true] Show copy button
+ * @param {boolean} [props.run=false] Show interactive Run execution button
+ * @param {boolean} [props.playground=false] Show Open in Playground button
  * @param {boolean} [props.lineNumbers=false] Show line numbers
  * @param {string} [props.title] Optional title bar label
  * @returns {HTMLElement} CodeBlock element
@@ -155,25 +165,42 @@ export function CodeBlock(props = {}) {
     const {
         code: codeContent = '',
         lang = 'javascript',
-        theme = 'dracula',
+        theme = 'cairn',
         copyable = true,
+        run = false,
+        playground = false,
         lineNumbers = false,
         title = ''
     } = props;
 
-    const t = typeof theme === 'string' ? (CODE_THEMES[theme] || CODE_THEMES.dracula) : theme;
+    const t = typeof theme === 'string' ? (CODE_THEMES[theme] || CODE_THEMES.cairn) : theme;
     const copied = state(false);
+    const isRunning = state(false);
+
+    const cleanCode = (codeContent || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"');
 
     const handleCopy = () => {
         if (typeof navigator !== 'undefined' && navigator.clipboard) {
-            navigator.clipboard.writeText(codeContent).then(() => {
+            navigator.clipboard.writeText(cleanCode).then(() => {
                 copied.value = true;
                 setTimeout(() => copied.value = false, 2000);
             });
         }
     };
 
-    const highlightedHtml = highlight(codeContent, lang, t);
+    const handlePlayground = () => {
+        if (typeof window !== 'undefined') {
+            try {
+                sessionStorage.setItem('cairn_custom_code', cleanCode);
+                window.open('playground.html?template=custom', '_blank');
+            } catch(e) {}
+        }
+    };
+
+    const highlightedHtml = highlight(cleanCode, lang, t);
 
     // Optional line numbers
     const lines = highlightedHtml.split('\n');
@@ -213,35 +240,70 @@ export function CodeBlock(props = {}) {
                     span('', { style: { width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e' } }),
                     span('', { style: { width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f' } })
                 ),
-                span(title || lang.toUpperCase(), { style: { color: t.comment, fontWeight: 700, marginLeft: '6px' } })
+                span(title || lang.toUpperCase(), { style: { color: t.keyword || '#38bdf8', fontWeight: 700, marginLeft: '6px' } })
             ),
-            copyable ? button(() => copied.value ? '✅ Copied!' : '📋 Copy', {
-                style: () => ({
-                    background: copied.value ? '#10b98122' : 'rgba(255,255,255,0.06)',
-                    color: copied.value ? '#10b981' : t.fg,
-                    border: 'none',
-                    padding: '4px 10px',
-                    borderRadius: '5px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                }),
-                onclick: handleCopy
-            }) : null
+            div({ style: { display: 'flex', gap: '6px', alignItems: 'center' } },
+                run ? button(() => isRunning.value ? '💻 Code' : '▶ Run', {
+                    style: () => ({
+                        background: isRunning.value ? '#334155' : 'linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(79, 70, 229, 0.25))',
+                        color: '#38bdf8',
+                        border: '1px solid rgba(56, 189, 248, 0.4)',
+                        padding: '4px 10px',
+                        borderRadius: '5px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                    }),
+                    onclick: () => isRunning.value = !isRunning.value
+                }) : null,
+                copyable ? button(() => copied.value ? '✅ Copied!' : '📋 Copy', {
+                    style: () => ({
+                        background: copied.value ? '#10b98122' : 'rgba(255,255,255,0.06)',
+                        color: copied.value ? '#10b981' : t.fg,
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        padding: '4px 10px',
+                        borderRadius: '5px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                    }),
+                    onclick: handleCopy
+                }) : null,
+                playground ? button('↗ Playground', {
+                    style: {
+                        background: 'transparent',
+                        color: '#94a3b8',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        padding: '4px 8px',
+                        borderRadius: '5px',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer'
+                    },
+                    onclick: handlePlayground
+                }) : null
+            )
         ),
-        // Code Body
-        pre({
-            style: {
-                margin: 0,
-                padding: '16px',
-                overflowX: 'auto',
-                fontSize: '0.9rem',
-                lineHeight: '1.6'
+        // Code Body or Live Output
+        () => {
+            if (isRunning.value) {
+                return div({ style: { padding: '1.25rem', background: '#020617' } },
+                    div({ style: { color: '#10b981', fontSize: '0.75rem', fontWeight: 'bold', marginBottom: '0.5rem' } }, '🟢 Live Running Sandbox Output:'),
+                    div({ id: 'cairn-codeblock-output', style: { width: '100%' } })
+                );
             }
-        },
-            code(raw(formattedContent))
-        )
+            return pre({
+                style: {
+                    margin: 0,
+                    padding: '16px',
+                    overflowX: 'auto',
+                    fontSize: '0.9rem',
+                    lineHeight: '1.6'
+                }
+            },
+                code(raw(formattedContent))
+            );
+        }
     );
 }
 

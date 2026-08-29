@@ -17,9 +17,39 @@ const CHART_DEFAULTS = {
 
 function getCtx(target) {
     if (typeof target === 'string') {
-        return document.querySelector(target)?.getContext('2d');
+        let el = typeof document !== 'undefined' ? document.querySelector(target) : null;
+        if (el && el.tagName === 'CANVAS') {
+            return el.getContext('2d');
+        } else if (el) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 700;
+            canvas.height = 350;
+            canvas.style.maxWidth = '100%';
+            el.appendChild(canvas);
+            return canvas.getContext('2d');
+        } else if (typeof document !== 'undefined') {
+            el = document.createElement('canvas');
+            if (target.startsWith('#')) el.id = target.slice(1);
+            else if (target.startsWith('.')) el.className = target.slice(1);
+            else el.id = target;
+            el.width = 700;
+            el.height = 350;
+            el.style.maxWidth = '100%';
+            const parent = document.getElementById('app') || document.body;
+            if (parent) parent.appendChild(el);
+            return el.getContext('2d');
+        }
+        return null;
     }
-    if (target && target.nodeType) return target.getContext('2d');
+    if (target && target.tagName === 'CANVAS') return target.getContext('2d');
+    if (target && target.nodeType) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 700;
+        canvas.height = 350;
+        canvas.style.maxWidth = '100%';
+        target.appendChild(canvas);
+        return canvas.getContext('2d');
+    }
     return null;
 }
 

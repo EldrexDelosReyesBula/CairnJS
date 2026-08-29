@@ -96,9 +96,13 @@ export function createStore(name, config = {}) {
 /**
  * Retrieves a previously registered store by name.
  * @param {string} name Store name
- * @returns {object|undefined} Store instance
+ * @returns {object} Store instance
  */
 export function useStore(name) {
+    if (!_storeRegistry.has(name)) {
+        console.warn(`[Cairn Store Warning]: Store "${name}" has not been created yet with createStore("${name}", ...). Auto-initializing fallback store.`);
+        return createStore(name, { state: {}, actions: {}, getters: {} });
+    }
     return _storeRegistry.get(name);
 }
 

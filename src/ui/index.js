@@ -6,7 +6,7 @@
 import {
     div, button, input, p, span, h1, h2, h3, h4, h5, h6,
     img, a, section, article, nav, footer, header, main, aside,
-    ul, ol, li, form, textarea, select, option, text, element, h
+    ul, ol, li, form, textarea, select, option, text, element, h, hr
 } from '../dom.js';
 import { state, effect, computed } from '../state.js';
 import { component } from '../component.js';
@@ -14,8 +14,8 @@ import { tokens } from '../styling.js';
 import { CodeBlock } from '../docs.js';
 import { createFocusTrap, useClickOutside, useEscapeKey, updateFloatingPosition, overlayStack } from '../overlay.js';
 import { portal } from '../portal.js';
-import { useHotkeys } from '../utils.js';
 import { VirtualList } from '../virtual-list.js';
+import { Charts as CoreCharts } from '../charts.js';
 
 // --- SVG ICON SYSTEM & ICON PRIMITIVES ---
 export const ICON_PATHS = {
@@ -97,7 +97,60 @@ export const IconButton = (props = {}, ...children) => {
 // --- LAYOUT COMPONENTS (10) ---
 export const Box = (props = {}, ...children) => div({ style: props.padding ? { padding: typeof props.padding === 'number' ? `${props.padding * 4}px` : props.padding } : {}, ...props }, ...children);
 export const Container = (props = {}, ...children) => div({ style: { maxWidth: props.maxWidth === 'lg' ? '1200px' : props.maxWidth || '1000px', margin: '0 auto', padding: props.padding ? '1rem' : '0' }, ...props }, ...children);
-export const Grid = (props = {}, ...children) => div({ style: { display: 'grid', gridTemplateColumns: `repeat(${props.columns || 3}, 1fr)`, gap: typeof props.gap === 'number' ? `${props.gap * 4}px` : (props.gap || '1rem') }, ...props }, ...children);
+export const Grid = (props = {}, ...children) => {
+    let gridTemplateColumns;
+    if (props.minItemWidth) {
+        gridTemplateColumns = `repeat(auto-fit, minmax(${typeof props.minItemWidth === 'number' ? `${props.minItemWidth}px` : props.minItemWidth}, 1fr))`;
+    } else if (props.autoFit || props.responsive) {
+        gridTemplateColumns = 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))';
+    } else if (typeof props.columns === 'number') {
+        gridTemplateColumns = `repeat(${props.columns}, minmax(0, 1fr))`;
+    } else if (props.columns) {
+        gridTemplateColumns = props.columns;
+    } else {
+        gridTemplateColumns = 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))';
+    }
+
+    return div({
+        style: {
+            display: 'grid',
+            gridTemplateColumns,
+            gap: typeof props.gap === 'number' ? `${props.gap * 4}px` : (props.gap || '1rem'),
+            width: '100%',
+            ...props.style
+        },
+        ...props
+    }, ...children);
+};
+
+export const MasonryGrid = (props = {}, ...children) => {
+    const cols = props.columns || 3;
+    const gap = typeof props.gap === 'number' ? `${props.gap * 4}px` : (props.gap || '1rem');
+    return div({
+        style: {
+            columnCount: cols,
+            columnGap: gap,
+            width: '100%',
+            ...props.style
+        },
+        ...props
+    }, ...children);
+};
+
+export const BentoGrid = (props = {}, ...children) => {
+    return div({
+        style: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
+            gridAutoRows: props.rowHeight || '160px',
+            gap: typeof props.gap === 'number' ? `${props.gap * 4}px` : (props.gap || '1rem'),
+            width: '100%',
+            ...props.style
+        },
+        ...props
+    }, ...children);
+};
+
 export const Stack = (props = {}, ...children) => div({ style: { display: 'flex', flexDirection: props.direction || 'column', gap: typeof props.gap === 'number' ? `${props.gap * 4}px` : (props.gap || '1rem') }, ...props }, ...children);
 export const Divider = (props = {}) => div({ style: { height: '1px', background: props.color || 'rgba(255,255,255,0.1)', margin: '1rem 0', width: '100%' }, ...props });
 export const Spacer = (props = {}) => div({ style: { height: typeof props.height === 'number' ? `${props.height}px` : (props.height || '16px'), width: '100%' } });
@@ -647,11 +700,21 @@ export const Breadcrumbs = (props = {}) => nav({ style: { display: 'flex', gap: 
  * Interactive Pagination component.
  */
 export const Pagination = (props = {}) => {
-    const totalPages = props.totalPages || 10;
-    const currentPage = state(props.page || 1);
+    const isSignal = props.page && typeof props.page === 'object' && 'value' in props.page;
+    const currentPage = isSignal ? props.page : state(typeof props.page === 'number' ? props.page : 1);
+    
+    const getTotal = () => {
+        if (props.totalPages && typeof props.totalPages === 'object' && 'value' in props.totalPages) {
+            return props.totalPages.value;
+        }
+        return typeof props.totalPages === 'number' ? props.totalPages : 1;
+    };
+
+    const getPage = () => currentPage.value;
 
     const setPage = (p) => {
-        if (p < 1 || p > totalPages) return;
+        const max = getTotal();
+        if (p < 1 || p > max) return;
         currentPage.value = p;
         if (props.onChange) props.onChange(p);
     };
@@ -662,53 +725,72 @@ export const Pagination = (props = {}) => {
         style: { display: 'flex', gap: '0.35rem', alignItems: 'center', ...props.style }
     },
         button('Previous', {
-            disabled: () => currentPage.value <= 1,
+            disabled: () => getPage() <= 1,
             style: () => ({
                 padding: '0.4rem 0.75rem',
                 borderRadius: '0.375rem',
                 border: '1px solid #334155',
                 background: '#1e293b',
-                color: currentPage.value <= 1 ? '#64748b' : 'white',
-                cursor: currentPage.value <= 1 ? 'not-allowed' : 'pointer'
+                color: getPage() <= 1 ? '#64748b' : 'white',
+                cursor: getPage() <= 1 ? 'not-allowed' : 'pointer'
             }),
-            onclick: () => setPage(currentPage.value - 1)
+            onclick: () => setPage(getPage() - 1)
         }),
-        span(() => `Page ${currentPage.value} of ${totalPages}`, { style: { fontSize: '0.875rem', color: '#94a3b8', margin: '0 0.5rem' } }),
+        span(() => `Page ${getPage()} of ${getTotal()}`, { style: { fontSize: '0.875rem', color: '#94a3b8', margin: '0 0.5rem' } }),
         button('Next', {
-            disabled: () => currentPage.value >= totalPages,
+            disabled: () => getPage() >= getTotal(),
             style: () => ({
                 padding: '0.4rem 0.75rem',
                 borderRadius: '0.375rem',
                 border: '1px solid #334155',
                 background: '#1e293b',
-                color: currentPage.value >= totalPages ? '#64748b' : 'white',
-                cursor: currentPage.value >= totalPages ? 'not-allowed' : 'pointer'
+                color: getPage() >= getTotal() ? '#64748b' : 'white',
+                cursor: getPage() >= getTotal() ? 'not-allowed' : 'pointer'
             }),
-            onclick: () => setPage(currentPage.value + 1)
+            onclick: () => setPage(getPage() + 1)
         })
     );
 };
 
 export const Tabs = (props = {}) => {
-    const activeTab = state(0);
-    return div(
-        div({ role: 'tablist', style: { display: 'flex', borderBottom: '1px solid #334155' } },
-            (props.items || []).map((tab, idx) => button(typeof tab === 'string' ? tab : tab.label, {
-                role: 'tab',
-                'aria-selected': () => String(activeTab.value === idx),
-                style: () => ({
-                    padding: '0.5rem 1rem',
-                    borderBottom: activeTab.value === idx ? '2px solid #6366f1' : 'none',
-                    background: 'transparent',
-                    color: activeTab.value === idx ? '#6366f1' : 'white',
-                    fontWeight: activeTab.value === idx ? '600' : 'normal',
-                    cursor: 'pointer'
-                }),
-                onclick: () => {
-                    activeTab.value = idx;
-                    if (props.onChange) props.onChange(idx);
-                }
-            }))
+    const activeTab = state(props.defaultIndex || 0);
+    const items = props.items || [];
+
+    return div({ class: 'cairn-tabs-container', style: { width: '100%', ...props.style } },
+        div({ role: 'tablist', style: { display: 'flex', borderBottom: '1px solid #334155', gap: '0.25rem' } },
+            items.map((tab, idx) => {
+                const label = typeof tab === 'string' ? tab : tab.label;
+                return button(label, {
+                    role: 'tab',
+                    'aria-selected': () => String(activeTab.value === idx),
+                    style: () => ({
+                        padding: '0.6rem 1.15rem',
+                        border: 'none',
+                        borderBottom: activeTab.value === idx ? '2px solid #38bdf8' : '2px solid transparent',
+                        background: activeTab.value === idx ? 'rgba(56, 189, 248, 0.08)' : 'transparent',
+                        color: activeTab.value === idx ? '#38bdf8' : '#94a3b8',
+                        fontWeight: activeTab.value === idx ? '700' : '500',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        borderRadius: '0.375rem 0.375rem 0 0',
+                        transition: 'all 0.15s ease'
+                    }),
+                    onclick: () => {
+                        activeTab.value = idx;
+                        if (props.onChange) props.onChange(idx, tab);
+                    }
+                });
+            })
+        ),
+        div({
+            role: 'tabpanel',
+            style: { padding: '1.25rem 0', width: '100%' }
+        },
+            () => {
+                const current = items[activeTab.value];
+                if (!current) return null;
+                return typeof current === 'object' && current.content !== undefined ? current.content : current;
+            }
         )
     );
 };
@@ -761,10 +843,11 @@ export const SegmentedControl = (props = {}) => {
  */
 export const Stepper = (props = {}) => {
     const steps = props.steps || [];
-    const currentStep = state(props.activeStep || 0);
+    const currentStep = state(props.activeStep || props.defaultStep || 0);
 
     const wizard = {
         currentStep,
+        current: currentStep,
         next: () => {
             if (currentStep.value < steps.length - 1) {
                 currentStep.value++;
@@ -796,7 +879,7 @@ export const Stepper = (props = {}) => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
-                        color: currentStep.value === i ? '#3b82f6' : (currentStep.value > i ? '#22c55e' : '#64748b'),
+                        color: currentStep.value === i ? '#38bdf8' : (currentStep.value > i ? '#22c55e' : '#64748b'),
                         fontWeight: currentStep.value === i ? '600' : 'normal',
                         cursor: 'pointer'
                     }),
@@ -807,11 +890,12 @@ export const Stepper = (props = {}) => {
                             width: '24px',
                             height: '24px',
                             borderRadius: '50%',
-                            background: currentStep.value === i ? '#3b82f6' : (currentStep.value > i ? '#22c55e' : '#334155'),
-                            color: 'white',
+                            background: currentStep.value === i ? '#38bdf8' : (currentStep.value > i ? '#22c55e' : '#334155'),
+                            color: currentStep.value === i ? '#0f172a' : 'white',
                             display: 'grid',
                             placeItems: 'center',
-                            fontSize: '0.75rem'
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold'
                         })
                     }),
                     span(label),
@@ -895,11 +979,20 @@ export const DataTable = (props = {}) => {
     return div({
         style: { display: 'flex', flexDirection: 'column', gap: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1rem', ...props.style }
     },
-        props.searchable !== false ? div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+        props.searchable !== false ? div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' } },
             InputComponent({
                 placeholder: props.searchPlaceholder || 'Search table...',
                 value: searchQuery,
-                style: { maxWidth: '300px' },
+                style: {
+                    maxWidth: '260px',
+                    padding: '0.45rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #334155',
+                    background: '#1e293b',
+                    color: '#f8fafc',
+                    outline: 'none',
+                    fontSize: '0.875rem'
+                },
                 oninput: (e) => {
                     searchQuery.value = e.target.value;
                     currentPage.value = 1;
@@ -933,8 +1026,8 @@ export const DataTable = (props = {}) => {
             if (totalPages.value <= 1) return null;
             return div({ style: { display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' } },
                 Pagination({
-                    page: currentPage.value,
-                    totalPages: totalPages.value,
+                    page: currentPage,
+                    totalPages: totalPages,
                     onChange: (p) => { currentPage.value = p; }
                 })
             );
@@ -1160,10 +1253,21 @@ export const CommandPalette = (props = {}) => {
         return actions.filter(a => (a.title && a.title.toLowerCase().includes(q)) || (a.group && a.group.toLowerCase().includes(q)) || (a.subtitle && a.subtitle.toLowerCase().includes(q)));
     });
 
+    let compEl = null;
+
     const open = () => {
         isOpen.value = true;
         searchQuery.value = '';
         selectedIdx.value = 0;
+        if (typeof document !== 'undefined' && compEl && document.body && !document.body.contains(compEl)) {
+            document.body.appendChild(compEl);
+        }
+        setTimeout(() => {
+            if (compEl && typeof compEl.querySelector === 'function') {
+                const searchInput = compEl.querySelector('input');
+                if (searchInput && typeof searchInput.focus === 'function') searchInput.focus();
+            }
+        }, 50);
     };
 
     const close = () => {
@@ -1177,9 +1281,13 @@ export const CommandPalette = (props = {}) => {
     };
 
     if (props.hotkey !== false && typeof window !== 'undefined') {
-        useHotkeys('ctrl+k', (e) => {
+        useHotkeys(['ctrl+k', 'meta+k', 'cmd+k'], (e) => {
             e.preventDefault();
-            isOpen.value = !isOpen.value;
+            if (isOpen.value) {
+                close();
+            } else {
+                open();
+            }
         });
     }
 
@@ -1198,7 +1306,7 @@ export const CommandPalette = (props = {}) => {
                 alignItems: 'flex-start',
                 justifyContent: 'center',
                 paddingTop: '15vh',
-                zIndex: tokens.zIndex.modal,
+                zIndex: tokens.zIndex ? tokens.zIndex.modal || 9999 : 9999,
                 backdropFilter: 'blur(4px)'
             },
             onclick: (e) => {
@@ -1231,7 +1339,7 @@ export const CommandPalette = (props = {}) => {
                     width: '90%',
                     maxWidth: '560px',
                     overflow: 'hidden',
-                    boxShadow: tokens.shadows['2xl']
+                    boxShadow: tokens.shadows ? tokens.shadows['2xl'] || '0 25px 50px -12px rgba(0,0,0,0.5)' : '0 25px 50px -12px rgba(0,0,0,0.5)'
                 }
             },
                 div({ style: { display: 'flex', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #334155', gap: '0.5rem' } },
@@ -1247,7 +1355,10 @@ export const CommandPalette = (props = {}) => {
                             selectedIdx.value = 0;
                         }
                     }),
-                    span('ESC', { style: { fontSize: '0.75rem', padding: '0.2rem 0.4rem', background: '#1e293b', borderRadius: '4px', color: '#94a3b8' } })
+                    span('ESC', {
+                        style: { fontSize: '0.75rem', padding: '0.2rem 0.4rem', background: '#1e293b', borderRadius: '4px', color: '#94a3b8', cursor: 'pointer' },
+                        onclick: close
+                    })
                 ),
                 () => {
                     const list = filteredActions.value;
@@ -1285,7 +1396,10 @@ export const CommandPalette = (props = {}) => {
         );
     };
 
-    const compEl = div(modalEl);
+    compEl = div(modalEl);
+    if (typeof document !== 'undefined' && document.body && !document.body.contains(compEl)) {
+        document.body.appendChild(compEl);
+    }
     return Object.assign(compEl, controller);
 };
 
@@ -1296,10 +1410,14 @@ export const ContextMenu = (props = {}) => {
     const items = props.items || [];
     const isOpen = state(false);
     const pos = state({ x: 0, y: 0 });
+    let comp = null;
 
     const openAt = (x, y) => {
         pos.value = { x, y };
         isOpen.value = true;
+        if (typeof document !== 'undefined' && comp && document.body && !document.body.contains(comp)) {
+            document.body.appendChild(comp);
+        }
     };
 
     const close = () => {
@@ -1331,8 +1449,8 @@ export const ContextMenu = (props = {}) => {
                 borderRadius: '0.5rem',
                 padding: '0.35rem',
                 minWidth: '160px',
-                zIndex: tokens.zIndex.popover,
-                boxShadow: tokens.shadows.xl
+                zIndex: tokens.zIndex ? tokens.zIndex.popover || 9999 : 9999,
+                boxShadow: tokens.shadows ? tokens.shadows.xl || '0 20px 25px -5px rgba(0,0,0,0.5)' : '0 20px 25px -5px rgba(0,0,0,0.5)'
             })
         },
             items.map(item => {
@@ -1342,19 +1460,23 @@ export const ContextMenu = (props = {}) => {
                 return div({
                     role: 'menuitem',
                     style: {
-                        padding: '0.4rem 0.75rem',
+                        padding: '0.45rem 0.75rem',
                         fontSize: '0.875rem',
                         borderRadius: '0.25rem',
                         color: item.danger ? '#ef4444' : '#f8fafc',
                         cursor: 'pointer',
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        transition: 'background 0.1s ease'
                     },
+                    onmouseenter: (e) => { e.currentTarget.style.background = '#1e293b'; },
+                    onmouseleave: (e) => { e.currentTarget.style.background = 'transparent'; },
                     onclick: (e) => {
                         e.stopPropagation();
                         close();
-                        if (item.onClick) item.onClick(item);
+                        const fn = item.onClick || item.onclick || item.onSelect || item.action;
+                        if (typeof fn === 'function') fn(item);
                     }
                 },
                     span(item.label || item.title),
@@ -1369,8 +1491,12 @@ export const ContextMenu = (props = {}) => {
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
     }
 
-    const comp = div(menuEl);
-    return Object.assign(comp, { openAt, close, attachTo, isOpen });
+    comp = div(menuEl);
+    if (typeof document !== 'undefined' && document.body && !document.body.contains(comp)) {
+        document.body.appendChild(comp);
+    }
+    const controller = { openAt, close, attachTo, isOpen, element: comp };
+    return Object.assign(comp, controller);
 };
 
 /**
@@ -1583,8 +1709,8 @@ const _toastList = state([]);
 let _toastContainerMounted = false;
 
 function ensureToastContainer() {
-    if (_toastContainerMounted || typeof document === 'undefined') return;
-    _toastContainerMounted = true;
+    if (typeof document === 'undefined' || !document.body) return;
+    if (document.getElementById('cairn-toast-portal')) return;
 
     const toastRoot = div({
         id: 'cairn-toast-portal',
@@ -1592,7 +1718,7 @@ function ensureToastContainer() {
             position: 'fixed',
             bottom: '24px',
             right: '24px',
-            zIndex: tokens.zIndex.toast,
+            zIndex: tokens.zIndex ? tokens.zIndex.toast || 99999 : 99999,
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
@@ -1616,7 +1742,7 @@ function ensureToastContainer() {
                     borderRadius: '0.5rem',
                     background: bgMap[t.type] || '#1e293b',
                     color: 'white',
-                    boxShadow: tokens.shadows.lg,
+                    boxShadow: tokens.shadows ? tokens.shadows.lg || '0 10px 15px -3px rgba(0,0,0,0.4)' : '0 10px 15px -3px rgba(0,0,0,0.4)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -1647,6 +1773,7 @@ function ensureToastContainer() {
 
 export const Toast = {
     show: (options = {}) => {
+        ensureToastContainer();
         const id = options.id || `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         const toastItem = {
             id,
@@ -1842,6 +1969,7 @@ export const Notification = (props = {}) => Alert(props);
 // --- ADVANCED COMPONENTS ---
 export const DragDrop = (props = {}, ...children) => div({ style: { border: '2px dashed #475569', padding: '1rem', borderRadius: '0.5rem' } }, ...children);
 export const UICharts = {
+    ...CoreCharts,
     Line: (props = {}) => div(`[Chart: ${props.type || 'Line'}]`, { style: { background: '#1e293b', padding: '2rem', borderRadius: '0.5rem', textAlign: 'center' } })
 };
 
@@ -1867,6 +1995,16 @@ export const UI = {
     navbar: Navbar, sidebar: Sidebar, menu: Menu, dropdown: Dropdown, breadcrumbs: Breadcrumbs, pagination: Pagination, tabs: Tabs, segmentedControl: SegmentedControl, stepper: Stepper, commandPalette: CommandPalette, contextMenu: ContextMenu,
     table: Table, dataTable: DataTable, dataGrid: DataGrid, list: List, card: Card, badge: Badge, avatar: Avatar, tag: Tag, tooltip: Tooltip, popover: Popover, accordion: Accordion, timeline: Timeline, tree: Tree, statistic: Statistic,
     modal: Modal, confirmDialog: ConfirmDialog, drawer: Drawer, toast: Toast, alert: Alert, progress: Progress, skeleton: Skeleton, spinner: Spinner, emptyState: EmptyState, notification: Notification,
+    virtualList: VirtualList, codeBlock: CodeBlock
+};
+
+export {
+    VirtualList,
+    VirtualList as virtualList,
+    CodeBlock,
+    CodeBlock as codeBlock,
+    UICharts as Charts,
+    Stepper as stepper
 };
 
 export default UI;

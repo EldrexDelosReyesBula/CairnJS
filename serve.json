@@ -1,0 +1,10 @@
+{
+  "cleanUrls": false,
+  "directoryListing": false,
+  "rewrites": [
+    { "source": "/playground", "destination": "/docs/playground.html" },
+    { "source": "/docs", "destination": "/docs/index.html" },
+    { "source": "/docs/", "destination": "/docs/index.html" },
+    { "source": "/", "destination": "/docs/index.html" }
+  ]
+}

@@ -1,27 +1,109 @@
-# Cairn Styling & Theme Engine
+# Cairn Universal Native Styling Engine
 
-Write styles with full CSS power, fine-grained reactivity, dynamic themes, scoped classes, fluid scaling, and zero runtime dependencies.
+Write styles with full CSS power, standard tagged template literals (`css\`...\``), shorthand UI presets, external stylesheets, fine-grained reactivity, dynamic themes, scoped classes, and zero build steps.
+
+:::swatches
+:::
 
 ---
 
-## Core Philosophy
+## 1. Tagged Template Literals (`css\`...\``)
 
-Cairn styling uses standard CSS property names in camelCase or strings. Every CSS property works exactly as expected with reactive binding support.
+Write standard CSS with nested pseudo-selectors, hover effects, and media queries directly in JavaScript:
 
 ```js
-div("Hello", {
-    style: {
-        display: "flex",
-        padding: "16px",
-        borderRadius: "8px",
-        background: "linear-gradient(135deg, #667eea, #764ba2)"
+import { css, html, mount } from '@eldrex/cairnjs';
+
+const cardClass = css`
+    background: #1e293b;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    
+    &:hover {
+        transform: translateY(-2px);
+        border-color: #38bdf8;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     }
+`;
+
+mount('#app', html`
+    <div class="${cardClass}">
+        <h3>✨ Dynamic Styled Card</h3>
+        <p>Built with native CSS template literals.</p>
+    </div>
+`);
+```
+
+---
+
+## 2. Shorthand Style Presets (`css.card`, `css.btn`, `css.glass`, `css.row`)
+
+Generate tuned design tokens in 1 line:
+
+```js
+import { css, html, mount } from '@eldrex/cairnjs';
+
+const glassCard = css.glass({ blur: '20px' });
+const primaryBtn = css.btn('primary');
+const flexRow = css.row('1rem');
+
+mount('#app', html`
+    <div class="${glassCard}">
+        <div class="${flexRow}">
+            <button class="${primaryBtn}">Action 1</button>
+            <button class="${css.btn('danger')}">Delete</button>
+        </div>
+    </div>
+`);
+```
+
+---
+
+## 3. External Stylesheets & Global Injections (`css.import`, `css.global`)
+
+Load Google Fonts, external CDN styles, or inject global CSS resets:
+
+```js
+import { css } from '@eldrex/cairnjs';
+
+// 1. Load external stylesheet / Google Fonts
+css.import('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+// 2. Inject global styles
+css.global`
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, sans-serif; background: #0b0f19; color: #f8fafc; }
+`;
+```
+
+---
+
+## 4. Dynamic Style Objects & Variants (`css({ ... })`, `css.variants`)
+
+```js
+import { css, state } from '@eldrex/cairnjs';
+
+const isDarkMode = state(true);
+
+const dynamicBox = css({
+    padding: '1rem',
+    borderRadius: '8px',
+    background: '#0f172a',
+    '&:hover': { color: '#38bdf8' }
+});
+
+const getButtonVariant = css.variants({
+    primary: { background: '#0284c7', color: '#fff' },
+    secondary: { background: '#334155', color: '#f8fafc' }
 });
 ```
 
 ---
 
-## Dynamic Theming Engine (`createTheme`, `setTheme`)
+## 5. Dynamic Theming Engine (`createTheme`, `setTheme`)
 
 Define and switch themes on the fly. Themes automatically inject CSS custom properties (`--cairn-*`) on `:root`:
 
@@ -45,64 +127,19 @@ console.log(activeTheme.value.name); // 'cyberpunk'
 
 ---
 
-## Scoped CSS Class Generator (`css`)
+## 6. Built-in Design Tokens (`tokens`)
 
-Generate scoped class names with automatic stylesheet injection:
-
-```js
-import { css } from '@eldrex/cairnjs';
-
-const cardClass = css({
-    padding: '24px',
-    borderRadius: '16px',
-    background: 'rgba(15, 23, 42, 0.8)',
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.4)'
-    }
-});
-
-const myCard = div({ class: cardClass }, 'Glassmorphism Card');
-```
-
----
-
-## Fluid Typography & Responsive Spacing (`fluid`)
-
-Generate mathematical CSS `clamp()` expressions for seamless responsive scaling:
-
-```js
-import { fluid, div } from '@eldrex/cairnjs';
-
-const heroText = div('Fluid Scaling Title', {
-    style: {
-        fontSize: fluid(24, 48), // clamp(24px, 5vw, 48px)
-        padding: fluid(12, 32)
-    }
-});
-```
-
----
-
-## Comprehensive Design Tokens (`tokens`)
+Access pre-tuned glassmorphism and gradient presets:
 
 ```js
 import { tokens } from '@eldrex/cairnjs';
 
-// 1. Typography Hierarchy
-tokens.typography.fontFamily.display  // "'Cairn', system-ui, sans-serif"
-tokens.typography.fontFamily.brand    // "'Cairn', system-ui, sans-serif"
-tokens.typography.fontFamily.sans     // "system-ui, -apple-system, sans-serif"
-tokens.typography.fontFamily.mono     // "ui-monospace, Consolas, monospace"
-
-// 2. Glassmorphism Presets
+// 1. Glass Morphism Presets
 tokens.glass.sm   // { background: 'rgba(...)', backdropFilter: 'blur(8px)', ... }
 tokens.glass.md   // { background: 'rgba(...)', backdropFilter: 'blur(16px)', ... }
 tokens.glass.dark // { background: 'rgba(...)', backdropFilter: 'blur(20px)', ... }
 
-// 3. Gradients
+// 2. Gradients
 tokens.gradients.sky       // 'linear-gradient(135deg, #0ea5e9, #3b82f6)'
 tokens.gradients.sunset    // 'linear-gradient(135deg, #f43f5e, #fb923c)'
 tokens.gradients.emerald   // 'linear-gradient(135deg, #10b981, #059669)'

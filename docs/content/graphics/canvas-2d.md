@@ -1,23 +1,87 @@
-# 2D Canvas
+# 2D Canvas Graphics Engine
 
-Cairn includes a full reactive 2D drawing API built on the native Canvas 2D Context — no external libraries needed.
+Cairn includes a full reactive 2D drawing API built on the native Canvas 2D Context — zero external dependencies, zero build steps, and hardware-accelerated 60 FPS performance.
+
+---
+
+## 👁️ Interactive 2D Canvas Demo
+
+Click **▶ Run** or **Open in Playground** to run this live 2D drawing and particle canvas widget:
+
+```javascript
+import { cairn, createCanvas2D, state, div, button, mount } from '@eldrex/cairnjs';
+
+const isAnimating = state(true);
+const shapeCount = state(18);
+
+// Create container
+const container = div({ style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', background: '#090d16', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #1e2638' } },
+    div({ style: { display: 'flex', gap: '0.75rem', alignItems: 'center' } },
+        button({
+            style: { background: '#0284c7', color: '#fff', border: 'none', padding: '0.4rem 0.85rem', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: '600' },
+            onclick: () => { isAnimating.value = !isAnimating.value; }
+        }, () => isAnimating.value ? '⏸ Pause 2D Canvas' : '▶ Resume 2D Canvas'),
+        button({
+            style: { background: '#1e2638', color: '#38bdf8', border: '1px solid #38bdf8', padding: '0.4rem 0.85rem', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: '600' },
+            onclick: () => { shapeCount.value = shapeCount.value >= 30 ? 10 : shapeCount.value + 5; }
+        }, () => `Shapes: ${shapeCount.value}`)
+    ),
+    div({ id: 'cairn-2d-canvas-wrap', style: { width: '100%', maxWidth: '640px', height: '320px', borderRadius: '0.5rem', overflow: 'hidden' } })
+);
+
+mount('#app', container);
+
+// Initialize Cairn 2D Canvas Controller
+const canvas = createCanvas2D('#cairn-2d-canvas-wrap', { width: 640, height: 320, background: '#0b1120' });
+
+let angle = 0;
+canvas.onDraw((ctx, dt) => {
+    if (isAnimating.value) angle += dt * 0.0015;
+
+    // Draw background gradient
+    ctx.gradient('linear', [[0, '#090d16'], [1, '#0f172a']], { x1: 0, y1: 0, x2: 640, y2: 320 })
+       .rect(0, 0, 640, 320);
+
+    // Draw rotating geometric petals
+    const count = shapeCount.value;
+    for (let i = 0; i < count; i++) {
+        const theta = angle + (i * (Math.PI * 2 / count));
+        const r = 80 + Math.sin(angle * 3 + i) * 20;
+        const x = 320 + Math.cos(theta) * r;
+        const y = 160 + Math.sin(theta) * (r * 0.6);
+
+        ctx.shadow('rgba(56, 189, 248, 0.4)', 12, 0, 0)
+           .fillStyle(i % 2 === 0 ? '#38bdf8' : '#818cf8')
+           .circle(x, y, 10 + Math.sin(angle * 2 + i) * 4);
+    }
+
+    // Center Core Badge
+    ctx.shadow('rgba(2, 132, 199, 0.6)', 24, 0, 0)
+       .fillStyle('#0284c7')
+       .circle(320, 160, 24)
+       .fillStyle('#ffffff')
+       .text('Cairn 2D', 320, 160, { size: 12, weight: 'bold', align: 'center', baseline: 'middle' });
+});
+
+canvas.start();
+```
 
 ---
 
 ## createCanvas2D(target, options?)
 
-Creates a Cairn Canvas2D controller attached to an HTML `<canvas>` element.
+Creates a Cairn Canvas2D controller attached to an HTML `<canvas>` element or selector container.
 
-### Parameters
+### Configuration Options
 
-| Option | Default | Description |
-|---|---|---|
-| `width` | `800` | Canvas width in pixels |
-| `height` | `600` | Canvas height in pixels |
-| `background` | `'transparent'` | Background fill color per frame |
-| `pixelRatio` | `devicePixelRatio` | Pixel density for HiDPI screens |
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `width` | `number` | `800` | Canvas virtual width in CSS pixels |
+| `height` | `number` | `600` | Canvas virtual height in CSS pixels |
+| `background` | `string` | `'transparent'` | Background fill color cleared every frame |
+| `pixelRatio` | `number` | `devicePixelRatio` | HiDPI sub-pixel density multiplier |
 
-```js
+```javascript static
 import { createCanvas2D } from '@eldrex/cairnjs';
 
 const canvas = createCanvas2D('#myCanvas', { width: 800, height: 600, background: '#090d16' });
@@ -25,11 +89,11 @@ const canvas = createCanvas2D('#myCanvas', { width: 800, height: 600, background
 
 ---
 
-## Drawing API (Fluent Chain)
+## Fluent Drawing API (Chained Methods)
 
-All draw methods return `this` for chaining:
+All drawing operations return `this` for chaining:
 
-```js
+```javascript static
 canvas.onDraw((ctx) => {
   ctx
     .fillStyle('#38bdf8')
@@ -51,135 +115,42 @@ canvas.start();
 
 ---
 
-## Draw Methods
+## 2D Primitives Reference
 
-### rect(x, y, width, height, opts?)
-
-Draws a filled rectangle.
-
-```js
+### Rectangles with Border Radius
+```javascript static
 ctx.fillStyle('#38bdf8').rect(10, 10, 100, 50, { radius: 6 });
 ```
 
-| Option | Description |
-|---|---|
-| `radius` | Border radius (rounded corners) |
-
----
-
-### circle(x, y, radius)
-
-Draws a filled circle centered at `(x, y)`.
-
-```js
+### Circles & Ellipses
+```javascript static
 ctx.fillStyle('#f97316').circle(200, 200, 40);
-```
-
----
-
-### ellipse(x, y, rx, ry, rotation?)
-
-Draws an ellipse.
-
-```js
 ctx.fillStyle('#a78bfa').ellipse(300, 200, 80, 40);
 ```
 
----
-
-### line(x1, y1, x2, y2)
-
-Draws a line between two points using the current `strokeStyle`.
-
-```js
+### Lines, Polygons & Bézier Curves
+```javascript static
 ctx.strokeStyle('#34d399').lineWidth(3).line(0, 0, 400, 400);
-```
-
----
-
-### path(points)
-
-Draws a filled closed polygon from an array of `[x, y]` pairs.
-
-```js
 ctx.fillStyle('#facc15').path([[100, 50], [150, 150], [50, 150]]);
-```
-
----
-
-### bezier(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
-
-Draws a cubic Bézier curve.
-
-```js
 ctx.strokeStyle('#f43f5e').lineWidth(2).bezier(0, 300, 100, 0, 300, 600, 400, 300);
 ```
 
----
-
-### star(x, y, points, outerRadius, innerRadius)
-
-Draws an N-pointed star centered at `(x, y)`.
-
-```js
+### Stars & Regular Polygons
+```javascript static
 ctx.fillStyle('#facc15').star(200, 200, 5, 40, 20);
-```
-
----
-
-### polygon(x, y, sides, radius)
-
-Draws a regular polygon (e.g. triangle, pentagon, hexagon) centered at `(x, y)`.
-
-```js
 ctx.fillStyle('#38bdf8').polygon(400, 200, 6, 45);
 ```
 
----
-
-### arc(x, y, radius, startAngle, endAngle, counterclockwise?)
-
-Draws an open or closed arc.
-
-```js
-ctx.strokeStyle('#ec4899').lineWidth(4).arc(100, 100, 30, 0, Math.PI * 1.5);
-```
-
----
-
-### shadow(color, blur, offsetX?, offsetY?)
-
-Sets drop shadow styling for subsequent draw operations.
-
-```js
+### Drop Shadows, Text & Gradients
+```javascript static
 ctx.shadow('rgba(56, 189, 248, 0.5)', 20, 0, 4)
    .fillStyle('#38bdf8')
    .circle(200, 200, 40);
-```
 
----
-
-### text(str, x, y, opts?)
-
-Draws text at the given position.
-
-```js
-ctx.fillStyle('white').text('Score: 100', 400, 100, {
-  size: 20,
-  weight: 'bold',
-  family: 'Inter, sans-serif',
-  align: 'center',   // 'left' | 'center' | 'right'
-  baseline: 'middle'
+ctx.fillStyle('white').text('High Score: 9,820', 400, 100, {
+  size: 20, weight: 'bold', family: 'Inter, sans-serif', align: 'center', baseline: 'middle'
 });
-```
 
----
-
-### gradient(type, stops, coords)
-
-Creates a gradient fill. Use before calling a shape method.
-
-```js
 ctx.gradient('linear', [[0, '#38bdf8'], [1, '#a78bfa']], {
   x1: 0, y1: 0, x2: 400, y2: 0
 }).rect(0, 0, 400, 200);
@@ -187,96 +158,14 @@ ctx.gradient('linear', [[0, '#38bdf8'], [1, '#a78bfa']], {
 
 ---
 
-### image(img, x, y, w?, h?)
-
-Draws an `HTMLImageElement` or `HTMLCanvasElement`.
-
-```js
-const img = new Image();
-img.src = '/hero.png';
-img.onload = () => {
-  canvas.onDraw((ctx) => ctx.image(img, 0, 0, 800, 400)).start();
-};
-```
-
----
-
-## Style Methods
-
-```js
-ctx.fillStyle('#38bdf8')   // Fill color
-   .strokeStyle('#f97316') // Stroke color
-   .lineWidth(2)           // Line thickness
-```
-
----
-
-## Transform Methods
-
-```js
-ctx.save()
-   .translate(200, 200)
-   .rotate(Math.PI / 4)
-   .fillStyle('#a78bfa').rect(-25, -25, 50, 50)
-   .restore();
-```
-
----
-
-## Controller Methods
+## Canvas Lifecycle & Controller Methods
 
 | Method | Description |
 |---|---|
-| `canvas.start()` | Starts the `requestAnimationFrame` render loop |
-| `canvas.stop()` | Stops the render loop |
-| `canvas.render()` | Renders a single frame without a loop |
-| `canvas.onDraw(fn)` | Registers a draw callback `(ctx, deltaTime) => {}` |
-| `canvas.clearDrawCallbacks()` | Removes all draw callbacks |
-| `canvas.toDataURL(type?)` | Exports canvas as PNG/JPEG data URL |
-| `canvas.reactive(signal)` | Auto re-renders when a signal changes |
-
----
-
-## Reactive Canvas
-
-Bind a Cairn signal so the canvas redraws whenever state changes:
-
-```js
-import { state, createCanvas2D } from '@eldrex/cairnjs';
-
-const pos = state({ x: 100, y: 100 });
-
-const canvas = createCanvas2D('#scene', { width: 800, height: 600 });
-
-canvas.onDraw((ctx) => {
-  ctx.fillStyle('#38bdf8').circle(pos.value.x, pos.value.y, 30);
-}).reactive(pos).start();
-
-// Animate: update state to re-draw
-document.addEventListener('mousemove', (e) => {
-  pos.value = { x: e.clientX, y: e.clientY };
-});
-```
-
----
-
-## Particle System Example
-
-```js
-import { createCanvas2D, physics } from '@eldrex/cairnjs';
-
-const canvas = createCanvas2D('#particles', { width: 800, height: 600 });
-const grid = physics.grid(300, { bounds: { x: 800, y: 600 } });
-
-grid.onFrame((positions) => {
-  canvas.render();
-});
-
-canvas.onDraw((ctx) => {
-  for (let i = 0; i < 300; i++) {
-    const x = positions[i * 4];
-    const y = positions[i * 4 + 1];
-    ctx.fillStyle('rgba(56,189,248,0.6)').circle(x, y, 2);
-  }
-}).start();
-```
+| `canvas.start()` | Starts the `requestAnimationFrame` 60fps render loop |
+| `canvas.stop()` | Halts the animation loop |
+| `canvas.render()` | Renders a single discrete frame without starting a loop |
+| `canvas.onDraw(fn)` | Registers a draw callback receiving `(ctx, deltaTime)` |
+| `canvas.clearDrawCallbacks()` | Removes all registered draw handlers |
+| `canvas.toDataURL(type?)` | Exports canvas bitmap as PNG/JPEG/WEBP data URL |
+| `canvas.reactive(signal)` | Automatically triggers a re-render whenever a signal changes |

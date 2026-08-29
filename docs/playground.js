@@ -2,6 +2,213 @@
 // Standalone external module to ensure zero HTML parser collisions or script tag conflicts.
 
 export const TEMPLATES = {
+    html_template: `import { cairn } from '../src/index.js';
+const { state, html, mount } = cairn;
+
+// 1. Reactive State
+const task = state('');
+const todos = state([
+    'Zero-boilerplate HTML template literals',
+    'Fine-grained reactive signals',
+    'No build tools or compilers needed'
+]);
+
+// 2. Pure HTML Component (Write HTML like you always do!)
+const App = () => html\`
+    <div style="max-width: 500px; margin: 2rem auto; background: #0f172a; padding: 2rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: system-ui, sans-serif; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+        
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; color: #38bdf8; font-size: 1.5rem;">✨ Pure HTML Studio</h2>
+            <span style="background: rgba(56,189,248,0.15); color: #38bdf8; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">Zero Build</span>
+        </div>
+        
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            Write standard HTML with embedded signals, two-way bindings, and events.
+        </p>
+
+        <!-- Form -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <input
+                :bind=\${task}
+                placeholder="Enter a new task..."
+                style="flex: 1; padding: 0.65rem 0.85rem; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 0.5rem; color: #fff; outline: none;"
+            />
+            <button
+                style="background: #0284c7; color: white; border: none; padding: 0.65rem 1.25rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;"
+                onclick=\${() => {
+                    if (!task.value.trim()) return;
+                    todos.value = [...todos.value, task.value];
+                    task.value = '';
+                }}
+            >+ Add</button>
+        </div>
+
+        <!-- Dynamic List -->
+        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.8rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Tasks (\${() => todos.value.length})</h4>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            \${() => todos.value.map((t, idx) => html\`
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: #1e293b; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem;">
+                    <span>⚡ \${t}</span>
+                    <button
+                        style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem;"
+                        onclick=\${() => {
+                            todos.value = todos.value.filter((_, i) => i !== idx);
+                        }}
+                    >✕</button>
+                </div>
+            \`)}
+        </div>
+    </div>
+\`;
+
+mount('#app', App());`,
+
+    js_lab: `import { cairn } from '../src/index.js';
+const { state, html, mount } = cairn;
+
+console.clear();
+console.info('🚀 JavaScript Studies & Console Lab initialized');
+
+// 1. Study: Objects, Arrays & Symbols
+const developer = {
+    name: 'Alex Rivera',
+    role: 'Frontend Architect',
+    skills: ['JavaScript', 'CairnJS', 'WebAssembly'],
+    experienceYears: 6,
+    active: true
+};
+
+console.log('📌 Developer Profile:', developer);
+
+// 2. Study: console.table with structured data
+const benchmarks = [
+    { operation: 'Signal Read', opsPerSec: '42,000,000', memory: '0 bytes' },
+    { operation: 'DOM Text Mutation', opsPerSec: '1,200,000', memory: '16 bytes' },
+    { operation: 'Store Action Dispatch', opsPerSec: '8,500,000', memory: '32 bytes' }
+];
+
+console.table(benchmarks);
+
+// 3. Study: console.time / timeEnd Benchmarking
+console.time('⚡ Array Calculation (100k items)');
+const sum = Array.from({ length: 100000 }, (_, i) => i).reduce((acc, n) => acc + n, 0);
+console.timeEnd('⚡ Array Calculation (100k items)');
+console.log('Sum result:', sum);
+
+// 4. Study: Interactive JS Studies UI
+const logCount = state(0);
+
+const runStudy = (name) => {
+    logCount.value++;
+    console.count('Study Execution');
+    if (name === 'map') {
+        const usersMap = new Map([['id_1', { name: 'Sarah' }], ['id_2', { name: 'Devon' }]]);
+        console.log('🗺️ Map Structure:', usersMap);
+    } else if (name === 'promise') {
+        console.info('⏳ Simulating async fetch promise...');
+        new Promise(res => setTimeout(() => res({ status: 200, data: 'OK' }), 600))
+            .then(res => console.log('✅ Async Resolved:', res));
+    } else if (name === 'warn') {
+        console.warn('⚠️ High memory threshold simulation warning');
+    }
+};
+
+mount('#app', html\`
+    <div style="max-width: 540px; margin: 1.5rem auto; background: #0f172a; padding: 1.75rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: system-ui, sans-serif;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; color: #38bdf8; font-size: 1.4rem;">🧪 JavaScript Studies Lab</h2>
+            <span style="background: rgba(56,189,248,0.15); color: #38bdf8; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">Console Heavy</span>
+        </div>
+        <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.25rem;">
+            Inspect the Console pane below for rich outputs: tables, timers, counts, maps, and objects.
+        </p>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button style="background: #0284c7; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;" onclick=\${() => runStudy('map')}>
+                🗺️ Test Map
+            </button>
+            <button style="background: #4f46e5; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;" onclick=\${() => runStudy('promise')}>
+                ⏳ Test Promise
+            </button>
+            <button style="background: #d97706; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;" onclick=\${() => runStudy('warn')}>
+                ⚠️ Test Warn
+            </button>
+            <button style="background: #334155; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;" onclick=\${() => console.clear()}>
+                🧹 Clear Logs
+            </button>
+        </div>
+    </div>
+\`);`,
+
+    rapid_tool: `import { cairn } from '../src/index.js';
+
+// Build a complete JSON formatter, text transformer, or converter tool in 12 lines!
+cairn.tool({
+    target: '#app',
+    title: '🛠️ JSON & Text Formatter Tool',
+    description: 'Instant utility built with CairnJS Rapid Tool Builder Kit in 15 lines of code.',
+    inputs: [
+        {
+            id: 'rawText',
+            label: 'Input JSON / Text',
+            type: 'textarea',
+            placeholder: 'Paste raw JSON or text here...',
+            default: '{"name":"CairnJS","speed":"Instant","zeroDeps":true}'
+        }
+    ],
+    actions: [
+        {
+            label: '✨ Format JSON',
+            run: ({ rawText }) => JSON.stringify(JSON.parse(rawText), null, 2)
+        },
+        {
+            label: '🗜️ Minify JSON',
+            run: ({ rawText }) => JSON.stringify(JSON.parse(rawText))
+        },
+        {
+            label: '🔤 UPPERCASE',
+            run: ({ rawText }) => rawText.toUpperCase()
+        },
+        {
+            label: '🔗 Slugify',
+            run: ({ rawText }) => rawText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        }
+    ]
+});`,
+
+    rapid_app: `import { cairn } from '../src/index.js';
+
+// Launch an entire reactive application in 1 single call!
+cairn.app('#app', {
+    state: {
+        query: '',
+        tags: ['React', 'Vue', 'Svelte', 'CairnJS', 'Web Components', 'Signals']
+    },
+    template: ({ query, tags, html }) => html\`
+        <div style="max-width: 480px; margin: 2rem auto; background: #0f172a; padding: 2rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: system-ui, sans-serif;">
+            <h2 style="margin: 0 0 1rem 0; color: #38bdf8;">🔍 5-Line Reactive Filter App</h2>
+            
+            <input
+                placeholder="Search tags..."
+                style="width: 100%; box-sizing: border-box; padding: 0.75rem; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 0.5rem; color: #fff; margin-bottom: 1rem;"
+                oninput=\${(e) => { query.value = e.target.value; }}
+            />
+
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                \${() => tags.value
+                    .filter(t => t.toLowerCase().includes(query.value.toLowerCase()))
+                    .map(t => html\`
+                        <span style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); padding: 0.35rem 0.75rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600;">
+                            \${t}
+                        </span>
+                    \`)}
+            </div>
+        </div>
+    \`
+});`,
+
     starter: `import { cairn } from '../src/index.js';
 const { state, div, h1, p, button, span, mount } = cairn;
 
@@ -1615,6 +1822,233 @@ const App = () => div({
 
 mount('#app', App());`,
 
+    image_grid: `import { cairn, Grid, state, computed } from '../src/index.js';
+const { div, h2, p, button, img, span, mount } = cairn;
+
+const activeCategory = state('All');
+const selectedImage = state(null);
+const gridLayout = state('bento'); // 'bento' | 'masonry' | 'autofit' | 'twocol'
+
+const gallery = [
+    { id: 1, title: 'Parametric Curve Matrix', category: 'Architecture', ratio: '16/10', bentoSpan: 'span 2 / span 2', src: '../examples/assets/83d40a8a2d26f9d5f3d378fcb961e6bd.jpg' },
+    { id: 2, title: 'Brutalist Monolith', category: 'Architecture', ratio: '1/1', bentoSpan: 'span 1 / span 1', src: '../examples/assets/954fef29d383752d08306b5b33714058.jpg' },
+    { id: 3, title: 'Zen Mineral Formation', category: 'Nature', ratio: '4/3', bentoSpan: 'span 1 / span 1', src: '../examples/assets/83d40a8a2d26f9d5f3d378fcb961e6bd.jpg' },
+    { id: 4, title: 'Dark Matter Field', category: 'Abstract', ratio: '16/9', bentoSpan: 'span 2 / span 1', src: '../examples/assets/954fef29d383752d08306b5b33714058.jpg' },
+    { id: 5, title: 'Geometric Prism Array', category: 'Minimalist', ratio: '1/1', bentoSpan: 'span 1 / span 1', src: '../examples/assets/83d40a8a2d26f9d5f3d378fcb961e6bd.jpg' },
+    { id: 6, title: 'Kinetic Flow Study', category: 'Abstract', ratio: '4/3', bentoSpan: 'span 1 / span 1', src: '../examples/assets/954fef29d383752d08306b5b33714058.jpg' }
+];
+
+const categories = ['All', 'Architecture', 'Abstract', 'Minimalist', 'Nature'];
+const gridTypes = [
+    { id: 'bento', label: '🍱 Bento Grid' },
+    { id: 'masonry', label: '🏛️ Masonry Flow' },
+    { id: 'autofit', label: '📐 Auto-Fit (3-Col)' },
+    { id: 'twocol', label: '🔲 Split 2-Column' }
+];
+
+const filteredGallery = computed(() => {
+    if (activeCategory.value === 'All') return gallery;
+    return gallery.filter(item => item.category === activeCategory.value);
+});
+
+const App = () => div({
+    style: { maxWidth: '860px', margin: '1.5rem auto', color: '#f8fafc', padding: '0 1rem' }
+},
+    // Header
+    div({ style: { textAlign: 'center', marginBottom: '1.5rem' } },
+        h2({ style: { margin: '0 0 0.5rem 0', color: '#38bdf8', fontSize: '1.6rem' } }, '🖼️ Dynamic Media Grid & Layouts Studio'),
+        p({ style: { color: '#94a3b8', fontSize: '0.9rem', margin: 0 } }, 'Explore multiple responsive grid architectures: Bento, Masonry, Auto-Fit, and Multi-Column.')
+    ),
+
+    // Control Bars
+    div({ style: { display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', marginBottom: '1.75rem' } },
+        // Grid Type Switcher
+        div({ style: { display: 'flex', flexWrap: 'wrap', gap: '0.35rem', background: '#0f172a', padding: '4px', borderRadius: '0.65rem', border: '1px solid #334155' } },
+            gridTypes.map(gt => button(gt.label, {
+                style: () => ({
+                    padding: '0.4rem 0.85rem',
+                    borderRadius: '0.45rem',
+                    border: 'none',
+                    background: gridLayout.value === gt.id ? '#0284c7' : 'transparent',
+                    color: gridLayout.value === gt.id ? '#ffffff' : '#94a3b8',
+                    fontWeight: gridLayout.value === gt.id ? '700' : '500',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                }),
+                onclick: () => { gridLayout.value = gt.id; }
+            }))
+        ),
+
+        // Category Filter
+        div({ style: { display: 'flex', flexWrap: 'wrap', gap: '0.35rem' } },
+            categories.map(cat => button(cat, {
+                style: () => ({
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '9999px',
+                    border: '1px solid ' + (activeCategory.value === cat ? '#38bdf8' : '#334155'),
+                    background: activeCategory.value === cat ? 'rgba(56, 189, 248, 0.15)' : '#1e293b',
+                    color: activeCategory.value === cat ? '#38bdf8' : '#cbd5e1',
+                    fontWeight: activeCategory.value === cat ? '700' : '500',
+                    fontSize: '0.775rem',
+                    cursor: 'pointer'
+                }),
+                onclick: () => { activeCategory.value = cat; }
+            }))
+        )
+    ),
+
+    // Dynamic Grid Container
+    () => {
+        const type = gridLayout.value;
+        const items = filteredGallery.value;
+
+        if (type === 'masonry') {
+            return div({
+                style: {
+                    columnCount: '3',
+                    columnGap: '1rem',
+                    width: '100%'
+                }
+            },
+                items.map(item => div({
+                    style: {
+                        background: '#111827',
+                        borderRadius: '0.75rem',
+                        overflow: 'hidden',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        marginBottom: '1rem',
+                        breakInside: 'avoid',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s ease'
+                    },
+                    onmouseenter: (e) => { e.currentTarget.style.transform = 'scale(1.02)'; },
+                    onmouseleave: (e) => { e.currentTarget.style.transform = 'scale(1)'; },
+                    onclick: () => { selectedImage.value = item; }
+                },
+                    img({ src: item.src, alt: item.title, style: { width: '100%', display: 'block' } }),
+                    div({ style: { padding: '0.75rem 1rem' } },
+                        p(item.title, { style: { margin: '0 0 0.25rem 0', fontWeight: '700', fontSize: '0.875rem' } }),
+                        span(item.category, { style: { fontSize: '0.75rem', color: '#38bdf8', fontWeight: '600' } })
+                    )
+                ))
+            );
+        }
+
+        if (type === 'bento') {
+            return div({
+                style: {
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gridAutoRows: '190px',
+                    gap: '1rem',
+                    width: '100%'
+                }
+            },
+                items.map((item, idx) => div({
+                    style: {
+                        gridArea: idx === 0 ? '1 / 1 / 3 / 3' : (idx === 3 ? 'span 1 / span 2' : 'span 1 / span 1'),
+                        background: '#111827',
+                        borderRadius: '0.85rem',
+                        overflow: 'hidden',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-end',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                    },
+                    onmouseenter: (e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.5)'; },
+                    onmouseleave: (e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; },
+                    onclick: () => { selectedImage.value = item; }
+                },
+                    img({ src: item.src, alt: item.title, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }),
+                    div({ style: { position: 'relative', zIndex: 2, padding: '1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)' } },
+                        p(item.title, { style: { margin: '0 0 0.2rem 0', fontWeight: '700', fontSize: '0.95rem' } }),
+                        span(item.category, { style: { fontSize: '0.75rem', color: '#38bdf8', fontWeight: '600' } })
+                    )
+                ))
+            );
+        }
+
+        // Default Auto-Fit or 2-Col
+        const gridCols = type === 'twocol' ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(220px, 1fr))';
+        return div({
+            style: {
+                display: 'grid',
+                gridTemplateColumns: gridCols,
+                gap: '1rem',
+                width: '100%'
+            }
+        },
+            items.map(item => div({
+                style: {
+                    background: '#111827',
+                    borderRadius: '0.75rem',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease'
+                },
+                onmouseenter: (e) => { e.currentTarget.style.transform = 'translateY(-4px)'; },
+                onmouseleave: (e) => { e.currentTarget.style.transform = 'translateY(0)'; },
+                onclick: () => { selectedImage.value = item; }
+            },
+                div({ style: { aspectRatio: item.ratio, overflow: 'hidden', background: '#1e293b' } },
+                    img({ src: item.src, alt: item.title, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })
+                ),
+                div({ style: { padding: '0.75rem 1rem' } },
+                    p(item.title, { style: { margin: '0 0 0.25rem 0', fontWeight: '700', fontSize: '0.9rem' } }),
+                    span(item.category, { style: { fontSize: '0.75rem', color: '#38bdf8', fontWeight: '600' } })
+                )
+            ))
+        );
+    },
+
+    // Lightbox Modal
+    () => selectedImage.value ? div({
+        style: {
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            zIndex: 99999,
+            backdropFilter: 'blur(8px)'
+        },
+        onclick: (e) => { if (e.target === e.currentTarget) selectedImage.value = null; }
+    },
+        div({
+            style: {
+                background: '#0f172a',
+                border: '1px solid #334155',
+                borderRadius: '1rem',
+                overflow: 'hidden',
+                maxWidth: '620px',
+                width: '100%',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)'
+            }
+        },
+            img({ src: selectedImage.value.src, style: { width: '100%', maxHeight: '65vh', objectFit: 'cover', display: 'block' } }),
+            div({ style: { padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                div(
+                    p(selectedImage.value.title, { style: { margin: 0, fontWeight: '700', fontSize: '1.1rem' } }),
+                    span(selectedImage.value.category, { style: { color: '#38bdf8', fontSize: '0.85rem' } })
+                ),
+                button('Close (ESC)', {
+                    style: { padding: '0.45rem 0.9rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer', fontWeight: '600' },
+                    onclick: () => { selectedImage.value = null; }
+                })
+            )
+        )
+    ) : null
+);
+
+mount('#app', App());`,
+
     datatable: `import { cairn, DataTable, span } from '../src/index.js';
 const { div, h2, mount } = cairn;
 
@@ -2050,12 +2484,48 @@ export function showToast(msg) {
 // Console Logger in UI
 export function appendConsole(level, ...args) {
     if (!consoleLogs) return;
+    if (level === 'clear') {
+        consoleLogs.innerHTML = '';
+        return;
+    }
+
     const entry = document.createElement('div');
     entry.className = 'log-entry ' + level;
     
     let icon = 'fa-circle-info';
     if (level === 'warn') icon = 'fa-triangle-exclamation';
     if (level === 'error') icon = 'fa-circle-xmark';
+    if (level === 'table') icon = 'fa-table-cells';
+    if (level === 'time') icon = 'fa-stopwatch';
+
+    if (level === 'table' && args.length > 0 && typeof args[0] === 'object' && args[0] !== null) {
+        try {
+            const data = args[0];
+            let rows = Array.isArray(data) ? data : Object.entries(data).map(([k, v]) => ({ key: k, value: v }));
+            const sample = rows.find(r => typeof r === 'object' && r !== null) || {};
+            const keys = Object.keys(sample);
+            
+            let tableHtml = '<div style="margin-top: 0.35rem; overflow-x: auto;"><table style="width: 100%; font-size: 0.8rem; border-collapse: collapse; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">';
+            tableHtml += '<thead><tr style="background: rgba(255,255,255,0.08); text-align: left;"><th style="padding: 4px 8px; border: 1px solid rgba(255,255,255,0.1); color: #38bdf8;">(index)</th>';
+            keys.forEach(k => { tableHtml += `<th style="padding: 4px 8px; border: 1px solid rgba(255,255,255,0.1); color: #38bdf8;">${k}</th>`; });
+            tableHtml += '</tr></thead><tbody>';
+            
+            rows.forEach((row, idx) => {
+                tableHtml += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 4px 8px; border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-weight: bold;">${idx}</td>`;
+                keys.forEach(k => {
+                    const val = typeof row === 'object' && row !== null ? row[k] : row;
+                    tableHtml += `<td style="padding: 4px 8px; border: 1px solid rgba(255,255,255,0.1); color: #f8fafc;">${typeof val === 'object' ? JSON.stringify(val) : String(val ?? '')}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            tableHtml += '</tbody></table></div>';
+            
+            entry.innerHTML = `<i class="fa-solid ${icon}"></i> <div style="width: 100%;"><strong>console.table</strong>${tableHtml}</div>`;
+            consoleLogs.appendChild(entry);
+            consoleLogs.scrollTop = consoleLogs.scrollHeight;
+            return;
+        } catch (err) {}
+    }
 
     const formattedArgs = args.map(a => {
         if (typeof a === 'object' && a !== null) {
@@ -2084,84 +2554,312 @@ export function setCode(code) {
         editorTextarea.value = code;
     }
 }
-
-// Code Execution Engine (Runs inside Sandbox Iframe)
 export function runCode() {
     if (!previewFrame) return;
 
     if (consoleLogs) consoleLogs.innerHTML = '';
     appendConsole('info', 'Executing CairnJS sandbox...');
 
-    const code = getCode();
-    const normalizedCode = code.replace(/<\/script>/gi, '<\\/script>');
-    const baseUrl = window.location.origin + '/docs/';
+    const rawCode = getCode();
+    // Normalize unicode non-breaking spaces and smart quotes that break JS syntax
+    const code = (rawCode || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/\r\n/g, '\n');
 
-    const openScript = '<script>';
-    const openScriptModule = '<script type="module">';
-    const closeScript = '</' + 'script>';
+    const trimmedCode = code.trim();
+    const isFullHtml = /^<\s*!doctype|^<\s*html/i.test(trimmedCode) || (/<html[\s>]/i.test(trimmedCode) && /<\/html>/i.test(trimmedCode));
+    const hasScriptTag = /<script\b/i.test(trimmedCode);
+    const isPureHtmlMarkup = /^\s*<[a-z0-9!_-]/i.test(trimmedCode) && !isFullHtml && !hasScriptTag && !trimmedCode.includes('import ');
 
-    const iframeDoc = '<!DOCTYPE html>\n' +
-'<html lang="en" data-theme="' + (document.documentElement.getAttribute('data-theme') || 'dark') + '">\n' +
-'<head>\n' +
-'    <meta charset="UTF-8">\n' +
-'    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
-'    <base href="' + baseUrl + '">\n' +
-'    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n' +
-'    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">\n' +
-'    <style>\n' +
-'        :root, [data-theme="dark"] {\n' +
-'            --bg: #0b0f19;\n' +
-'            --surface: #111827;\n' +
-'            --surface-card: #1e293b;\n' +
-'            --border: rgba(255, 255, 255, 0.08);\n' +
-'            --text: #f8fafc;\n' +
-'            --text-muted: #94a3b8;\n' +
-'            --accent: #38bdf8;\n' +
-'        }\n' +
-'        [data-theme="light"] {\n' +
-'            --bg: #f8fafc;\n' +
-'            --surface: #ffffff;\n' +
-'            --surface-card: #ffffff;\n' +
-'            --border: #e2e8f0;\n' +
-'            --text: #0f172a;\n' +
-'            --text-muted: #64748b;\n' +
-'            --accent: #0284c7;\n' +
-'        }\n' +
-'        * { box-sizing: border-box; margin: 0; padding: 0; }\n' +
-'        body {\n' +
-'            font-family: "Inter", system-ui, sans-serif;\n' +
-'            background: var(--bg);\n' +
-'            color: var(--text);\n' +
-'            padding: 1.25rem;\n' +
-'            min-height: 100vh;\n' +
-'        }\n' +
-'        #app { width: 100%; }\n' +
-'    </style>\n' +
-'    ' + openScript + '\n' +
-'        const _log = console.log;\n' +
-'        const _warn = console.warn;\n' +
-'        const _error = console.error;\n' +
-'        console.log = (...args) => { _log(...args); parent.postMessage({ type: "cairn-log", level: "log", args }, "*"); };\n' +
-'        console.warn = (...args) => { _warn(...args); parent.postMessage({ type: "cairn-log", level: "warn", args }, "*"); };\n' +
-'        console.error = (...args) => { _error(...args); parent.postMessage({ type: "cairn-log", level: "error", args }, "*"); };\n' +
-'        window.addEventListener("error", (e) => {\n' +
-'            parent.postMessage({ type: "cairn-log", level: "error", args: [e.message || "Runtime Error"] }, "*");\n' +
-'            parent.postMessage({ type: "cairn-status", status: "error" }, "*");\n' +
-'        });\n' +
-'        window.addEventListener("unhandledrejection", (e) => {\n' +
-'            parent.postMessage({ type: "cairn-log", level: "error", args: [e.reason?.message || String(e.reason)] }, "*");\n' +
-'            parent.postMessage({ type: "cairn-status", status: "error" }, "*");\n' +
-'        });\n' +
-'    ' + closeScript + '\n' +
-'</head>\n' +
-'<body>\n' +
-'    <div id="app"></div>\n' +
-'    ' + openScriptModule + '\n' +
-'        ' + normalizedCode + '\n' +
-'        parent.postMessage({ type: "cairn-status", status: "ok" }, "*");\n' +
-'    ' + closeScript + '\n' +
-'</body>\n' +
-'</html>';
+    // Dynamically adjust Monaco Editor language mode to avoid false syntax error squiggles on HTML
+    if (monacoEditor && monacoEditor.getModel()) {
+        const targetLang = (isFullHtml || hasScriptTag || isPureHtmlMarkup) ? 'html' : 'javascript';
+        if (monacoEditor.getModel().getLanguageId() !== targetLang) {
+            monaco.editor.setModelLanguage(monacoEditor.getModel(), targetLang);
+        }
+    }
+
+    const consoleBridge = `
+        const _timers = new Map();
+        const _counters = new Map();
+        const _safeFormat = (val, seen = new Set()) => {
+            if (val === null) return "null";
+            if (val === undefined) return "undefined";
+            if (typeof val === "function") return "ƒ " + (val.name || "anonymous") + "()";
+            if (typeof val === "symbol") return val.toString();
+            if (typeof val === "bigint") return val.toString() + "n";
+            if (val instanceof Error) return val.name + ": " + val.message;
+            if (typeof Node !== "undefined" && val instanceof Node) {
+                return val.nodeType === 1 ? "<" + val.tagName.toLowerCase() + (val.id ? "#"+val.id : "") + (val.className ? "."+val.className.trim().replace(/\\s+/g, ".") : "") + ">" : "[Node " + val.nodeName + "]";
+            }
+            if (typeof val === "object") {
+                if (seen.has(val)) return "[Circular]";
+                seen.add(val);
+                if (Array.isArray(val)) return "[" + val.map(x => _safeFormat(x, seen)).join(", ") + "]";
+                if (val instanceof Map) return "Map(" + val.size + ") { " + Array.from(val.entries()).map(([k, v]) => _safeFormat(k, seen) + " => " + _safeFormat(v, seen)).join(", ") + " }";
+                if (val instanceof Set) return "Set(" + val.size + ") { " + Array.from(val.values()).map(v => _safeFormat(v, seen)).join(", ") + " }";
+                if (val instanceof Date) return "Date(" + val.toISOString() + ")";
+                if (val instanceof RegExp) return val.toString();
+                if (val instanceof Promise) return "Promise { <pending> }";
+                try {
+                    const keys = Object.keys(val);
+                    if (keys.length === 0) return "{}";
+                    return "{ " + keys.slice(0, 50).map(k => k + ": " + _safeFormat(val[k], seen)).join(", ") + (keys.length > 50 ? ", ...(" + (keys.length - 50) + " more)" : "") + " }";
+                } catch(e) { return String(val); }
+            }
+            return String(val);
+        };
+        const _post = (level, rawArgs) => {
+            try {
+                const args = Array.from(rawArgs).map(a => _safeFormat(a));
+                parent.postMessage({ type: "cairn-log", level, args }, "*");
+            } catch(e) {}
+        };
+        const _rawLog = console.log.bind(console);
+        const _rawInfo = (console.info ? console.info.bind(console) : _rawLog);
+        const _rawWarn = (console.warn ? console.warn.bind(console) : _rawLog);
+        const _rawError = (console.error ? console.error.bind(console) : _rawLog);
+        const _rawDir = (console.dir ? console.dir.bind(console) : _rawLog);
+
+        console.log = (...args) => { _rawLog(...args); _post("log", args); };
+        console.info = (...args) => { _rawInfo(...args); _post("info", args); };
+        console.warn = (...args) => { _rawWarn(...args); _post("warn", args); };
+        console.error = (...args) => { _rawError(...args); _post("error", args); };
+        console.dir = (...args) => { _rawDir(...args); _post("log", args); };
+        console.clear = () => { parent.postMessage({ type: "cairn-log", level: "clear", args: [] }, "*"); };
+        console.table = (data) => {
+            try { parent.postMessage({ type: "cairn-log", level: "table", rawData: data, args: [_safeFormat(data)] }, "*"); } catch(e) { _post("log", [data]); }
+        };
+        console.time = (label = "default") => { _timers.set(label, performance.now()); };
+        console.timeEnd = (label = "default") => {
+            const start = _timers.get(label);
+            if (start !== undefined) {
+                const ms = (performance.now() - start).toFixed(2);
+                _timers.delete(label);
+                parent.postMessage({ type: "cairn-log", level: "time", args: [label + ": " + ms + " ms"] }, "*");
+            }
+        };
+        console.count = (label = "default") => {
+            const count = (_counters.get(label) || 0) + 1;
+            _counters.set(label, count);
+            parent.postMessage({ type: "cairn-log", level: "info", args: [label + ": " + count] }, "*");
+        };
+        window.addEventListener("error", (e) => {
+            parent.postMessage({ type: "cairn-log", level: "error", args: [e.message || "Runtime Error"] }, "*");
+            parent.postMessage({ type: "cairn-status", status: "error" }, "*");
+        });
+        window.addEventListener("unhandledrejection", (e) => {
+            parent.postMessage({ type: "cairn-log", level: "error", args: [e.reason?.message || String(e.reason)] }, "*");
+            parent.postMessage({ type: "cairn-status", status: "error" }, "*");
+        });
+    `;
+
+    const srcIndexUrl = new URL('../src/index.js', window.location.href).href;
+    const srcUiUrl = new URL('../src/ui/index.js', window.location.href).href;
+    const srcDomUrl = new URL('../src/dom.js', window.location.href).href;
+    const srcStylingUrl = new URL('../src/styling.js', window.location.href).href;
+    const srcGraphicsUrl = new URL('../src/graphics.js', window.location.href).href;
+    const srcWasmUrl = new URL('../src/wasm.js', window.location.href).href;
+    const srcDocsUrl = new URL('../src/docs.js', window.location.href).href;
+    const srcDirUrl = new URL('../src/', window.location.href).href;
+
+    const importMapJson = JSON.stringify({
+        imports: {
+            "@eldrex/cairnjs": srcIndexUrl,
+            "@eldrex/cairnjs/ui": srcUiUrl,
+            "@eldrex/cairnjs/dom": srcDomUrl,
+            "@eldrex/cairnjs/styling": srcStylingUrl,
+            "@eldrex/cairnjs/graphics": srcGraphicsUrl,
+            "@eldrex/cairnjs/wasm": srcWasmUrl,
+            "@eldrex/cairnjs/docs": srcDocsUrl,
+            "@eldrex/cairnjs/": srcDirUrl,
+            "cairnjs": srcIndexUrl,
+            "cairnjs/ui": srcUiUrl,
+            "cairn": srcIndexUrl
+        }
+    }, null, 2);
+
+    const normalizedCode = code
+        .replace(/(from\s+['"])@eldrex\/cairnjs\/ui(['"])/g, `$1${srcUiUrl}$2`)
+        .replace(/(from\s+['"])@eldrex\/cairnjs\/dom(['"])/g, `$1${srcDomUrl}$2`)
+        .replace(/(from\s+['"])@eldrex\/cairnjs\/styling(['"])/g, `$1${srcStylingUrl}$2`)
+        .replace(/(from\s+['"])@eldrex\/cairnjs\/graphics(['"])/g, `$1${srcGraphicsUrl}$2`)
+        .replace(/(from\s+['"])@eldrex\/cairnjs\/wasm(['"])/g, `$1${srcWasmUrl}$2`)
+        .replace(/(from\s+['"])@eldrex\/cairnjs\/docs(['"])/g, `$1${srcDocsUrl}$2`)
+        .replace(/(from\s+['"])@eldrex\/cairnjs(['"])/g, `$1${srcIndexUrl}$2`)
+        .replace(/(from\s+['"])https:\/\/esm\.sh\/@eldrex\/cairnjs(@[^\'"]+)?(['"])/g, `$1${srcIndexUrl}$2`)
+        .replace(/(from\s+['"])cairnjs\/ui(['"])/g, `$1${srcUiUrl}$2`)
+        .replace(/(from\s+['"])cairnjs(['"])/g, `$1${srcIndexUrl}$2`)
+        .replace(/(from\s+['"])cairn(['"])/g, `$1${srcIndexUrl}$2`)
+        .replace(/(import\s+['"])@eldrex\/cairnjs\/ui(['"])/g, `$1${srcUiUrl}$2`)
+        .replace(/(import\s+['"])@eldrex\/cairnjs(['"])/g, `$1${srcIndexUrl}$2`)
+        .replace(/(import\s+['"])cairnjs(['"])/g, `$1${srcIndexUrl}$2`)
+        .replace(/(import\s*\(['"])@eldrex\/cairnjs\/ui(['"]\))/g, `$1${srcUiUrl}$2`)
+        .replace(/(import\s*\(['"])@eldrex\/cairnjs(['"]\))/g, `$1${srcIndexUrl}$2`)
+        .replace(/(import\s*\(['"])cairnjs(['"]\))/g, `$1${srcIndexUrl}$2`)
+        .replace(/<\/script>/gi, '<\\/script>');
+
+    // 1. Full HTML Document
+    if (isFullHtml) {
+        let fullHtml = normalizedCode;
+        const injection = `
+            <script type="importmap">${importMapJson}</script>
+            <script>${consoleBridge}</script>
+        `;
+
+        if (/<head[^>]*>/i.test(fullHtml)) {
+            fullHtml = fullHtml.replace(/<head[^>]*>/i, `$& \n${injection}`);
+        } else {
+            fullHtml = `<head>${injection}</head>${fullHtml}`;
+        }
+
+        previewFrame.srcdoc = fullHtml;
+        return;
+    }
+
+    // 2. Embedded Script Tags
+    if (hasScriptTag) {
+        const fullHtml = `<!DOCTYPE html>
+<html lang="en" data-theme="${document.documentElement.getAttribute('data-theme') || 'dark'}">
+<head>
+    <meta charset="UTF-8">
+    <script type="importmap">
+    ${importMapJson}
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Inter", system-ui, sans-serif;
+            background: #090d16;
+            color: #f8fafc;
+            padding: 1.25rem;
+        }
+    </style>
+    <script>
+        ${consoleBridge}
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+    ${normalizedCode}
+</body>
+</html>`;
+        previewFrame.srcdoc = fullHtml;
+        return;
+    }
+
+    // 3. Pure HTML Markup
+    if (isPureHtmlMarkup) {
+        const fullHtml = `<!DOCTYPE html>
+<html lang="en" data-theme="${document.documentElement.getAttribute('data-theme') || 'dark'}">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Inter", system-ui, sans-serif;
+            background: #090d16;
+            color: #f8fafc;
+            padding: 1.25rem;
+        }
+    </style>
+    <script>
+        ${consoleBridge}
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+    ${normalizedCode}
+</body>
+</html>`;
+        previewFrame.srcdoc = fullHtml;
+        return;
+    }
+
+    // 4. Standard JavaScript / TypeScript Module
+    // Strip local and package Cairn imports since symbols are already pre-exposed in module scope
+    const executableBody = normalizedCode
+        .replace(/^\s*import\s+[^;\n]*?from\s+['"][^'"]+['"];?\s*$/gm, '// [cairn: import resolved]')
+        .replace(/^\s*import\s*\{[\s\S]*?\}\s*from\s*['"][^'"]+['"];?\s*$/gm, '// [cairn: import resolved]')
+        .replace(/^\s*import\s+['"][^'"]+['"];?\s*$/gm, '// [cairn: import resolved]');
+
+    const iframeDoc = `<!DOCTYPE html>
+<html lang="en" data-theme="${document.documentElement.getAttribute('data-theme') || 'dark'}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="importmap">
+    ${importMapJson}
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root, [data-theme="dark"] {
+            --bg: #090d16;
+            --surface: #0e131f;
+            --surface-card: #121826;
+            --border: #1e2638;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+        }
+        [data-theme="light"] {
+            --bg: #ffffff;
+            --surface: #f8fafc;
+            --surface-card: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #0284c7;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Inter", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 1.25rem;
+            min-height: 100vh;
+        }
+        #app { width: 100%; }
+    </style>
+    <script>
+        ${consoleBridge}
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">
+        import * as CairnAll from '${srcIndexUrl}';
+        import * as CairnUI from '${srcUiUrl}';
+        const _safeExpose = (obj) => {
+            if (!obj) return;
+            for (const k of Object.keys(obj)) {
+                try {
+                    const desc = Object.getOwnPropertyDescriptor(window, k);
+                    if (!desc || desc.writable || desc.set) {
+                        window[k] = obj[k];
+                    }
+                } catch (e) {}
+            }
+        };
+        _safeExpose(CairnAll);
+        _safeExpose(CairnUI);
+        window.cairn = CairnAll;
+
+        try {
+            ${executableBody}
+            parent.postMessage({ type: "cairn-status", status: "ok" }, "*");
+        } catch(err) {
+            console.error(err);
+            parent.postMessage({ type: "cairn-status", status: "error" }, "*");
+        }
+    </script>
+</body>
+</html>`;
 
     previewFrame.srcdoc = iframeDoc;
 }
@@ -2169,7 +2867,11 @@ export function runCode() {
 // Message Listener from Sandbox Iframe
 window.addEventListener('message', (e) => {
     if (e.data && e.data.type === 'cairn-log') {
-        appendConsole(e.data.level, ...e.data.args);
+        if (e.data.level === 'table' && e.data.rawData) {
+            appendConsole('table', e.data.rawData);
+        } else {
+            appendConsole(e.data.level, ...e.data.args);
+        }
     } else if (e.data && e.data.type === 'cairn-status') {
         if (runtimeStatus) {
             if (e.data.status === 'ok') {
@@ -2184,6 +2886,9 @@ window.addEventListener('message', (e) => {
 // URL Template Router Helper
 export function getInitialTemplateKey() {
     try {
+        if (sessionStorage.getItem('cairn_custom_code')) {
+            return 'custom';
+        }
         const urlParams = new URLSearchParams(window.location.search);
         const fromQuery = urlParams.get('template') || urlParams.get('example');
         const fromHash = window.location.hash.replace('#', '');
@@ -2197,6 +2902,12 @@ export function getInitialTemplateKey() {
 
 // Template Switching
 export function loadTemplate(key) {
+    if (key === 'custom' && TEMPLATES.custom) {
+        setCode(TEMPLATES.custom);
+        if (templatePicker) templatePicker.value = 'custom';
+        runCode();
+        return;
+    }
     if (TEMPLATES[key]) {
         setCode(TEMPLATES[key]);
         if (templatePicker) templatePicker.value = key;
@@ -2244,6 +2955,26 @@ export function initMonaco() {
     const initialKey = getInitialTemplateKey();
     if (templatePicker) templatePicker.value = initialKey;
 
+    const customStored = sessionStorage.getItem('cairn_custom_code');
+    let initialCode;
+    if (customStored) {
+        initialCode = customStored;
+        TEMPLATES.custom = customStored;
+        sessionStorage.removeItem('cairn_custom_code');
+        if (templatePicker) {
+            let opt = templatePicker.querySelector('option[value="custom"]');
+            if (!opt) {
+                opt = document.createElement('option');
+                opt.value = 'custom';
+                opt.textContent = '✨ Imported from Docs';
+                templatePicker.insertBefore(opt, templatePicker.firstChild);
+            }
+            templatePicker.value = 'custom';
+        }
+    } else {
+        initialCode = TEMPLATES[initialKey] || TEMPLATES.starter || TEMPLATES.counter;
+    }
+
     if (typeof window.require !== 'undefined' && monacoContainer) {
         window.require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
         window.require(['vs/editor/editor.main'], function () {
@@ -2280,7 +3011,6 @@ export function initMonaco() {
                     }
                 });
 
-            const initialCode = TEMPLATES[initialKey] || TEMPLATES.counter;
             const modelUri = monaco.Uri.parse('file:///playground-main.js');
             let model = monaco.editor.getModel(modelUri);
             if (!model) {
@@ -2343,12 +3073,41 @@ if (btnRun) {
     });
 }
 
-const btnReset = document.getElementById('btn-reset');
-if (btnReset && templatePicker) {
-    btnReset.addEventListener('click', () => {
-        loadTemplate(templatePicker.value);
-        showToast('Template reset!');
-    });
+// Format Code Action
+export function formatCode() {
+    if (monacoEditor) {
+        const action = monacoEditor.getAction('editor.action.formatDocument');
+        if (action) {
+            action.run().then(() => showToast('Code formatted!'));
+            return;
+        }
+    }
+    // Fallback basic JS/HTML indentation formatter
+    try {
+        const raw = getCode();
+        let indent = 0;
+        const lines = raw.split('\n').map(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return '';
+            if (trimmed.startsWith('}') || trimmed.startsWith(']') || trimmed.startsWith(')')) {
+                indent = Math.max(0, indent - 1);
+            }
+            const formattedLine = '    '.repeat(indent) + trimmed;
+            if (trimmed.endsWith('{') || trimmed.endsWith('[') || trimmed.endsWith('(')) {
+                indent++;
+            }
+            return formattedLine;
+        });
+        setCode(lines.join('\n'));
+        showToast('Code formatted!');
+    } catch (e) {
+        showToast('Could not format code');
+    }
+}
+
+const btnFormat = document.getElementById('btn-format');
+if (btnFormat) {
+    btnFormat.addEventListener('click', formatCode);
 }
 
 const btnCopy = document.getElementById('btn-copy');
@@ -2356,6 +3115,91 @@ if (btnCopy) {
     btnCopy.addEventListener('click', () => {
         navigator.clipboard.writeText(getCode()).then(() => showToast('Code copied to clipboard!'));
     });
+}
+
+// View Mode Switching (Split, Full Editor, Full Preview)
+export function setViewMode(mode) {
+    document.body.setAttribute('data-view', mode);
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.viewMode === mode);
+    });
+    if (monacoEditor) {
+        setTimeout(() => monacoEditor.layout(), 60);
+    }
+    if (mode === 'preview') {
+        runCode();
+    }
+}
+
+document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        setViewMode(btn.dataset.viewMode);
+    });
+});
+
+// Console Toggle & Visibility
+const btnToggleConsole = document.getElementById('btn-toggle-console');
+const btnCloseConsole = document.getElementById('btn-close-console');
+
+export function toggleConsole(show) {
+    const currentlyHidden = document.body.getAttribute('data-console-hidden') === 'true';
+    const nextHidden = show !== undefined ? !show : !currentlyHidden;
+    document.body.setAttribute('data-console-hidden', nextHidden ? 'true' : 'false');
+    if (btnToggleConsole) {
+        btnToggleConsole.classList.toggle('active', !nextHidden);
+    }
+}
+
+if (btnToggleConsole) {
+    btnToggleConsole.addEventListener('click', () => toggleConsole());
+}
+if (btnCloseConsole) {
+    btnCloseConsole.addEventListener('click', () => toggleConsole(false));
+}
+
+// Draggable Console Resizer Splitter
+const consoleResizer = document.getElementById('console-resizer');
+const previewFrameEl = document.getElementById('preview-frame');
+if (consoleResizer) {
+    let isDragging = false;
+    let startY = 0;
+    let startHeight = 160;
+
+    const onMouseDown = (e) => {
+        isDragging = true;
+        startY = e.clientY || (e.touches && e.touches[0].clientY);
+        const currentHeightStr = getComputedStyle(document.documentElement).getPropertyValue('--console-height').trim();
+        startHeight = parseInt(currentHeightStr, 10) || 160;
+        consoleResizer.classList.add('dragging');
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'ns-resize';
+        if (previewFrameEl) previewFrameEl.style.pointerEvents = 'none';
+    };
+
+    const onMouseMove = (e) => {
+        if (!isDragging) return;
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const deltaY = startY - clientY;
+        const newHeight = Math.max(34, Math.min(window.innerHeight * 0.85, startHeight + deltaY));
+        document.documentElement.style.setProperty('--console-height', `${newHeight}px`);
+    };
+
+    const onMouseUp = () => {
+        if (isDragging) {
+            isDragging = false;
+            consoleResizer.classList.remove('dragging');
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+            if (previewFrameEl) previewFrameEl.style.pointerEvents = 'auto';
+        }
+    };
+
+    consoleResizer.addEventListener('mousedown', onMouseDown);
+    consoleResizer.addEventListener('touchstart', onMouseDown, { passive: true });
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('touchmove', onMouseMove, { passive: true });
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchend', onMouseUp);
 }
 
 const btnClearConsole = document.getElementById('btn-clear-console');

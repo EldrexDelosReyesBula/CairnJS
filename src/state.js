@@ -195,7 +195,12 @@ export function state(initialValue) {
         rollback() {
             if (history.length > 0) {
                 const prev = history.pop();
-                _val = prev;
+                if (typeof _val === 'object' && _val !== null && typeof prev === 'object' && prev !== null) {
+                    Object.keys(_val).forEach(k => delete _val[k]);
+                    Object.assign(_val, prev);
+                } else {
+                    _val = prev;
+                }
                 notify();
             }
             return this;
@@ -205,7 +210,13 @@ export function state(initialValue) {
         },
         restore(snapshotData) {
             recordHistory(_val);
-            _val = JSON.parse(JSON.stringify(snapshotData));
+            const parsed = JSON.parse(JSON.stringify(snapshotData));
+            if (typeof _val === 'object' && _val !== null && typeof parsed === 'object' && parsed !== null) {
+                Object.keys(_val).forEach(k => delete _val[k]);
+                Object.assign(_val, parsed);
+            } else {
+                _val = parsed;
+            }
             notify();
             return this;
         },
@@ -419,9 +430,17 @@ export function effect(fn) {
     let cleanupFn = null;
     let isStopped = false;
 
+    let recursionDepth = 0;
+    const MAX_EFFECT_RECURSION = 100;
+
     const runEffect = () => {
         if (isStopped || runEffect._isDisposed) return;
+        if (recursionDepth >= MAX_EFFECT_RECURSION) {
+            console.warn('[Cairn Reactivity Warning]: Maximum effect recursion depth exceeded. Breaking cyclic dependency.');
+            return;
+        }
 
+        recursionDepth++;
         if (typeof cleanupFn === 'function') {
             try {
                 cleanupFn();
@@ -440,6 +459,7 @@ export function effect(fn) {
         } finally {
             effectStack.pop();
             activeEffect = effectStack[effectStack.length - 1] || null;
+            recursionDepth--;
         }
     };
 
@@ -460,4 +480,13 @@ export function effect(fn) {
     };
 
     return dispose;
+}
+
+/**
+ * Checks if a given object is a Cairn reactive state or signal.
+ * @param {*} val
+ * @returns {boolean}
+ */
+export function isState(val) {
+    return Boolean(val && (val._isCairnState || (typeof val === 'object' && 'value' in val && typeof val.subscribe === 'function')));
 }

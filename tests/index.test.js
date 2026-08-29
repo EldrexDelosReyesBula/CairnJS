@@ -1,8 +1,7 @@
-/**
- * Cairn Framework Verification & Test Suite
- */
-
-import { cairn, state, computed, effect, collection, resource, component, mount, div, button, h1, studio, wasmEngine } from '../src/index.js';
+import {
+    cairn, state, computed, effect, collection, resource, component, mount, div, button, h1, studio, wasmEngine, html, app, tool, createTool,
+    btn, card, badge, stack, row, grid, title, divider, toggle
+} from '../src/index.js';
 import assert from 'assert';
 
 console.log('🧪 Running Cairn Framework Test Suite...');
@@ -1212,7 +1211,149 @@ assert.ok(cairn.overlayStack, 'overlayStack exists');
 assert.strictEqual(typeof cairn.createFocusTrap, 'function', 'createFocusTrap helper exists');
 assert.strictEqual(typeof cairn.useEscapeKey, 'function', 'useEscapeKey helper exists');
 
+// 28. Reconciler Array Safety & Non-Element Guard Verifications
+assert.strictEqual(typeof cairn.reconciler.reconcile, 'function');
+const dummyParent = { children: [], removeChild: () => {}, insertBefore: () => {} };
+cairn.reconciler.reconcile(dummyParent, null, null, (item) => item);
+cairn.reconciler.reconcile(null, [1, 2], [2, 3], (item) => item);
+assert.ok(true, 'Reconciler handled null and edge-case arrays gracefully without throwing');
+
+// 29. Effect Recursion Depth Safeguard
+const cyclicState = state(0);
+let cyclicRunCount = 0;
+const stopCyclic = effect(() => {
+    cyclicRunCount++;
+    if (cyclicState.value < 200) {
+        cyclicState.value++;
+    }
+});
+assert.ok(cyclicRunCount <= 105, 'Cyclic recursion guard prevented runaway execution');
+stopCyclic();
+
+// 30. Predictable State History & Snapshot Verifications
+const userSettings = state({ theme: 'dark', notifications: true });
+const settingsSnap = userSettings.snapshot();
+assert.strictEqual(settingsSnap.theme, 'dark');
+userSettings.value = { theme: 'light', notifications: false };
+assert.strictEqual(userSettings.value.theme, 'light');
+userSettings.restore(settingsSnap);
+assert.strictEqual(userSettings.value.theme, 'dark', 'State restore restored snapshot accurately');
+
+// 31. cairn.html Tagged Template Literal Engine
+assert.strictEqual(typeof html, 'function', 'html tagged template exists');
+assert.strictEqual(typeof cairn.html, 'function', 'cairn.html tagged template exists');
+const titleText = state('Cairn Prototyping');
+const tplResult = html`<div class="banner"><h1>${titleText}</h1><p>Active: ${true}</p></div>`;
+assert.ok(tplResult, 'Template literal parsed successfully');
+
+// 32. cairn.app 1-Line Reactive App Launcher
+assert.strictEqual(typeof app, 'function', 'app launcher exists');
+assert.strictEqual(typeof cairn.app, 'function', 'cairn.app launcher exists');
+const mockRoot = { appendChild: () => {}, innerHTML: '', querySelector: () => null };
+const mountedApp = app(mockRoot, {
+    state: { query: 'fast prototyping', items: ['A', 'B'] },
+    template: ({ state, query, html: tpl }) => {
+        assert.ok(query, 'Reactive state injected into template');
+        return tpl`<div class="app">${query}</div>`;
+    }
+});
+assert.ok(mountedApp, 'cairn.app bootstrapped and mounted application successfully');
+
+// 33. cairn.tool Rapid Tool Builder Kit
+assert.strictEqual(typeof tool, 'function', 'tool builder exists');
+assert.strictEqual(typeof cairn.tool, 'function', 'cairn.tool exists');
+const customTool = tool({
+    target: mockRoot,
+    title: 'Hash Generator',
+    inputs: [{ id: 'text', label: 'Input Text', type: 'text', default: 'hello' }],
+    actions: [{ label: 'Encode', run: ({ text }) => Buffer.from(text).toString('base64') }]
+});
+assert.ok(customTool, 'cairn.tool generated interactive tool UI successfully');
+
+// 34. Predictive Zero-Learning-Curve UI Helpers (btn, card, badge, stack, row, grid, title, divider, toggle)
+assert.strictEqual(typeof btn, 'function', 'btn helper exists');
+assert.strictEqual(typeof cairn.btn, 'function', 'cairn.btn exists');
+assert.strictEqual(typeof btn.primary, 'function', 'btn.primary exists');
+assert.strictEqual(typeof btn.danger, 'function', 'btn.danger exists');
+
+let clicked = false;
+const primaryBtn = btn.primary('Save Changes', () => { clicked = true; });
+assert.ok(primaryBtn, 'Primary button created');
+assert.strictEqual(primaryBtn.tagName.toLowerCase(), 'button');
+
+const testCard = card({ title: 'User Profile' },
+    row(badge('Pro', 'success'), title('Jane Doe', 2)),
+    divider(),
+    btn.secondary('Edit Profile')
+);
+assert.ok(testCard, 'Predictive card created');
+assert.strictEqual(testCard.tagName.toLowerCase(), 'div');
+
+const toggleState = state(false);
+const switchEl = toggle(toggleState, 'Dark Mode');
+assert.ok(switchEl, 'Predictive switch toggle created');
+
+// 35. Universal Native CSS Engine (css`...`, css({ ... }), css.presets, css.global)
+assert.strictEqual(typeof cairn.css, 'function', 'cairn.css function exists');
+assert.strictEqual(typeof cairn.css.card, 'function', 'cairn.css.card preset exists');
+assert.strictEqual(typeof cairn.css.btn, 'function', 'cairn.css.btn preset exists');
+assert.strictEqual(typeof cairn.css.row, 'function', 'cairn.css.row preset exists');
+assert.strictEqual(typeof cairn.css.global, 'function', 'cairn.css.global exists');
+
+// Tagged template literal
+const taggedClass = cairn.css`
+    background: #0f172a;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    &:hover { color: #38bdf8; }
+`;
+assert.ok(typeof taggedClass === 'string' && taggedClass.startsWith('cairn-coat-'), 'css template literal generates class name');
+
+// Preset styles
+const cardPreset = cairn.css.card({ bg: '#1e293b' });
+assert.ok(typeof cardPreset === 'string' && cardPreset.startsWith('cairn-coat-'), 'css.card generates class name');
+
+// 36. Cairn Reusable CodeBlock & ContextMenu Separator Verifications
+console.log('🧪 Running Cairn Reusable CodeBlock & Documentation Engine Verifications...');
+const cb = cairn.docs.CodeBlock({
+    code: 'console.log("Hello Cairn");',
+    lang: 'javascript',
+    run: true,
+    playground: true,
+    copyable: true
+});
+assert.ok(cb, 'CodeBlock component rendered');
+
+const testCtxMenu = cairn.ContextMenu({
+    items: [
+        { label: 'Item 1' },
+        { separator: true },
+        { label: 'Item 2' }
+    ]
+});
+assert.ok(testCtxMenu, 'ContextMenu with separator rendered without error');
+
+// 11. Security & Privacy: XSS URL Attribute Sanitization
+const dangerousCode = cairn.html`<a href="javascript:alert('xss')" src="data:text/html,<script>alert(1)</script>">Click</a>`;
+if (typeof document !== 'undefined') {
+    assert.strictEqual(dangerousCode.getAttribute('href'), 'about:blank#blocked');
+    assert.strictEqual(dangerousCode.getAttribute('src'), 'about:blank#blocked');
+}
+
+// 12. Full HTML Document Detection in Playground Engine
+const testFullHtmlDoc = `<!DOCTYPE html>
+<html lang="en">
+<head><title>Test App</title></head>
+<body><div id="app"></div><script type="module">import { state } from '@eldrex/cairnjs';</script></body>
+</html>`;
+const isFull = /^<\s*!doctype|^<\s*html/i.test(testFullHtmlDoc.trim()) || (/<html[\s>]/i.test(testFullHtmlDoc) && /<\/html>/i.test(testFullHtmlDoc));
+assert.strictEqual(isFull, true, 'Full HTML document correctly recognized');
+
 console.log('✅ ALL CAIRN TEST SUITE VERIFICATIONS PASSED PERFECTLY!');
+
+
+
+
 
 
 

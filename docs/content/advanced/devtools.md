@@ -25,30 +25,25 @@ console.log('DevTools Active:', devtools.isEnabled());
 Inspect component instances, descriptors, or native DOM elements to view props, active state signals, and bound DOM nodes:
 
 ```javascript
-import { component, div, h1, button, state, devtools } from '@eldrex/cairnjs';
+import { component, div, h1, button, state, devtools, mount } from '@eldrex/cairnjs';
 
 const UserBadge = component(({ username, role }) => {
     const isOnline = state(true);
-    return div({ class: 'user-badge' },
-        h1(username),
-        button(() => isOnline.value ? 'Online' : 'Away', {
+    return div({ style: { padding: '1.25rem', background: '#1e293b', borderRadius: '0.75rem', color: '#fff', maxWidth: '350px' } },
+        h1({ style: { margin: '0 0 0.5rem 0', fontSize: '1.25rem' } }, `${username} (${role})`),
+        button(() => isOnline.value ? '🟢 Status: Online' : '⚪ Status: Away', {
+            style: { padding: '0.4rem 0.85rem', borderRadius: '0.375rem', background: '#334155', color: '#fff', border: 'none', cursor: 'pointer' },
             onclick: () => { isOnline.value = !isOnline.value; }
         })
     );
 });
 
-const instance = UserBadge({ username: 'Eldrex', role: 'Architect' });
+const instance = UserBadge({ username: 'Eldrex', role: 'Student' });
+mount('#app', instance);
 
 // Inspect the component
 const data = devtools.inspect(instance);
-console.log(data);
-// {
-//   name: 'UserBadge',
-//   props: { username: 'Eldrex', role: 'Architect' },
-//   state: { isOnline: true },
-//   dom: <div class="user-badge">...</div>,
-//   timestamp: 1724544000000
-// }
+console.log('Inspected Component Metadata:', data);
 ```
 
 When DevTools is enabled, `inspect()` prints a formatted console group with color-coded props, state, and DOM pointers.

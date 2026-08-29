@@ -50,6 +50,9 @@ export const plugins = {
      * @param {object} pluginMeta 
      */
     register(pluginMeta) {
+        if (typeof pluginMeta === 'function') {
+            return this.install(pluginMeta);
+        }
         if (typeof pluginMeta === 'object' && pluginMeta.name) {
             _marketplaceRegistry.set(pluginMeta.name, {
                 downloads: 0,

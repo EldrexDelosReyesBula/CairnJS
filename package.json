@@ -1,6 +1,6 @@
 {
   "name": "@eldrex/cairnjs",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Zero-dependency, high-performance UI framework with fine-grained reactivity, complete motion suite, declarative form validation, overlays, and WASM acceleration.",
   "type": "module",
   "main": "dist/cairn.js",

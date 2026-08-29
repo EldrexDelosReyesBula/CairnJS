@@ -1,66 +1,66 @@
 # Troubleshooting & Common Gotchas
 
-A comprehensive guide to identifying, debugging, and fixing common pitfalls in CairnJS applications.
+A guide to identifying, debugging, and resolving common scenarios when building with CairnJS.
 
 ---
 
-## 1. Reactivity & Signal Gotchas
+## 1. Reactivity & Signal Usage
 
-### Pitfall 1: Mutating signals without `.value`
-Signals in CairnJS are reactive wrappers. Reading or mutating the signal must always go through the `.value` property.
+### Reading or Mutating Signals Without `.value`
+Signals in CairnJS wrap reactive state. Accessing or updating values must use the `.value` property:
 
-```javascript
+```javascript static
 const count = state(0);
 
-// ❌ WRONG: Does not trigger reactive updates
+// ❌ Avoid: Does not trigger reactive updates
 count++;
 count = 5;
 
-// ✅ CORRECT: Directly mutates and triggers dependent effects
+// ✅ Correct: Directly triggers dependent effects and UI updates
 count.value++;
 count.value = 5;
 ```
 
 ---
 
-### Pitfall 2: Static string evaluation instead of reactive getter
-When passing text or children to an element builder, passing a raw string evaluates it once at render time. Passing a zero-argument function (`() => ...`) creates a fine-grained reactive subscription.
+### Static Text vs Reactive Getters
+When passing dynamic content into element functions, a raw string is evaluated once at render time. Passing a function (`() => ...`) subscribes the node to signal updates:
 
-```javascript
-const user = state('Alice');
+```javascript static
+const user = state('Alex');
 
-// ❌ WRONG: Static string evaluated once at mount time
+// ❌ Static: Evaluated once at initial render
 p(`Hello, ${user.value}!`);
 
-// ✅ CORRECT: Reactive getter function automatically updates text node
+// ✅ Reactive: Function creates a fine-grained subscription
 p(() => `Hello, ${user.value}!`);
 ```
 
 ---
 
-### Pitfall 3: Conditional elements rendered once vs reactively
-If you want an element to appear or disappear when a signal changes, wrap the conditional in a getter function.
+### Conditional UI Mounting
+To dynamically mount or unmount elements based on a signal, wrap the condition in a function:
 
-```javascript
+```javascript static
 const isVisible = state(false);
 
-// ❌ WRONG: Evaluated once at initial component mount
+// ❌ Evaluated once during setup
 div(isVisible.value ? p('Welcome!') : null);
 
-// ✅ CORRECT: Re-evaluates whenever isVisible signal mutates
+// ✅ Re-evaluates whenever isVisible changes
 div(() => isVisible.value ? p('Welcome!') : null);
 ```
 
 ---
 
-## 2. Environment & Network Errors
+## 2. Environment & Local Server
 
 ### Error: `Fetch API cannot load file:///... CORS policy`
-If you open `docs/index.html` or an example directly by double-clicking the HTML file in your file explorer (`file:///` protocol), modern browser security models block dynamic `fetch()` requests for local markdown or WASM files.
+Opening HTML files directly from your file system (`file:///` protocol) triggers browser security restrictions on dynamic `fetch()` requests for Markdown or WebAssembly files.
 
-**Solution: Run with any local HTTP server:**
+**Solution: Run with a local HTTP server:**
 ```bash
-# Using npx serve (recommended)
+# Using npx serve
 npx serve .
 
 # Or using Python built-in server
@@ -69,47 +69,32 @@ python -m http.server 8000
 
 ---
 
-### Error: `TypeError: Cannot read properties of undefined` in component setup
-Ensure that `component()` functions either return an element directly or access signals inside reactive closures:
+## 3. Forms & Validation
 
-```javascript
-// ✅ CORRECT: Functional component builder
-const UserCard = component((props) => {
-    return div({ class: 'user-card' },
-        h3(() => props.name.value)
-    );
-});
-```
+### Handling Form Submissions
+Use `form.handleSubmit` to trigger schema validation before running the submission logic:
 
----
-
-## 3. Forms & Validation Troubleshooting
-
-### Issue: Form submits even when invalid
-Ensure you are using `form.handleSubmit()` or checking `form.isValid.value`:
-
-```javascript
+```javascript static
 const form = createForm({
     fields: { email: { default: '' } },
     schema: { email: [validators.required(), validators.email()] },
     onSubmit: async (values) => {
-        // Only executes if all schema validators pass
         console.log('Valid submission:', values);
     }
 });
 
-// ✅ Form submission handler
+// Form submit trigger
 button('Submit', { onclick: form.handleSubmit });
 ```
 
 ---
 
-## 4. Overlay & Focus Trapping Gotchas
+## 4. Modal Overlays & Event Bubbling
 
-### Issue: Modal backdrop clicks do not close the modal
-Ensure you are checking if the click event originated on the backdrop container rather than inner content:
+### Backdrop Click Dismissal
+Check whether a click originated on the backdrop container rather than an inner element:
 
-```javascript
+```javascript static
 const MyModal = component(() => {
     return div({
         class: 'modal-backdrop',
@@ -119,25 +104,25 @@ const MyModal = component(() => {
             }
         }
     },
-        div({ class: 'modal-content' }, ...children)
+        div({ class: 'modal-content' }, 'Modal Body')
     );
 });
 ```
 
 ---
 
-## 5. Memory Management & Effect Teardowns
+## 5. Effect Teardowns & Timers
 
-### Preventing memory leaks in continuous timers or listeners
-When using `effect()` to attach event listeners or interval timers, always return a teardown function. CairnJS automatically runs the teardown when dependencies change or when the effect is disposed.
+### Cleaning Up Long-Running Intervals
+When creating timers or global event listeners inside `effect()`, return a teardown function to clean up when dependencies update:
 
-```javascript
+```javascript static
 effect(() => {
     const timer = setInterval(() => {
         time.value = Date.now();
     }, 1000);
 
-    // ✅ CLEANUP: Automatically cleans up interval
+    // Teardown callback
     return () => clearInterval(timer);
 });
 ```

@@ -20,19 +20,22 @@ import { effect } from './state.js';
 export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item, i) => item?.id ?? item?.key ?? i) {
     if (!parent) return;
 
+    const safeOld = Array.isArray(oldItems) ? oldItems : [];
+    const safeNew = Array.isArray(newItems) ? newItems : [];
+
     const oldKeyMap = new Map();
-    oldItems.forEach((item, i) => {
+    safeOld.forEach((item, i) => {
         const key = getKey(item, i);
-        oldKeyMap.set(key, { item, index: i, node: parent.children[i] });
+        oldKeyMap.set(key, { item, index: i, node: parent.children ? parent.children[i] : null });
     });
 
     const newKeyMap = new Map();
-    newItems.forEach((item, i) => {
+    safeNew.forEach((item, i) => {
         newKeyMap.set(getKey(item, i), item);
     });
 
     // Remove nodes no longer in new list
-    oldItems.forEach((item, i) => {
+    safeOld.forEach((item, i) => {
         const key = getKey(item, i);
         if (!newKeyMap.has(key)) {
             const entry = oldKeyMap.get(key);
@@ -43,7 +46,7 @@ export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item
     });
 
     // Insert / reorder nodes for new items
-    newItems.forEach((item, newIdx) => {
+    safeNew.forEach((item, newIdx) => {
         const key = getKey(item, newIdx);
         const existing = oldKeyMap.get(key);
 
@@ -56,15 +59,17 @@ export function reconcile(parent, oldItems, newItems, renderItem, getKey = (item
             }
             if (!newNode) return;
 
-            const refNode = parent.children[newIdx] || null;
-            parent.insertBefore(newNode, refNode);
+            const refNode = (parent.children && parent.children[newIdx]) || null;
+            if (typeof parent.insertBefore === 'function') {
+                parent.insertBefore(newNode, refNode);
+            }
         } else {
             // Existing item — ensure position is correct
             const currentNode = existing.node;
             if (!currentNode) return;
 
-            const nodeAtPos = parent.children[newIdx];
-            if (nodeAtPos !== currentNode) {
+            const nodeAtPos = parent.children ? parent.children[newIdx] : null;
+            if (nodeAtPos !== currentNode && typeof parent.insertBefore === 'function') {
                 parent.insertBefore(currentNode, nodeAtPos || null);
             }
         }

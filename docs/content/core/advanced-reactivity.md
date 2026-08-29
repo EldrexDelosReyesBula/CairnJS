@@ -1,113 +1,88 @@
-# Advanced Reactivity
+# Reactivity Patterns & Utilities
 
-Beyond `state()`, `computed()`, and `effect()`, Cairn provides higher-level reactive primitives for more complex scenarios: explicit watchers, batched updates, portals, error boundaries, and suspense.
+Beyond basic `state()`, `computed()`, and `effect()`, Cairn provides utility functions for common reactive patterns: explicit watchers, batched mutations, portals, error boundaries, and async suspense containers.
 
 ---
 
 ## watch(source, handler, options?)
 
-An explicit watcher that fires a callback whenever a signal's value changes, giving you access to both the **new** and **old** values.
+An explicit watcher that fires a callback whenever a signal's value changes, providing access to both the **new** and **old** values.
 
-### Signature
+### Options
 
-```js
-watch(source, handler, { immediate?, deep? })
-```
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `immediate` | `boolean` | `false` | Fire handler immediately on initialization |
+| `deep` | `boolean` | `false` | Deep object comparison |
 
-| Option | Default | Description |
-|---|---|---|
-| `immediate` | `false` | Fire handler on first run (before any change) |
-| `deep` | `false` | Deep object comparison (uses JSON diff) |
+### Basic Watcher
 
-### Basic Example
-
-```js
+```javascript
 import { state, watch } from '@eldrex/cairnjs';
 
 const count = state(0);
 
 const stop = watch(count, (newVal, oldVal) => {
-  console.log(`Changed: ${oldVal} → ${newVal}`);
+  console.log(`Count changed from ${oldVal} to ${newVal}`);
 });
 
-count.value = 5; // "Changed: 0 → 5"
-stop();          // remove watcher
-count.value = 6; // no output
+count.value = 5;
+stop();
+count.value = 10; // No output (watcher stopped)
 ```
 
 ### Watching Multiple Signals
 
-Pass an array to watch all at once:
+```javascript
+import { state, watch } from '@eldrex/cairnjs';
 
-```js
-const firstName = state('Eldrex');
-const lastName  = state('Bula');
+const firstName = state('Alex');
+const lastName  = state('Rivera');
 
 watch([firstName, lastName], ([fn, ln], [prevFn, prevLn]) => {
-  console.log(`Full name: ${fn} ${ln}`);
+  console.log(`Updated name: ${fn} ${ln}`);
 });
-```
 
-### Immediate Mode
-
-```js
-watch(count, (newVal) => {
-  console.log('Initial + changes:', newVal);
-}, { immediate: true });
-```
-
-### Deep Object Watching
-
-```js
-const config = state({ theme: 'dark', lang: 'en' });
-
-watch(config, (newConfig, oldConfig) => {
-  console.log('Config changed:', newConfig);
-}, { deep: true });
-
-config.value = { theme: 'light', lang: 'fr' };
+firstName.value = 'Sam';
 ```
 
 ---
 
 ## watchEffect(sources, handler, options?)
 
-Alias for `watch()` with an array of sources. Fires handler when any of the tracked sources change.
+Fires a handler callback whenever any signal in an array of sources updates:
 
-```js
+```javascript
 import { watchEffect, state } from '@eldrex/cairnjs';
 
-const x = state(0);
-const y = state(0);
+const x = state(10);
+const y = state(20);
 
 watchEffect([x, y], ([newX, newY]) => {
-  console.log(`Position: (${newX}, ${newY})`);
+  console.log(`Coordinates: (${newX}, ${newY})`);
 });
+
+x.value = 15;
 ```
 
 ---
 
 ## batch(fn)
 
-Batches multiple state mutations into a single render flush. Without `batch()`, each `.value =` write triggers a separate effect cycle. With `batch()`, all writes flush together — **one render pass**.
+Batches multiple state mutations into a single update cycle. Instead of notifying subscribers after every individual write, all writes flush together in one pass.
 
-```js
+```javascript
 import { state, batch, effect } from '@eldrex/cairnjs';
 
-const x = state(0);
-const y = state(0);
-const z = state(0);
+const a = state(0);
+const b = state(0);
 
-effect(() => console.log(x.value, y.value, z.value));
+effect(() => console.log(`Values: a=${a.value}, b=${b.value}`));
 
-// Without batch: logs 3 separate times
-x.value = 1; y.value = 2; z.value = 3;
-
-// With batch: logs once
+// Flushes a single notification pass for both mutations
 batch(() => {
-  x.value = 10;
-  y.value = 20;
-  z.value = 30;
+  a.value = 100;
+  b.value = 200;
 });
 ```
 
@@ -115,78 +90,54 @@ batch(() => {
 
 ## portal(target, ...children)
 
-Renders Cairn nodes into any DOM target — including elements outside the current component tree. Perfect for modals, tooltips, and notification containers.
+Renders elements into a target DOM node outside the component hierarchy (such as modals, tooltips, or toast containers):
 
-```js
+```javascript static
 import { portal, div, p } from '@eldrex/cairnjs';
 
-const modalContent = div({ class: 'modal' }, p('Hello from a portal!'));
-const p = portal('#modal-root', modalContent);
+const modalContent = div({ class: 'modal' }, p('Rendered outside component tree'));
+const port = portal(document.body, modalContent);
 
-// Later: clean up
-p.destroy();
-```
-
-### Targeting Selectors
-
-```js
-portal('body', ToastNotification());
-portal(document.getElementById('overlay-container'), ModalDialog());
+// Clean up when finished
+port.destroy();
 ```
 
 ---
 
 ## errorBoundary(config)
 
-Wraps a render function in a try/catch. If the child throws during render, the fallback UI is shown instead.
+Wraps rendering in a protective boundary. If a child component throws an error during rendering, a fallback UI is rendered instead.
 
-```js
+```javascript static
 import { errorBoundary, div, p } from '@eldrex/cairnjs';
 
 const SafeWidget = errorBoundary({
-  children: () => BrokenComponent(),
+  children: () => MyComponent(),
   fallback: (err) => div(
     { style: { color: '#ef4444', padding: '1rem' } },
-    p('Something went wrong: ' + err.message)
+    p('Unable to display widget: ' + err.message)
   ),
-  onError: (err) => console.error('[Error Boundary]:', err)
+  onError: (err) => console.error('[Widget Error]:', err)
 });
 ```
-
-### Default Fallback
-
-If no `fallback` is provided, Cairn renders a built-in red error card with the error message.
 
 ---
 
 ## suspense(config)
 
-Shows a loading fallback while async `resource()` signals are resolving. Switches to the `children` render function once all resources finish loading.
+Provides a loading fallback state while asynchronous resources are resolving:
 
-```js
+```javascript static
 import { suspense, resource, div, p } from '@eldrex/cairnjs';
 
-const posts = resource(() => fetch('/api/posts').then(r => r.json()));
+const postsResource = resource(() => fetch('/api/posts').then(r => r.json()));
 
 const PostFeed = suspense({
-  resources: [posts],
-  loading: () => div({ class: 'spinner' }, 'Loading posts...'),
-  error:   (err) => p('Failed: ' + err.message),
+  resources: [postsResource],
+  loading: () => div('Loading posts...'),
+  error: (err) => p('Error loading data: ' + err.message),
   children: () => div(
-    posts.data.value.map(post => p(post.title))
+    postsResource.data.value.map(post => p(post.title))
   )
-});
-```
-
-### Multiple Resources
-
-```js
-const users  = resource(() => fetch('/api/users').then(r => r.json()));
-const config = resource(() => fetch('/api/config').then(r => r.json()));
-
-suspense({
-  resources: [users, config],
-  loading: () => p('Loading everything...'),
-  children: () => App({ users: users.data.value, config: config.data.value })
 });
 ```

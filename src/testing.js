@@ -118,6 +118,19 @@ export const test = {
         };
     },
 
+    run() {
+        const total = testResults.length;
+        const passed = testResults.filter(r => r.passed).length;
+        const failed = total - passed;
+        return {
+            total,
+            passed,
+            failed,
+            summary: failed === 0 ? 'All tests passed' : `${failed} test(s) failed`,
+            results: [...testResults]
+        };
+    },
+
     getResults() {
         return testResults;
     },

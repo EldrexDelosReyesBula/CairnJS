@@ -48,10 +48,20 @@ console.log(counter.doubled); // 2
 Retrieves a previously registered store by name — useful for accessing stores across module boundaries.
 
 ```js
-import { useStore } from '@eldrex/cairnjs';
+import { createStore, useStore } from '@eldrex/cairnjs';
 
+// 1. Define store once
+createStore('counter', {
+  state: { count: 0 },
+  actions: {
+    increment() { this.count++; }
+  }
+});
+
+// 2. Retrieve anywhere across components
 const counter = useStore('counter');
 counter.increment();
+console.log('Counter value:', counter.count);
 ```
 
 ---

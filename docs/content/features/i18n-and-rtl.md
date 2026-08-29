@@ -53,7 +53,7 @@ When switching to an RTL locale (such as Arabic `ar`, Hebrew `he`, Persian `fa`,
 2. Updates `<html dir="rtl">` on the browser document root.
 3. Exposes boolean getter `i18n.isRTL`.
 
-```javascript
+```javascript static
 // Manual RTL override:
 i18n.setRTL('rtl'); // or 'ltr' / 'auto'
 
@@ -68,7 +68,7 @@ console.log(i18n.isRTL);     // boolean
 
 Reactive formatting helpers wrapping standard browser `Intl` APIs:
 
-```javascript
+```javascript static
 // Format Dates
 const dateStr = i18n.formatDate(new Date(), { dateStyle: 'full' });
 

@@ -2,25 +2,31 @@
 
 `@eldrex/cairnjs/ui` provides 50+ pre-built, accessible, zero-dependency UI component primitives.
 
+:::gallery
+:::
+
+:::carousel
+:::
+
 ---
 
 ## Layout Components (10)
 
 ```js
-import { Box, Container, Grid, Stack, Divider, Spacer, Center, Cluster, Split, AspectRatio } from '@eldrex/cairnjs/ui';
+import { cairn } from '@eldrex/cairnjs';
+import { Box, Stack, Grid } from '@eldrex/cairnjs/ui';
+const { mount } = cairn;
 
-// Stack
-Stack({ gap: 4, direction: 'column' },
-    Box({ padding: 4 }, 'Box 1'),
-    Box({ padding: 4 }, 'Box 2')
+const layout = Stack({ gap: 4, direction: 'column' },
+    Box({ padding: 4, style: { background: '#1e293b', color: '#fff', borderRadius: '8px' } }, '📦 Box 1 (Stack Container)'),
+    Box({ padding: 4, style: { background: '#334155', color: '#fff', borderRadius: '8px' } }, '📦 Box 2 (Stack Container)'),
+    Grid({ columns: 2, gap: '1rem', style: { marginTop: '1rem' } },
+        Box({ style: { background: '#0284c7', padding: '1rem', color: '#fff', borderRadius: '8px' } }, 'Grid Col 1'),
+        Box({ style: { background: '#4f46e5', padding: '1rem', color: '#fff', borderRadius: '8px' } }, 'Grid Col 2')
+    )
 );
 
-// Grid
-Grid({ columns: 3, gap: '1rem' },
-    Box('Col 1'),
-    Box('Col 2'),
-    Box('Col 3')
-);
+mount('#app', layout);
 ```
 
 ---
@@ -28,14 +34,23 @@ Grid({ columns: 3, gap: '1rem' },
 ## Form Components (18)
 
 ```js
-import { Input, Textarea, Select, Checkbox, Radio, Toggle, Slider, DatePicker, Form, Field, Label } from '@eldrex/cairnjs/ui';
+import { cairn } from '@eldrex/cairnjs';
+import { Form, Field, Input, Toggle } from '@eldrex/cairnjs/ui';
+const { mount } = cairn;
 
-Form({ onSubmit: (e) => console.log('Form submitted!') },
+const formUI = Form({
+    onSubmit: (e) => {
+        e.preventDefault();
+        console.log('Form submitted successfully!');
+    }
+},
     Field({ label: 'Email Address' },
         Input({ type: 'email', placeholder: 'you@example.com' })
     ),
     Toggle({ label: 'Enable Notifications' })
 );
+
+mount('#app', formUI);
 ```
 
 ---
@@ -43,12 +58,16 @@ Form({ onSubmit: (e) => console.log('Form submitted!') },
 ## Navigation Components (8)
 
 ```js
-import { Navbar, Sidebar, Menu, Breadcrumbs, Pagination, Tabs, Stepper, Dropdown } from '@eldrex/cairnjs/ui';
+import { cairn } from '@eldrex/cairnjs';
+import { Navbar } from '@eldrex/cairnjs/ui';
+const { mount } = cairn;
 
-Navbar({
+const nav = Navbar({
     brand: 'Cairn App',
     items: ['Home', 'Docs', 'About']
 });
+
+mount('#app', nav);
 ```
 
 ---
@@ -56,13 +75,17 @@ Navbar({
 ## Data Display Components (12)
 
 ```js
-import { Table, List, Card, Badge, Avatar, Tag, Tooltip, Accordion } from '@eldrex/cairnjs/ui';
+import { cairn } from '@eldrex/cairnjs';
+import { Card, Avatar, Badge, Accordion } from '@eldrex/cairnjs/ui';
+const { mount } = cairn;
 
-Card({ style: { maxWidth: '400px' } },
-    Avatar({ src: 'user.jpg' }),
+const profileCard = Card({ style: { maxWidth: '400px', margin: '1rem auto' } },
+    Avatar({ src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' }),
     Badge({ variant: 'Active' }),
-    Accordion({ title: 'View Details', content: 'Hidden text' })
+    Accordion({ title: 'View Account Details', content: 'Cairn fine-grained reactive member.' })
 );
+
+mount('#app', profileCard);
 ```
 
 ---
@@ -70,11 +93,18 @@ Card({ style: { maxWidth: '400px' } },
 ## Feedback Components (8)
 
 ```js
-import { Modal, Toast, Alert, Progress, Spinner, Skeleton, EmptyState } from '@eldrex/cairnjs/ui';
+import { cairn } from '@eldrex/cairnjs';
+import { Toast, Alert, Spinner } from '@eldrex/cairnjs/ui';
+const { mount, div } = cairn;
 
 Toast.success('Saved successfully!');
 
-Alert({ message: 'Warning: Unsaved changes' });
+const feedback = div(
+    Alert({ message: 'Warning: Unsaved changes detected' }),
+    Spinner()
+);
+
+mount('#app', feedback);
 ```
 
 ---
@@ -82,10 +112,14 @@ Alert({ message: 'Warning: Unsaved changes' });
 ## Advanced Components (3)
 
 ```js
-import { VirtualList, DragDrop, Charts } from '@eldrex/cairnjs/ui';
+import { cairn } from '@eldrex/cairnjs';
+import { VirtualList } from '@eldrex/cairnjs/ui';
+const { mount, div } = cairn;
 
-VirtualList({
-    data: Array.from({ length: 1000 }, (_, i) => `Item #${i}`),
-    renderItem: (item) => div(item)
+const virtualListUI = VirtualList({
+    data: Array.from({ length: 1000 }, (_, i) => `Item #${i + 1}`),
+    renderItem: (item) => div({ style: { padding: '0.5rem', borderBottom: '1px solid #334155' } }, item)
 });
+
+mount('#app', virtualListUI);
 ```

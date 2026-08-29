@@ -254,3 +254,87 @@ const showcase = createPlayground({
 
 mount('#app', showcase);
 ```
+
+---
+
+## 13. PATTERN: Responsive Grid Architectures (BentoGrid, MasonryGrid, Grid)
+```javascript
+import { Grid, BentoGrid, MasonryGrid, div, img, p, span } from '@eldrex/cairnjs';
+
+// 1. Apple-Style Bento Grid
+const bento = BentoGrid({ rowHeight: '180px', gap: '1rem' },
+    div({ style: { gridArea: '1 / 1 / 3 / 3' } }, 'Featured Hero Item'),
+    div('Compact Item 1'),
+    div('Compact Item 2')
+);
+
+// 2. Pinterest-Style Masonry Grid
+const masonry = MasonryGrid({ columns: 3, gap: '1rem' },
+    images.map(imgData => div({ style: { breakInside: 'avoid', marginBottom: '1rem' } },
+        img({ src: imgData.src, style: { width: '100%' } })
+    ))
+);
+
+// 3. Auto-Fit Responsive Grid
+const autoGrid = Grid({ minItemWidth: 240, gap: '1rem' },
+    items.map(it => div(it.title))
+);
+```
+
+---
+
+## 14. PATTERN: Personalization & Dynamic Theme Preferences
+```javascript
+import { personalize, settings } from '@eldrex/cairnjs';
+
+const userPrefs = personalize({
+    defaults: { theme: 'dark', accentColor: '#38bdf8', fontSize: 16 }
+});
+
+// Update preference & sync to DOM CSS custom properties (--cairn-accent-color, data-theme)
+userPrefs.set('accentColor', '#10b981');
+userPrefs.set('theme', 'light');
+
+// Optional: Mount built-in Settings Panel
+const panel = settings({ title: 'User Preferences', closable: true });
+```
+
+---
+
+## 15. PATTERN: Real-Time Collab & Live State
+```javascript
+import { realtime, collab, state } from '@eldrex/cairnjs';
+
+// 1. Reactive WebSocket Connection
+const socket = realtime.socket({
+    url: 'wss://api.example.com/live',
+    protocols: ['cairn-v1'],
+    reconnect: true
+});
+
+// 2. Shared Collab Room & Presence
+const room = collab.room({
+    id: 'room-101',
+    user: { id: 'usr_1', name: 'Alex' }
+});
+
+console.log('Active peers:', room.peers.value);
+```
+
+---
+
+## 16. PATTERN: Keyed List Reconciler & SSR Hydration
+```javascript
+import { reconcile, renderToString, hydrate, div, p } from '@eldrex/cairnjs';
+
+// 1. High-Performance Keyed DOM Reconciler
+reconcile(containerEl, newItemsArray, (item) => item.id, (item) => {
+    return div({ class: 'list-row' }, p(item.name));
+});
+
+// 2. Server-Side Rendering
+const htmlString = await renderToString(MyComponent({ title: 'SSR Title' }));
+
+// 3. Client-Side Hydration
+hydrate('#app', MyComponent({ title: 'SSR Title' }));
+```

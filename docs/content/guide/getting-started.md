@@ -1,35 +1,40 @@
 # Getting Started with Cairn
 
-Build reactive, framework-agnostic web components with zero dependencies.
+Build high-performance, reactive web apps with zero build steps, standard pure HTML template literals, and fine-grained state signals.
 
 ---
 
 ## Quick Start Options
 
-### 1. ESM CDN Import (Modern Browsers & Zero Build)
-Import Cairn directly via ES Modules in your HTML script tag:
+### 1. Pure HTML Template (Recommended for Beginners & Rapid Prototyping)
+Write standard HTML with reactive `${signal}` and two-way `:bind=${signal}`:
 
-```html
+```html static
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cairn ESM Quickstart</title>
+    <title>Cairn HTML Quickstart</title>
 </head>
-<body>
+<body style="background: #090d16; color: #f8fafc; font-family: system-ui, sans-serif; padding: 2rem;">
     <div id="app"></div>
 
     <script type="module">
-        import { state, computed, div, button, mount } from 'https://esm.sh/@eldrex/cairnjs@1.0.0';
+        import { cairn } from 'https://esm.sh/@eldrex/cairnjs@latest';
+        const { state, html, mount } = cairn;
 
         const count = state(0);
-        const double = computed(() => count.value * 2);
+        const name = state('Alex');
 
-        const App = div(
-            button(() => `Clicked ${count.value} times (Double: ${double.value})`, {
-                onclick: () => count.value++
-            })
-        );
+        const App = html`
+            <div style="max-width: 400px; padding: 1.5rem; background: #121826; border-radius: 0.5rem; border: 1px solid #1e2638;">
+                <h2>Welcome, ${name}!</h2>
+                <input :bind=${name} style="padding: 0.5rem; width: 100%; border-radius: 0.35rem; margin: 0.75rem 0; background: #090d16; color: #fff; border: 1px solid #1e2638;" />
+                <button onclick=${() => count.value++} style="padding: 0.5rem 1rem; background: #0284c7; color: #fff; border: none; border-radius: 0.35rem; cursor: pointer;">
+                    Clicked ${count} times
+                </button>
+            </div>
+        `;
 
         mount("#app", App);
     </script>
@@ -37,33 +42,51 @@ Import Cairn directly via ES Modules in your HTML script tag:
 </html>
 ```
 
-### 2. Local Source Import (Offline & Mobile IDEs)
-When building locally or on Android IDEs (Acode, Spck, Termux):
+---
 
-```html
-<script type="module">
-    import { state, button, div, mount } from './src/index.js';
+### 2. Predictive UI Quickstart (Zero-Learning-Curve Helpers)
+```js
+import { cairn } from '@eldrex/cairnjs';
+const { card, row, btn, badge, title, state, mount } = cairn;
 
-    let count = state(0);
-    mount("#app", div(button(() => `Count: ${count.value}`, { onclick: () => count.value++ })));
-</script>
+const likes = state(42);
+
+const App = card({ title: 'Cairn Widget' },
+    row(badge('Reactive', 'success'), title('Interactive Post', 2)),
+    btn.primary(() => `❤️ Like (${likes.value})`, () => likes.value++)
+);
+
+mount('#app', App);
 ```
 
-### 3. Global Script Tag (UMD / jsDelivr)
+---
+
+### 3. Local Source Import (Offline & Mobile IDEs)
+When building locally or on mobile IDEs (Acode, Spck, Termux):
+
+```js
+import { state, button, div, mount } from '@eldrex/cairnjs';
+
+const count = state(0);
+mount("#app", div(button(() => `Count: ${count.value}`, {
+    onclick: () => count.value++
+})));
+```
+
+---
+
+### 4. Global Script Tag (UMD / jsDelivr)
 Include the global UMD bundle which exposes `window.cairn`:
 
-```html
+```html static
 <!-- jsDelivr UMD (@latest for auto-updates) -->
 <script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
 
 <!-- unpkg UMD (@latest) -->
 <script src="https://unpkg.com/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
-
-<!-- Pinned Release (@1.2.0) -->
-<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.2.0/dist/cairn.min.js"></script>
 ```
 
-```html
+```html static
 <script>
     const { state, button, div, mount } = cairn;
     const count = state(0);
@@ -71,7 +94,9 @@ Include the global UMD bundle which exposes `window.cairn`:
 </script>
 ```
 
-### 4. npm Installation (Bundled Apps)
+---
+
+### 5. npm Installation (Bundled Apps)
 Install the package via npm:
 
 ```bash
@@ -82,7 +107,7 @@ npm install @eldrex/cairnjs
 import { state, button, div, mount, component } from '@eldrex/cairnjs';
 
 const App = component(() => {
-    let count = state(0);
+    const count = state(0);
     return div(
         button(() => `Count: ${count.value}`, {
             onclick: () => count.value++
@@ -97,7 +122,7 @@ mount('#app', App);
 
 ## Recommended Project Structure
 
-```
+```text
 my-cairn-app/
 ├── src/
 │   ├── components/
@@ -117,7 +142,7 @@ my-cairn-app/
 ### React Integration
 Mount Cairn components inside a React `ref`:
 
-```jsx
+```jsx static
 import React, { useEffect, useRef } from 'react';
 import { mount, cairn } from '@eldrex/cairnjs';
 
@@ -143,7 +168,7 @@ export function ReactHost() {
 ### Vue 3 Integration
 Mount Cairn components inside a Vue `ref`:
 
-```html
+```html static
 <template>
   <div ref="cairnTarget"></div>
 </template>

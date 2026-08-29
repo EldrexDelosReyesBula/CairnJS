@@ -2,6 +2,9 @@
 
 Cairn includes built-in physics motion solvers, spring presets, CSS transition helpers, touch gesture event listeners, kinematic particle physics, SVG shape generators, and Verlet physics grids.
 
+:::animation
+:::
+
 ---
 
 ## Spring Physics Solver & Presets
@@ -10,19 +13,26 @@ Simulates mass-spring physical motion without fixed duration frames.
 
 ### Custom Spring Configuration
 ```js
-import { spring } from '@eldrex/cairnjs';
+import { cairn } from '@eldrex/cairnjs';
+const { spring, html, mount } = cairn;
 
+const card = html`
+    <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #0284c7, #4f46e5); border-radius: 1rem; margin: 2rem auto; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);"></div>
+`;
+mount('#app', card);
+
+// Animate the card with mass-spring physics
 spring({
     from: 0,
-    to: 100,
+    to: 120,
     stiffness: 180,
     damping: 20,
     mass: 1,
     onUpdate: (position, velocity) => {
-        element.style.transform = `translateY(${position}px)`;
+        card.style.transform = `translateY(${position}px)`;
     },
     onComplete: () => {
-        console.log('Spring settled');
+        console.log('✨ Spring settled!');
     }
 });
 ```
@@ -37,14 +47,26 @@ Cairn provides 5 tuned presets for UI micro-interactions:
 - `spring.slow({ from, to, onUpdate })` — Deliberate, smooth easing (stiffness 80, damping 20).
 
 ```js
-// Quick button pop on click:
-button('⚡ Bounce', {
-    onclick: () => spring.bouncy({
-        from: 0.92,
+import { cairn } from '@eldrex/cairnjs';
+const { spring, html, mount } = cairn;
+
+const button = html`
+    <button style="padding: 0.75rem 1.5rem; background: #0284c7; color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+        ⚡ Click to Bounce
+    </button>
+`;
+
+button.onclick = () => {
+    spring.bouncy({
+        from: 0.85,
         to: 1.0,
-        onUpdate: (scale) => el.style.transform = `scale(${scale})`
-    })
-});
+        onUpdate: (scale) => {
+            button.style.transform = `scale(${scale})`;
+        }
+    });
+};
+
+mount('#app', button);
 ```
 
 ---
@@ -54,7 +76,10 @@ button('⚡ Bounce', {
 High-performance 2D particle simulation with velocity, mass, damping, force accumulation, and boundary collision:
 
 ```js
-import { physics } from '@eldrex/cairnjs';
+import { cairn } from '@eldrex/cairnjs';
+const { physics, createCanvas2D } = cairn;
+
+const canvas = createCanvas2D('#app', { width: 600, height: 400, background: '#0b0f19' });
 
 // 1. Create a particle
 const particle = physics.particle({
@@ -66,14 +91,15 @@ const particle = physics.particle({
     damping: 0.98
 });
 
-// 2. Apply external forces (e.g. Gravity / Wind)
+// 2. Apply external forces
 particle.applyForce(0, 9.8);
 
-// 3. Step the simulation forward in your game/render loop
-function loop(dt) {
-    particle.step(dt, { minX: 0, maxX: 800, minY: 0, maxY: 600 });
-    ctx.circle(particle.x, particle.y, 5);
-}
+// 3. Step the simulation in draw loop
+canvas.onDraw((ctx) => {
+    particle.step(0.016, { minX: 10, maxX: 590, minY: 10, maxY: 390 });
+    ctx.fillStyle('#38bdf8').circle(particle.x, particle.y, 8);
+});
+canvas.start();
 ```
 
 ---
@@ -83,8 +109,15 @@ function loop(dt) {
 Simulates gravity wells that pull nearby particles:
 
 ```js
-const well = physics.attractor({ x: 400, y: 300, strength: 500 });
+import { cairn } from '@eldrex/cairnjs';
+const { physics } = cairn;
+
+const particle = physics.particle({ x: 100, y: 100, vx: 2, vy: 0 });
+const well = physics.attractor({ x: 300, y: 200, strength: 500 });
+
+// Pull particle towards the attractor
 well.attract(particle);
+console.log('Attracted position:', particle.x, particle.y);
 ```
 
 ---
@@ -92,20 +125,28 @@ well.attract(particle);
 ## DOM Transitions & Gestures
 
 ```js
-import { transition, gesture } from '@eldrex/cairnjs';
+import { cairn } from '@eldrex/cairnjs';
+const { transition, gesture, html, mount } = cairn;
+
+const box = html`
+    <div style="padding: 2rem; background: #1e293b; color: #fff; border-radius: 0.75rem; text-align: center; user-select: none;">
+        👆 Swipe or Tap Me
+    </div>
+`;
+mount('#app', box);
 
 // Apply enter CSS transition
-transition(element, {
+transition(box, {
     duration: 300,
-    from: { opacity: 0, transform: 'translateY(10px)' },
+    from: { opacity: 0, transform: 'translateY(20px)' },
     enter: { opacity: 1, transform: 'translateY(0)' }
 });
 
 // Touch & swipe gestures
-const detach = gesture(element, {
-    onSwipeLeft: () => console.log('Swiped Left'),
-    onSwipeRight: () => console.log('Swiped Right'),
-    onTap: () => console.log('Tapped')
+const detach = gesture(box, {
+    onSwipeLeft: () => console.log('👈 Swiped Left'),
+    onSwipeRight: () => console.log('👉 Swiped Right'),
+    onTap: () => console.log('👆 Tapped!')
 });
 ```
 
@@ -116,12 +157,16 @@ const detach = gesture(element, {
 Generates mathematical SVG paths and shapes cleanly:
 
 ```js
-import { shapes } from '@eldrex/cairnjs';
+import { cairn } from '@eldrex/cairnjs';
+const { shapes, html, mount } = cairn;
 
-const rectSvg = shapes.rect({ w: 100, h: 60, rx: 8, fill: '#6366f1' });
-const circleSvg = shapes.circle({ r: 40, fill: '#22c55e' });
-const starSvg = shapes.star({ cx: 50, cy: 50, outerRadius: 40, innerRadius: 20, points: 5 });
-const polySvg = shapes.polygon({ points: '50,10 90,90 10,90', fill: '#38bdf8' });
+const starPath = shapes.star({ points: 5, innerRadius: 20, outerRadius: 45 });
+
+mount('#app', html`
+    <svg width="100" height="100" viewBox="-50 -50 100 100">
+        <path d="${starPath}" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
+    </svg>
+`);
 ```
 
 ---

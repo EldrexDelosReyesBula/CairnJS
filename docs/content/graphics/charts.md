@@ -46,6 +46,8 @@ Charts.bar('#chart', {
 ## Line Chart
 
 ```js
+import { Charts } from '@eldrex/cairnjs';
+
 Charts.line('#lineChart', {
   labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
   datasets: [
@@ -63,6 +65,8 @@ Charts.line('#lineChart', {
 ## Donut / Pie Chart
 
 ```js
+import { Charts } from '@eldrex/cairnjs';
+
 Charts.donut('#donut', {
   labels: ['React', 'Vue', 'Cairn', 'Svelte'],
   values: [42, 28, 20, 10]
@@ -78,6 +82,8 @@ Charts.donut('#donut', {
 ## Scatter Plot
 
 ```js
+import { Charts } from '@eldrex/cairnjs';
+
 Charts.scatter('#scatter', {
   datasets: [
     {
@@ -135,11 +141,13 @@ setInterval(() => {
 
 Charts accept either a CSS selector string or a direct `HTMLCanvasElement` reference:
 
-```html
+```html static
 <canvas id="chart" width="800" height="400"></canvas>
 ```
 
-```js
+```js static
+import { Charts } from '@eldrex/cairnjs';
+
 Charts.bar('#chart', data, opts);
 // or
 Charts.bar(document.getElementById('chart'), data, opts);

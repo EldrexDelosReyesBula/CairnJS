@@ -1,117 +1,112 @@
 # Cairn Reactivity System
 
-Cairn uses fine-grained reactivity signals that update target DOM nodes directly without re-rendering component trees or diffing Virtual DOM nodes.
+Cairn uses fine-grained reactivity signals that update target DOM nodes directly without full component re-renders or Virtual DOM reconciliation.
 
 ---
 
 ## state(initialValue)
+
 Creates a reactive state signal.
 
-```js
+```javascript
 import { state } from '@eldrex/cairnjs';
 
 let count = state(0);
 
-// Reading value (auto-tracks dependencies inside effect or DOM builders)
-console.log(count.value); // 0
+// Reading value
+console.log('Initial count:', count.value);
 
-// Updating value (notifies subscribers automatically)
+// Updating value (notifies subscribers)
 count.value = 5;
+console.log('Updated count:', count.value);
 
 // Peek without subscribing
-console.log(count.peek()); // 5
-```
-
-### Automatic Computed Alias
-If passed a function as initial value, `state(fn)` automatically delegates to `computed(fn)`:
-
-```js
-let count = state(10);
-let double = state(() => count.value * 2); // 20
+console.log('Peek value:', count.peek());
 ```
 
 ---
 
 ## computed(getter)
-Creates a derived state signal that caches its value until dependencies mutate.
 
-```js
+Creates a derived signal that caches its result and recalculates only when dependencies change.
+
+```javascript
 import { state, computed } from '@eldrex/cairnjs';
 
 let price = state(100);
-let tax = state(0.2);
+let taxRate = state(0.15);
 
-let total = computed(() => price.value * (1 + tax.value));
-console.log(total.value); // 120
+let total = computed(() => price.value * (1 + taxRate.value));
+console.log('Total price:', total.value);
 
 price.value = 200;
-console.log(total.value); // 240
+console.log('New total:', total.value);
 ```
 
 ---
 
 ## effect(fn)
-Executes a side-effect function whenever dependent states change.
 
-```js
+Runs a side-effect function whenever tracked signals change value.
+
+```javascript
 import { state, effect } from '@eldrex/cairnjs';
 
 let count = state(0);
 
 const stop = effect(() => {
-    console.log(`Count updated: ${count.value}`);
+    console.log(`Effect triggered: count is ${count.value}`);
 
-    // Optional cleanup callback
+    // Optional teardown callback
     return () => {
-        console.log('Cleanup previous run');
+        console.log('Teardown previous effect run');
     };
 });
 
 count.value = 1;
-
-// Stop listening
-stop();
 count.value = 2;
+
+// Stop watching
+stop();
 ```
 
 ---
 
 ## collection(initialData)
-Creates a reactive proxy wrapper around objects or arrays allowing granular mutation tracking.
 
-```js
+Creates a reactive proxy wrapper around arrays and objects for granular mutation tracking.
+
+```javascript
 import { collection, effect } from '@eldrex/cairnjs';
 
 let todos = collection([
-    { id: 1, text: 'Buy groceries', done: false }
+    { id: 1, text: 'Write documentation', done: true }
 ]);
 
 effect(() => {
-    console.log(`Total todos: ${todos.length}`);
+    console.log(`Todos count: ${todos.length}`);
 });
 
-todos.push({ id: 2, text: 'Clean desk', done: false });
-todos[0].done = true;
+todos.push({ id: 2, text: 'Review pull request', done: false });
 ```
 
 ---
 
 ## resource(fetcher)
-Manages asynchronous data fetching states with auto-polling and caching.
 
-```js
+Manages asynchronous data fetching states with loading and error indicators.
+
+```javascript static
 import { resource } from '@eldrex/cairnjs';
 
 const userResource = resource(async () => {
-    const res = await fetch('https://api.example.com/user');
+    const res = await fetch('/api/user');
     return res.json();
 });
 
-// userResource interface:
-// - userResource.data (reactive state signal)
-// - userResource.loading (reactive boolean state signal)
+// userResource properties:
+// - userResource.data (reactive data signal)
+// - userResource.loading (reactive boolean signal)
 // - userResource.error (reactive error signal)
-// - userResource.refetch() (reload function)
-// - userResource.poll(5000) (auto-polling interval)
-// - userResource.cache({ ttl: 300 }) (client caching)
+// - userResource.refetch() (reload trigger)
 ```

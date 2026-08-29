@@ -270,52 +270,251 @@ export function keyframes(rulesObj) {
 let coatClassCounter = 0;
 
 /**
- * Native Coat Styling System
- * @param {object|Function} rules Style object with selectors/media queries, or dynamic resolver function
- * @returns {string|Function} Scoped class name or reactive resolver
+ * Universal Native CSS Engine (Tagged template literals, style objects, or presets)
+ * @example
+ * // 1. Tagged template literal
+ * const box = css`
+ *     background: #1e293b;
+ *     padding: 1.5rem;
+ *     border-radius: 0.75rem;
+ *     &:hover { transform: translateY(-2px); }
+ * `;
+ * 
+ * // 2. Style object
+ * const card = css({ background: '#1e293b', padding: '1.5rem', '&:hover': { color: '#38bdf8' } });
+ * 
+ * @param {TemplateStringsArray|object|Function} stringsOrRules 
+ * @param {...any} values 
+ * @returns {string} Scoped class name
  */
-export function coat(rules) {
-    if (typeof rules === 'function') {
-        return rules;
+export function coat(stringsOrRules, ...values) {
+    if (typeof stringsOrRules === 'function') {
+        return stringsOrRules;
     }
-    if (!rules || typeof rules !== 'object') return '';
+    if (!stringsOrRules) return '';
 
     coatClassCounter++;
     const className = `cairn-coat-${coatClassCounter}`;
 
-    if (typeof document !== 'undefined') {
-        let mainStyles = '';
-        let nestedStyles = '';
-
-        Object.entries(rules).forEach(([key, val]) => {
-            if (typeof val === 'object' && val !== null) {
-                let subStr = '';
-                Object.entries(val).forEach(([p, v]) => {
-                    const kebab = p.startsWith('--') ? p : p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-                    subStr += `${kebab}: ${v}; `;
-                });
-                if (key.startsWith('&') || key.startsWith(':') || key.startsWith('[') || key.startsWith('.')) {
-                    const selector = key.startsWith('&') ? key.replace('&', `.${className}`) : `.${className}${key}`;
-                    nestedStyles += `${selector} { ${subStr}} `;
-                } else if (key.startsWith('@')) {
-                    nestedStyles += `${key} { .${className} { ${subStr}} } `;
-                } else {
-                    nestedStyles += `.${className} ${key} { ${subStr}} `;
-                }
-            } else if (val !== undefined && val !== null) {
-                const kebab = key.startsWith('--') ? key : key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-                mainStyles += `${kebab}: ${val}; `;
+    // 1. Tagged Template Literal: css`color: red; padding: 1rem;`
+    if (Array.isArray(stringsOrRules) && 'raw' in stringsOrRules) {
+        let rawCss = '';
+        for (let i = 0; i < stringsOrRules.length; i++) {
+            rawCss += stringsOrRules[i];
+            if (i < values.length) {
+                const val = values[i];
+                rawCss += (val !== undefined && val !== null) ? String(val) : '';
             }
-        });
+        }
 
-        const styleEl = document.createElement('style');
-        styleEl.setAttribute('data-cairn-coat', className);
-        styleEl.textContent = `.${className} { ${mainStyles}} ${nestedStyles}`;
-        document.head.appendChild(styleEl);
+        if (typeof document !== 'undefined') {
+            // Parse top-level vs nested pseudo/sub-selectors
+            let mainStyles = '';
+            let nestedStyles = '';
+            
+            // Normalize & parse rules
+            const nestedRegex = /(&[:\.\w\-\[\]]+|\.[\w\-]+|@media[^{]+)\s*\{([^}]+)\}/g;
+            let match;
+            let cleanedCss = rawCss;
+
+            while ((match = nestedRegex.exec(rawCss)) !== null) {
+                const selector = match[1].trim();
+                const body = match[2].trim();
+                if (selector.startsWith('&')) {
+                    nestedStyles += `${selector.replace('&', `.${className}`)} { ${body} } `;
+                } else if (selector.startsWith('@media')) {
+                    nestedStyles += `${selector} { .${className} { ${body} } } `;
+                } else {
+                    nestedStyles += `.${className} ${selector} { ${body} } `;
+                }
+            }
+
+            // Remove nested blocks to extract main properties
+            mainStyles = rawCss.replace(nestedRegex, '').trim();
+
+            const styleEl = document.createElement('style');
+            styleEl.setAttribute('data-cairn-css', className);
+            styleEl.textContent = `.${className} { ${mainStyles} } ${nestedStyles}`;
+            document.head.appendChild(styleEl);
+        }
+
+        return className;
     }
 
-    return className;
+    // 2. Object Style: css({ background: '#1e293b', ... })
+    if (typeof stringsOrRules === 'object') {
+        if (typeof document !== 'undefined') {
+            let mainStyles = '';
+            let nestedStyles = '';
+
+            Object.entries(stringsOrRules).forEach(([key, val]) => {
+                if (typeof val === 'object' && val !== null) {
+                    let subStr = '';
+                    Object.entries(val).forEach(([p, v]) => {
+                        const kebab = p.startsWith('--') ? p : p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+                        subStr += `${kebab}: ${v}; `;
+                    });
+                    if (key.startsWith('&') || key.startsWith(':') || key.startsWith('[') || key.startsWith('.')) {
+                        const selector = key.startsWith('&') ? key.replace('&', `.${className}`) : `.${className}${key}`;
+                        nestedStyles += `${selector} { ${subStr}} `;
+                    } else if (key.startsWith('@')) {
+                        nestedStyles += `${key} { .${className} { ${subStr}} } `;
+                    } else {
+                        nestedStyles += `.${className} ${key} { ${subStr}} `;
+                    }
+                } else if (val !== undefined && val !== null) {
+                    const kebab = key.startsWith('--') ? key : key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+                    mainStyles += `${kebab}: ${val}; `;
+                }
+            });
+
+            const styleEl = document.createElement('style');
+            styleEl.setAttribute('data-cairn-coat', className);
+            styleEl.textContent = `.${className} { ${mainStyles}} ${nestedStyles}`;
+            document.head.appendChild(styleEl);
+        }
+
+        return className;
+    }
+
+    return String(stringsOrRules);
 }
+
+// Global Style Injector
+coat.global = function(stringsOrCss, ...values) {
+    let cssText = '';
+    if (Array.isArray(stringsOrCss) && 'raw' in stringsOrCss) {
+        for (let i = 0; i < stringsOrCss.length; i++) {
+            cssText += stringsOrCss[i];
+            if (i < values.length) {
+                const val = values[i];
+                cssText += (val !== undefined && val !== null) ? String(val) : '';
+            }
+        }
+    } else if (typeof stringsOrCss === 'string') {
+        cssText = stringsOrCss;
+    } else if (typeof stringsOrCss === 'object' && stringsOrCss !== null) {
+        Object.entries(stringsOrCss).forEach(([sel, rules]) => {
+            let body = '';
+            Object.entries(rules).forEach(([p, v]) => {
+                const kebab = p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+                body += `${kebab}: ${v}; `;
+            });
+            cssText += `${sel} { ${body}} `;
+        });
+    }
+
+    if (typeof document !== 'undefined' && cssText) {
+        const styleEl = document.createElement('style');
+        styleEl.setAttribute('data-cairn-global-css', 'true');
+        styleEl.textContent = cssText;
+        document.head.appendChild(styleEl);
+    }
+};
+
+// Shorthand Preset Styles
+coat.card = (opts = {}) => coat({
+    background: opts.bg || '#1e293b',
+    border: opts.border || '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: opts.radius || '0.75rem',
+    padding: opts.padding || '1.5rem',
+    color: '#f8fafc',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+    ...(opts.style || {})
+});
+
+coat.glass = (opts = {}) => coat({
+    background: opts.bg || 'rgba(30, 41, 59, 0.65)',
+    backdropFilter: `blur(${opts.blur || '16px'})`,
+    WebkitBackdropFilter: `blur(${opts.blur || '16px'})`,
+    border: opts.border || '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: opts.radius || '0.75rem',
+    padding: opts.padding || '1.5rem',
+    color: '#f8fafc',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.37)'
+});
+
+coat.btn = (variant = 'primary') => {
+    const isPrimary = variant === 'primary';
+    const isDanger = variant === 'danger';
+    const isGhost = variant === 'ghost';
+
+    return coat({
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5rem',
+        padding: '0.6rem 1.25rem',
+        borderRadius: '0.5rem',
+        fontWeight: '600',
+        fontSize: '0.875rem',
+        cursor: 'pointer',
+        border: 'none',
+        transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+        userSelect: 'none',
+        background: isPrimary ? 'linear-gradient(135deg, #0284c7 0%, #4f46e5 100%)' :
+                    isDanger ? '#ef4444' :
+                    isGhost ? 'transparent' : '#334155',
+        color: '#ffffff',
+        '&:hover': {
+            transform: 'translateY(-1px)',
+            filter: 'brightness(1.1)'
+        },
+        '&:active': {
+            transform: 'scale(0.98)'
+        }
+    });
+};
+
+coat.row = (gap = '0.75rem') => coat({
+    display: 'flex',
+    alignItems: 'center',
+    gap: gap,
+    flexWrap: 'wrap'
+});
+
+coat.col = (gap = '0.75rem') => coat({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: gap
+});
+
+coat.center = () => coat({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+});
+
+// External CSS Stylesheet Loader (CDN, Google Fonts, Tailwind, external CSS files)
+coat.import = function(url) {
+    if (typeof document === 'undefined') return null;
+    const existing = document.querySelector(`link[href="${url}"]`);
+    if (existing) return existing;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    document.head.appendChild(link);
+    return link;
+};
+coat.load = coat.import;
+
+// Internal CSS Injector
+coat.inject = function(cssText) {
+    if (typeof document === 'undefined') return null;
+    const style = document.createElement('style');
+    style.setAttribute('data-cairn-injected-css', 'true');
+    style.textContent = typeof cssText === 'object' ? Object.entries(cssText).map(([k, v]) => `${k} { ${v} }`).join(' ') : String(cssText);
+    document.head.appendChild(style);
+    return style;
+};
+
+// Inline Style Object Formatter
+coat.inline = function(styleObj) {
+    if (!styleObj || typeof styleObj !== 'object') return '';
+    return Object.entries(styleObj)
+        .map(([k, v]) => `${k.startsWith('--') ? k : k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v}`)
+        .join('; ');
+};
 
 Object.assign(coat, {
     variants(config = {}) {
@@ -325,6 +524,9 @@ Object.assign(coat, {
         };
     },
     compose(...coats) {
+        if (coats.length > 0 && coats.every(c => typeof c === 'string')) {
+            return coats.filter(Boolean).join(' ');
+        }
         return coats.reduce((acc, c) => {
             if (typeof c === 'object' && c !== null) {
                 return { ...acc, ...c };

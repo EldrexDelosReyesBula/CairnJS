@@ -36,11 +36,31 @@ export function createScene3D(target, options = {}) {
 
     let canvasEl;
     if (typeof target === 'string') {
-        canvasEl = typeof document !== 'undefined' ? document.querySelector(target) : null;
-    } else if (target && target.nodeType) {
+        const found = typeof document !== 'undefined' ? document.querySelector(target) : null;
+        if (found && found.tagName === 'CANVAS') {
+            canvasEl = found;
+        } else if (found) {
+            canvasEl = document.createElement('canvas');
+            found.appendChild(canvasEl);
+        } else if (typeof document !== 'undefined') {
+            canvasEl = document.createElement('canvas');
+            if (target.startsWith('#')) canvasEl.id = target.slice(1);
+            else if (target.startsWith('.')) canvasEl.className = target.slice(1);
+            else canvasEl.id = target;
+            const parent = document.getElementById('app') || document.body;
+            if (parent) parent.appendChild(canvasEl);
+        }
+    } else if (target && target.tagName === 'CANVAS') {
         canvasEl = target;
+    } else if (target && target.nodeType) {
+        canvasEl = document.createElement('canvas');
+        target.appendChild(canvasEl);
     } else {
         canvasEl = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+        if (canvasEl && typeof document !== 'undefined') {
+            const parent = document.getElementById('app') || document.body;
+            if (parent) parent.appendChild(canvasEl);
+        }
     }
 
     if (!canvasEl) return null;

@@ -508,6 +508,27 @@ export interface PluginRegistry {
 export const plugins: PluginRegistry;
 
 export function sandbox(options?: any): { options: any; run(fn: Function): Promise<any> };
+
+export interface CodeBlockProps {
+    code: string;
+    lang?: string;
+    theme?: string | Record<string, any>;
+    copyable?: boolean;
+    run?: boolean;
+    playground?: boolean;
+    lineNumbers?: boolean;
+    title?: string;
+}
+
+export function CodeBlock(props: CodeBlockProps): HTMLElement;
+
+export const docs: {
+    highlight(code: string, lang?: string, theme?: any): string;
+    CodeBlock(props: CodeBlockProps): HTMLElement;
+    themes: Record<string, any>;
+    generate(options?: any): any;
+    createPlayground(config?: any): HTMLElement;
+};
 export function experiment(options: any): Promise<any>;
 export const features: {
     (flags?: Record<string, any>): State<Record<string, any>>;
@@ -657,12 +678,112 @@ export const cairn: {
     culling: typeof culling;
     renderOptimize: typeof renderOptimize;
     postprocessing: typeof postprocessing;
-    components3D: typeof components3D;
-    components2D: typeof components2D;
+    // Rapid Prototyping & Template Literals
+    html: typeof html;
+    app: typeof app;
+    tool: typeof tool;
+    createTool: typeof createTool;
     agentDocs: any;
     cairnAgentDocs: any;
     getAgentDocs: (level?: string) => string;
     [key: string]: any;
 };
 
+export function html(strings: TemplateStringsArray, ...values: any[]): HTMLElement | DocumentFragment;
+
+export interface AppOptions {
+    state?: Record<string, any>;
+    template: (context: { state: Record<string, State<any>>; html: typeof html; [key: string]: any }) => HTMLElement | DocumentFragment;
+}
+export function app(target: string | HTMLElement, options: AppOptions): HTMLElement;
+
+export interface ToolInput {
+    id?: string;
+    name?: string;
+    label?: string;
+    type?: 'text' | 'textarea' | 'number' | 'password' | string;
+    placeholder?: string;
+    default?: any;
+}
+
+export interface ToolAction {
+    label: string;
+    run: (values: Record<string, any>, states: Record<string, State<any>>) => any | Promise<any>;
+}
+
+export interface ToolConfig {
+    target?: string | HTMLElement;
+    title?: string;
+    description?: string;
+    inputs?: ToolInput[];
+    actions?: ToolAction[];
+    defaultOutput?: string;
+}
+
+export function tool(config: ToolConfig): HTMLElement;
+export function createTool(config: ToolConfig): HTMLElement;
+
+// Predictive Zero-Learning-Curve UI Helpers
+export interface BtnHelper {
+    (firstArg?: any, ...rest: any[]): HTMLButtonElement;
+    primary(text: any, onClick?: Function, ...extra: any[]): HTMLButtonElement;
+    secondary(text: any, onClick?: Function, ...extra: any[]): HTMLButtonElement;
+    danger(text: any, onClick?: Function, ...extra: any[]): HTMLButtonElement;
+    ghost(text: any, onClick?: Function, ...extra: any[]): HTMLButtonElement;
+}
+
+export interface CardHelper {
+    (firstArg?: any, ...rest: any[]): HTMLDivElement;
+    glass(firstArg?: any, ...rest: any[]): HTMLDivElement;
+    flat(firstArg?: any, ...rest: any[]): HTMLDivElement;
+}
+
+export interface BadgeHelper {
+    (textVal: any, variant?: 'primary' | 'success' | 'warning' | 'danger' | string): HTMLSpanElement;
+    success(text: any): HTMLSpanElement;
+    warning(text: any): HTMLSpanElement;
+    danger(text: any): HTMLSpanElement;
+}
+
+export interface GridHelper {
+    (columnsOrProps?: number | { cols?: number; gap?: string; style?: any }, ...children: any[]): HTMLDivElement;
+    auto(minWidth?: string, ...children: any[]): HTMLDivElement;
+}
+
+export interface TitleHelper {
+    (content: any, level?: number): HTMLElement;
+    gradient(content: any): HTMLElement;
+}
+
+export const btn: BtnHelper;
+export const card: CardHelper;
+export const badge: BadgeHelper;
+export const stack: (...children: any[]) => HTMLDivElement;
+export const row: (...children: any[]) => HTMLDivElement;
+export const grid: GridHelper;
+export const title: TitleHelper;
+export const divider: (labelStr?: string) => HTMLElement;
+export interface CssEngine {
+    (strings: TemplateStringsArray, ...values: any[]): string;
+    (rules: Record<string, any> | ((...args: any[]) => any)): string;
+    import(url: string): HTMLLinkElement | null;
+    load(url: string): HTMLLinkElement | null;
+    inject(cssText: string | Record<string, any>): HTMLStyleElement | null;
+    inline(styleObj: Record<string, any>): string;
+    global(stringsOrCss: TemplateStringsArray | string | Record<string, any>, ...values: any[]): void;
+    card(opts?: { bg?: string; border?: string; radius?: string; padding?: string; style?: any }): string;
+    glass(opts?: { bg?: string; blur?: string; border?: string; radius?: string; padding?: string }): string;
+    btn(variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | string): string;
+    row(gap?: string): string;
+    col(gap?: string): string;
+    center(): string;
+    compose(...classes: string[]): string;
+    variants(config: Record<string, any>): (variant: any) => any;
+}
+
+export const css: CssEngine;
+export const coat: CssEngine;
+
 export default cairn;
+
+

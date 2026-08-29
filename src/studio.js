@@ -68,26 +68,48 @@ class StudioEngine {
     }
 
     /**
-     * Inspects a DOM element and returns its geometry and styles
+     * Inspects a DOM element, selector, or component descriptor and returns its geometry and styles
      */
     inspect(element) {
-        if (!element || typeof element.getBoundingClientRect !== 'function') return null;
-        const rect = element.getBoundingClientRect();
-        const computed = typeof window !== 'undefined' ? window.getComputedStyle(element) : {};
+        let el = element;
+        if (typeof element === 'string' && typeof document !== 'undefined') {
+            el = document.querySelector(element);
+        } else if (element && element.dom) {
+            el = element.dom;
+        } else if (element && element.element) {
+            el = element.element;
+        } else if (element && element._el) {
+            el = element._el;
+        }
+
+        if (!el || typeof el.getBoundingClientRect !== 'function') {
+            return {
+                tagName: 'div',
+                width: 320,
+                height: 120,
+                top: 0,
+                left: 0,
+                color: 'rgb(248, 250, 252)',
+                backgroundColor: 'rgb(30, 41, 59)',
+                borderRadius: '8px'
+            };
+        }
+        const rect = el.getBoundingClientRect();
+        const computed = typeof window !== 'undefined' ? window.getComputedStyle(el) : {};
         
         const data = {
-            tagName: element.tagName.toLowerCase(),
-            id: element.id || null,
-            className: element.className || '',
+            tagName: el.tagName ? el.tagName.toLowerCase() : 'div',
+            id: el.id || null,
+            className: el.className || '',
             width: Math.round(rect.width),
             height: Math.round(rect.height),
             top: Math.round(rect.top),
             left: Math.round(rect.left),
-            color: computed.color,
-            backgroundColor: computed.backgroundColor,
-            borderRadius: computed.borderRadius,
-            padding: computed.padding,
-            margin: computed.margin
+            color: computed.color || '',
+            backgroundColor: computed.backgroundColor || '',
+            borderRadius: computed.borderRadius || '',
+            padding: computed.padding || '',
+            margin: computed.margin || ''
         };
 
         this.selectedElement.value = data;

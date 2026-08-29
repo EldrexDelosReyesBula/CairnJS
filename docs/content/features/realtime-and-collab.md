@@ -8,7 +8,7 @@ Cairn includes a built-in real-time and collaborative state synchronization engi
 
 `realtime()` manages a WebSocket connection with automatic exponential backoff reconnection, heartbeat keep-alive, and event dispatching:
 
-```javascript
+```javascript static
 import { realtime, state } from '@eldrex/cairnjs';
 
 const client = realtime({
@@ -40,8 +40,10 @@ console.log(client.status.value);
 
 For unidirectional real-time data streams (such as AI token streaming or live ticker feeds), use `sse()`:
 
-```javascript
-import { sse } from '@eldrex/cairnjs';
+```javascript static
+import { sse, state } from '@eldrex/cairnjs';
+
+const aiResponseText = state('');
 
 const feed = sse('/api/events/ai-stream', {
     onMessage: (data) => console.log('Chunk:', data),
@@ -61,8 +63,10 @@ feed.on('token', (chunk) => {
 
 For environments without WebSocket or SSE support, `poll()` provides adaptive background interval fetching:
 
-```javascript
-import { poll } from '@eldrex/cairnjs';
+```javascript static
+import { poll, state } from '@eldrex/cairnjs';
+
+const unreadCount = state(0);
 
 const poller = poll(async () => {
     const res = await fetch('/api/notifications/unread');
@@ -87,11 +91,10 @@ poller.stop();
 
 `live()` creates a reactive signal that binds directly to a real-time data source and automatically synchronizes when remote events fire:
 
-```javascript
+```javascript static
 import { live, div, p, mount } from '@eldrex/cairnjs';
 
 const tasks = live('/api/tasks', {
-    realtime: client,
     event: 'tasks:update'
 });
 
@@ -109,7 +112,7 @@ mount('#app', app);
 
 Track peer cursors, selection highlights, and user presence across sessions:
 
-```javascript
+```javascript static
 import { collab } from '@eldrex/cairnjs';
 
 const session = collab({
@@ -141,6 +144,8 @@ import { sharedState, effect } from '@eldrex/cairnjs';
 // Synchronize state across all open browser tabs
 const globalTheme = sharedState('app_theme', 'dark');
 
+console.log('Current shared theme:', globalTheme.value);
+
 // When Tab A changes globalTheme.value, Tab B automatically receives the update!
 globalTheme.value = 'light';
 ```
@@ -161,9 +166,10 @@ const room = chat({
 });
 
 room.send('Hello everyone!');
-console.log(room.messages.value);
+console.log('Room messages:', room.messages.value);
 
 // 2. Activity Feed
 const activity = feed({ maxItems: 50 });
 activity.push({ action: 'Created project', timestamp: Date.now() });
+console.log('Activity log length:', activity.items.value.length);
 ```

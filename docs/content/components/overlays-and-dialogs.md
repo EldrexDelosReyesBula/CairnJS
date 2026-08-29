@@ -19,7 +19,7 @@ const myModal = Modal({
     closeOnEscape: true,
     actions: [
         button('Cancel', { onclick: () => myModal.close() }),
-        button('Save Changes', { class: 'btn-primary', onclick: () => { ... } })
+        button('Save Changes', { onclick: () => { console.log('Saved'); myModal.close(); } })
     ]
 });
 
@@ -33,7 +33,7 @@ mount('#app', button('Open Settings', { onclick: () => myModal.open() }));
 Display asynchronous confirmation prompts with `await`:
 
 ```javascript
-import { ConfirmDialog } from '@eldrex/cairnjs';
+import { ConfirmDialog, button, mount } from '@eldrex/cairnjs';
 
 async function handleDeleteProject() {
     const confirmed = await ConfirmDialog.confirm({
@@ -48,6 +48,8 @@ async function handleDeleteProject() {
         console.log('Project deleted.');
     }
 }
+
+mount('#app', button('Delete Project', { onclick: handleDeleteProject }));
 ```
 
 ---
@@ -99,7 +101,7 @@ const historyDrawer = NotificationCenter.Panel();
 
 Low-level overlay primitives exported for custom UI components:
 
-```javascript
+```javascript static
 import { createFocusTrap, useClickOutside, useEscapeKey, updateFloatingPosition } from '@eldrex/cairnjs';
 
 // 1. Entrap Tab navigation inside any container

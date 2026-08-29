@@ -69,6 +69,10 @@ const threeCode = fs.readFileSync(path.join(__dirname, 'src', 'three.js'), 'utf-
 const docsCode = fs.readFileSync(path.join(__dirname, 'src', 'docs.js'), 'utf-8');
 const iterationCode = fs.readFileSync(path.join(__dirname, 'src', 'iteration.js'), 'utf-8');
 const bridgesCode = fs.readFileSync(path.join(__dirname, 'src', 'framework-bridges.js'), 'utf-8');
+const htmlCode = fs.readFileSync(path.join(__dirname, 'src', 'html.js'), 'utf-8');
+const appCode = fs.readFileSync(path.join(__dirname, 'src', 'app-launcher.js'), 'utf-8');
+const toolCode = fs.readFileSync(path.join(__dirname, 'src', 'tool-builder.js'), 'utf-8');
+const predictiveUiCode = fs.readFileSync(path.join(__dirname, 'src', 'predictive-ui.js'), 'utf-8');
 
 function stripImportsExports(code) {
     return code
@@ -102,6 +106,10 @@ ${stripImportsExports(animationCode)}
 ${stripImportsExports(domCode)}
 ${stripImportsExports(componentCode)}
 ${stripImportsExports(mountCode)}
+${stripImportsExports(htmlCode)}
+${stripImportsExports(appCode)}
+${stripImportsExports(toolCode)}
+${stripImportsExports(predictiveUiCode)}
 ${stripImportsExports(wasmCode)}
 ${stripImportsExports(virtualListCode)}
 ${stripImportsExports(physicsCode)}
@@ -136,6 +144,9 @@ ${stripImportsExports(iterationCode)}
 ${stripImportsExports(bridgesCode)}
 
 const cairn = {
+    version: '1.2.0',
+    html, app, tool, createTool,
+    btn, card, badge, stack, row, grid, title, divider, toggle,
     state, computed, effect, collection, resource, component, mount, ${tagList},
     spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility,
     animation: { spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility },
@@ -176,11 +187,13 @@ ${bundledBody}
 `;
 
 const esmBundle = `/**
- * Cairn v1.2.0 — Complete Fine-Grained Reactive Framework Release
+ * Cairn v1.3.0 — Complete Fine-Grained Reactive Framework Release
  * (c) Eldrex Bula & Cairn Contributors. MIT License.
  */
 ${bundledBody}
 export {
+    html, app, tool, createTool,
+    btn, card, badge, stack, row, grid, title, divider, toggle,
     state, computed, effect, collection, resource, component, mount, ${tagList},
     spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility,
     shapes, tokens, keyframes, media, styleHelper,

@@ -26,7 +26,7 @@ console.log(html);
 
 ### Node.js Express Example
 
-```js
+```js static
 import express from 'express';
 import { renderToString, div, h1, p } from '@eldrex/cairnjs';
 
@@ -70,7 +70,7 @@ app.listen(3000);
 
 Mounts a Cairn component onto server-rendered HTML, attaching reactivity without a full re-render.
 
-```js
+```js static
 import { hydrate } from '@eldrex/cairnjs';
 
 // client.js
@@ -92,7 +92,7 @@ hydrate('#app', MyApp, {
 ### Full SSR + Hydration Flow
 
 **server.js**
-```js
+```js static
 import { renderToString, div, p } from '@eldrex/cairnjs';
 
 export function renderPage(data) {
@@ -105,7 +105,7 @@ export function renderPage(data) {
 ```
 
 **client.js**
-```js
+```js static
 import { hydrate } from '@eldrex/cairnjs';
 import { App } from './App.js';
 
@@ -125,27 +125,29 @@ The reconciler performs surgical, key-based DOM patching for large reactive list
 Key-based list reconciliation.
 
 ```js
-import { reconcile, state, effect, ul, li } from '@eldrex/cairnjs';
+import { reconcile, state, effect, ul, li, mount } from '@eldrex/cairnjs';
 
 const todos = state([
   { id: 1, text: 'Write docs' },
   { id: 2, text: 'Build demo' }
 ]);
 
-const listEl = ul();
+const listEl = ul({ style: { padding: '1rem', background: '#1e293b', borderRadius: '0.5rem', color: '#fff' } });
 let prevItems = [];
 
 effect(() => {
   const newItems = todos.value;
   reconcile(listEl, prevItems, newItems,
-    (todo) => li(todo.text),
+    (todo) => li({ style: { padding: '0.25rem 0' } }, todo.text),
     (todo) => todo.id   // key extractor
   );
   prevItems = [...newItems];
 });
 
 // Add item — only one new <li> is inserted, nothing else re-renders
-todos.value = [...todos.value, { id: 3, text: 'Ship it' }];
+todos.value = [...todos.value, { id: 3, text: 'Ship it 🚀' }];
+
+mount('#app', listEl);
 ```
 
 ### Parameters
@@ -165,21 +167,23 @@ todos.value = [...todos.value, { id: 3, text: 'Ship it' }];
 A convenience wrapper that sets up a reactive list with auto-reconciliation.
 
 ```js
-import { createList, state, ul, li } from '@eldrex/cairnjs';
+import { createList, state, ul, li, mount } from '@eldrex/cairnjs';
 
 const todos = state([
   { id: 1, text: 'Buy milk' },
   { id: 2, text: 'Walk dog' }
 ]);
 
-const list = ul();
-const stop = createList(list, todos, (todo) => li(todo.text), (t) => t.id);
+const list = ul({ style: { padding: '1rem', background: '#1e293b', borderRadius: '0.5rem', color: '#fff' } });
+const stop = createList(list, todos, (todo) => li({ style: { padding: '0.25rem 0' } }, todo.text), (t) => t.id);
 
 // Automatically reconciles when todos.value changes
 todos.value = [
   { id: 1, text: 'Buy milk' },
-  { id: 3, text: 'New item' }  // item 2 removed, item 3 added
+  { id: 3, text: 'New item ⚡' }  // item 2 removed, item 3 added
 ];
+
+mount('#app', list);
 ```
 
 ---
@@ -188,10 +192,10 @@ todos.value = [
 
 Surgically patches a DOM element's attributes by diffing old and new prop objects. Only modifies attributes that actually changed.
 
-```js
-import { patchProps } from '@eldrex/cairnjs';
+```js static
+import { patchProps, div } from '@eldrex/cairnjs';
 
-const el = document.querySelector('#card');
+const el = div({ class: 'card', style: { opacity: '1' } });
 
 patchProps(el,
   { class: 'card', style: { opacity: '1' } },

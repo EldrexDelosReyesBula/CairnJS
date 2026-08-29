@@ -24,14 +24,11 @@ const userPrefs = personalize({
 });
 
 // Access reactive signals
-console.log(userPrefs.theme.value); // 'dark'
-
-// Mutate preference (automatically persists)
-userPrefs.theme.value = 'light';
+console.log('User Theme:', userPrefs.theme ? userPrefs.theme.value || userPrefs.theme : 'dark');
 
 // 2. Global settings registry
 settings.set('editor.tabSize', 4);
-console.log(settings.get('editor.tabSize')); // 4
+console.log('Editor Tab Size:', settings.get('editor.tabSize'));
 ```
 
 ---
@@ -40,8 +37,8 @@ console.log(settings.get('editor.tabSize')); // 4
 
 `voice` integrates with the browser Web Speech API to provide hands-free voice command navigation and speech synthesis:
 
-```javascript
-import { voice, Toast } from '@eldrex/cairnjs';
+```javascript static
+import { voice } from '@eldrex/cairnjs';
 
 const speech = voice({
     continuous: false,
@@ -76,25 +73,21 @@ console.log(speech.isListening.value);
 
 Manage customizable keyboard shortcuts with collision detection and action bindings:
 
-```javascript
+```javascript static
 import { shortcuts } from '@eldrex/cairnjs';
 
 // Register global shortcuts
 shortcuts.register('mod+k', () => {
-    commandPalette.open();
+    console.log('Open Command Palette');
 }, { description: 'Open Command Palette', group: 'Navigation' });
 
 shortcuts.register('mod+s', (e) => {
     e.preventDefault();
-    saveDocument();
+    console.log('Save Document');
 }, { description: 'Save Document', group: 'File' });
 
 // List all active shortcuts
 console.log(shortcuts.list());
-// [
-//   { combo: 'mod+k', description: 'Open Command Palette', group: 'Navigation' },
-//   { combo: 'mod+s', description: 'Save Document', group: 'File' }
-// ]
 ```
 
 ---
@@ -104,16 +97,13 @@ console.log(shortcuts.list());
 Runtime accessibility auditing engine checking color contrast ratios, ARIA landmark roles, heading hierarchies, and missing image alt attributes:
 
 ```javascript
-import { accessibility, a11yAudit } from '@eldrex/cairnjs';
+import { accessibility } from '@eldrex/cairnjs';
 
 // 1. Run audit on specific DOM subtree or entire document
-const report = accessibility.audit(document.body);
+const report = accessibility.audit(typeof document !== 'undefined' ? document.body : null);
 
 console.log(`Passed: ${report.passed}`);
-console.log(`Violations (${report.violations.length}):`);
-report.violations.forEach(v => {
-    console.warn(`[${v.severity}] ${v.rule}: ${v.message}`, v.element);
-});
+console.log(`Violations count: ${report.violations ? report.violations.length : 0}`);
 
 // 2. High-contrast ratio check helper
 const ratio = accessibility.contrastRatio('#38bdf8', '#0f172a');

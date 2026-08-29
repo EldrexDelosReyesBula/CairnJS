@@ -9,7 +9,6 @@
     <meta name="author" content="Eldrex Delos Reyes Bula">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <link rel="canonical" href="https://cairnjs.vercel.app/docs/index.html">
-    <base href="/docs/">
 
     <!-- Favicon & Icons -->
     <link rel="icon" type="image/svg+xml" href="./assets/cairn-official-logo.svg">
@@ -82,30 +81,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
     <style>
         :root, [data-theme="dark"] {
-            --bg: #0b0f19;
-            --surface: #111827;
-            --surface-card: #1e293b;
-            --surface-hover: #334155;
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #090d16;
+            --surface: #0e131f;
+            --surface-card: #121826;
+            --surface-hover: #1a2234;
+            --border: #1e2638;
             --border-active: #38bdf8;
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #38bdf8;
             --accent-purple: #818cf8;
-            --header-bg: rgba(11, 15, 25, 0.85);
-            --code-bg: #020617;
-            --code-header-bg: #0f172a;
-            --sidebar-bg: #0b0f19;
-            --drawer-bg: #0f172a;
-            --card-bg: rgba(15, 23, 42, 0.7);
-            --card-shadow: 0 20px 30px rgba(0, 0, 0, 0.35);
-            --btn-sec-bg: rgba(30, 41, 59, 0.8);
+            --header-bg: #090d16;
+            --code-bg: #0d121d;
+            --code-header-bg: #141b29;
+            --sidebar-bg: #090d16;
+            --drawer-bg: #0e131f;
+            --card-bg: #121826;
+            --card-shadow: none;
+            --btn-sec-bg: #161e2e;
             --btn-sec-text: #f1f5f9;
-            --btn-sec-border: rgba(255, 255, 255, 0.1);
-            --search-bg: rgba(30, 41, 59, 0.4);
-            --toggle-track: #1e293b;
-            --toggle-thumb: #0b0f19;
-            --toggle-border: rgba(255, 255, 255, 0.2);
+            --btn-sec-border: #232f46;
+            --search-bg: #141c2c;
+            --toggle-track: #1a2336;
+            --toggle-thumb: #090d16;
+            --toggle-border: #28354f;
             --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
             --font-body: 'Inter', system-ui, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
@@ -114,28 +113,28 @@
         [data-theme="light"] {
             --bg: #ffffff;
             --surface: #f8fafc;
-            --surface-card: #ffffff;
+            --surface-card: #f8fafc;
             --surface-hover: #f1f5f9;
-            --border: rgba(0, 0, 0, 0.08);
+            --border: #e2e8f0;
             --border-active: #0284c7;
             --text: #0f172a;
-            --text-muted: #475569;
+            --text-muted: #64748b;
             --accent: #0284c7;
             --accent-purple: #6366f1;
-            --header-bg: rgba(255, 255, 255, 0.95);
+            --header-bg: #ffffff;
             --code-bg: #0f172a;
             --code-header-bg: #1e293b;
             --sidebar-bg: #ffffff;
             --drawer-bg: #ffffff;
-            --card-bg: #ffffff;
-            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.03);
-            --btn-sec-bg: #f8fafc;
+            --card-bg: #f8fafc;
+            --card-shadow: none;
+            --btn-sec-bg: #f1f5f9;
             --btn-sec-text: #0f172a;
-            --btn-sec-border: rgba(0, 0, 0, 0.12);
+            --btn-sec-border: #cbd5e1;
             --search-bg: #f1f5f9;
             --toggle-track: #e2e8f0;
             --toggle-thumb: #ffffff;
-            --toggle-border: rgba(0, 0, 0, 0.15);
+            --toggle-border: #cbd5e1;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -171,7 +170,7 @@
             min-height: 100vh;
             line-height: 1.6;
             overflow-x: hidden;
-            transition: background-color 0.25s ease, color 0.25s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         pre, code {
@@ -181,144 +180,140 @@
         /* Custom Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-        #docs-root {
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #docs-root, #cairn-docs-app {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        /* Animated Gradient Text */
+        /* Clean High-Contrast Accent Text */
         .cairn-gradient-text {
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 25%, #c084fc 50%, #f472b6 75%, #38bdf8 100%);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: cairnGradientShift 8s ease infinite;
+            color: var(--accent);
+            font-weight: 800;
         }
 
-        @keyframes cairnGradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* VitePress Hero Styling */
+        /* Clean Flat Hero Section with Background GIF */
         .cairn-hero-section {
             position: relative;
-            padding: 4rem 1.5rem 5rem;
-            max-width: 1200px;
+            padding: clamp(3.5rem, 7vw, 5.5rem) clamp(1rem, 4vw, 2rem) clamp(3.5rem, 7vw, 5rem);
+            max-width: 1100px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 1;
         }
 
-        /* Subtle Ambient Glow Behind Hero */
-        .cairn-hero-glow {
+        .cairn-hero-bg-wrap {
             position: absolute;
-            top: 20%;
+            top: 0;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 400px;
-            background: radial-gradient(ellipse, rgba(56, 189, 248, 0.18) 0%, rgba(129, 140, 248, 0.12) 40%, rgba(192, 132, 252, 0.05) 65%, transparent 80%);
-            filter: blur(60px);
+            transform: translateX(-50%);
+            width: 100vw;
+            max-width: 100vw;
+            height: 100%;
+            min-height: 480px;
             pointer-events: none;
+            overflow: hidden;
             z-index: 0;
+            opacity: 0.15;
+            mask-image: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 75%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 75%);
         }
 
-        /* Version Badge Pill */
+        .cairn-hero-bg-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+        }
+
+        /* Version Badge Pill (Flat Minimal) */
         .cairn-version-badge {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.35rem 0.9rem;
-            background: var(--card-bg);
+            padding: 0.35rem 0.85rem;
+            background: var(--surface-card);
             border: 1px solid var(--border);
             border-radius: 9999px;
-            font-size: 0.825rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            color: var(--text);
+            color: var(--text-muted);
             text-decoration: none;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.15s ease, color 0.15s ease;
         }
 
         .cairn-version-badge:hover {
             border-color: var(--accent);
-            transform: translateY(-1px);
-        }
-
-        .cairn-badge-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 8px #10b981;
-        }
-
-        /* Solid Grounded Hero Logo (No Floating Bobbing) */
-        .cairn-hero-badge {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            filter: drop-shadow(0 12px 24px rgba(56, 189, 248, 0.25));
-        }
-
-        .cairn-hero-title {
-            position: relative;
-            z-index: 1;
-            font-family: var(--font-heading);
-            font-size: 3.85rem;
-            font-weight: 900;
-            line-height: 1.1;
-            letter-spacing: -0.035em;
-            margin-bottom: 1.25rem;
             color: var(--text);
         }
 
+        .cairn-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            flex-shrink: 0;
+        }
+
+        /* Hero Title & Subtitle */
+        .cairn-hero-title {
+            font-family: var(--font-heading);
+            font-size: clamp(2.2rem, 5.5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+            color: var(--text);
+            max-width: 850px;
+        }
+
         .cairn-hero-subtitle {
-            position: relative;
-            z-index: 1;
-            font-size: 1.25rem;
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
             line-height: 1.6;
             color: var(--text-muted);
-            max-width: 720px;
+            max-width: 680px;
             margin-bottom: 2rem;
             font-weight: 400;
         }
 
-        /* Quick Install Terminal Snippet */
+        /* Quick Install Box (Flat Minimal) */
         .cairn-install-box {
-            position: relative;
-            z-index: 1;
             display: inline-flex;
             align-items: center;
             gap: 0.75rem;
-            background: var(--card-bg);
+            background: var(--surface-card);
             border: 1px solid var(--border);
-            border-radius: 9999px;
-            padding: 0.4rem 0.6rem 0.4rem 1.25rem;
-            margin-bottom: 2.25rem;
+            border-radius: 0.5rem;
+            padding: 0.45rem 0.75rem 0.45rem 1rem;
+            margin-bottom: 2rem;
             font-family: var(--font-mono);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text);
-            box-shadow: var(--card-shadow);
-            backdrop-filter: blur(12px);
+            max-width: 100%;
         }
 
         .cairn-install-prompt {
@@ -328,13 +323,13 @@
         }
 
         .cairn-copy-btn {
-            background: rgba(30, 41, 59, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            color: #38bdf8 !important;
-            border-radius: 9999px;
-            padding: 0 0.85rem;
+            background: var(--btn-sec-bg) !important;
+            border: 1px solid var(--btn-sec-border) !important;
+            color: var(--text-muted) !important;
+            border-radius: 0.35rem;
+            padding: 0 0.75rem;
             height: 28px;
-            font-size: 0.775rem;
+            font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -344,204 +339,222 @@
         }
 
         .cairn-copy-btn:hover {
-            background: #0284c7 !important;
-            color: #ffffff !important;
-            border-color: #38bdf8 !important;
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
         }
 
-        /* Universal Button & Input Normalization */
-        button, input, select, textarea {
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            box-sizing: border-box;
-        }
-
-        button {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: inherit;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        /* Buttons (Flat Minimal) */
         .cairn-hero-actions {
-            position: relative;
-            z-index: 1;
             display: flex;
-            gap: 0.875rem;
-            margin-bottom: 3.5rem;
+            gap: 0.75rem;
+            margin-bottom: 2.75rem;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
         }
 
-        .cairn-btn-primary {
-            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%) !important;
-            color: #ffffff !important;
-            height: 42px;
-            padding: 0 1.5rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            font-size: 0.925rem;
-            text-decoration: none;
-            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.35);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            cursor: pointer;
-            border: 1px solid rgba(56, 189, 248, 0.35) !important;
+        .cairn-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            box-sizing: border-box;
-            white-space: nowrap;
+            height: 40px;
+            padding: 0 1.25rem;
+            border-radius: 0.5rem;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            outline: none;
+            border: 1px solid transparent;
+        }
+
+        .cairn-btn-primary {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            border: 1px solid #38bdf8 !important;
         }
 
         .cairn-btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 28px rgba(2, 132, 199, 0.5);
-            filter: brightness(1.08);
+            background: #0369a1 !important;
             color: #ffffff !important;
         }
 
         .cairn-btn-secondary {
-            background: #1e293b !important;
-            color: #f1f5f9 !important;
-            height: 42px;
-            padding: 0 1.5rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            font-size: 0.925rem;
-            text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            box-sizing: border-box;
-            white-space: nowrap;
+            background: var(--btn-sec-bg) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--btn-sec-border) !important;
         }
 
         .cairn-btn-secondary:hover {
             border-color: var(--accent) !important;
             color: var(--accent) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(56, 189, 248, 0.15);
         }
 
-        /* Stats Bar Highlights */
-        .cairn-stats-bar {
-            position: relative;
-            z-index: 1;
+        .cairn-btn-outline {
+            background: transparent !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text) !important;
+        }
+        .cairn-btn-outline:hover {
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
+        }
+
+        /* Clean Flat Metric Row */
+        .cairn-metrics-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(1.25rem, 3.5vw, 3rem);
+            margin-top: 0.5rem;
+            padding: 1rem 1.75rem;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            max-width: 680px;
+            width: 100%;
+            flex-wrap: wrap;
+            box-sizing: border-box;
+        }
+
+        .cairn-metric-item {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 85px;
+        }
+
+        .cairn-metric-num {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1.2;
+            margin-bottom: 0.2rem;
+        }
+
+        .cairn-metric-label {
+            font-size: 0.725rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Clean Flat Feature Grid */
+        .cairn-feature-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1rem;
             width: 100%;
             max-width: 1100px;
-            margin-bottom: 4rem;
-        }
-
-        .cairn-stat-item {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.875rem;
-            padding: 1.25rem 1rem;
-            text-align: center;
-            box-shadow: var(--card-shadow);
-        }
-
-        .cairn-stat-val {
-            font-family: var(--font-heading);
-            font-size: 1.65rem;
-            font-weight: 800;
-            color: var(--accent);
-            margin-bottom: 0.25rem;
-        }
-
-        .cairn-stat-lbl {
-            font-size: 0.825rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* 6-Card Feature Grid */
-        .cairn-feature-grid {
-            position: relative;
-            z-index: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-            width: 100%;
-            max-width: 1200px;
         }
 
         .cairn-feature-card {
-            background: var(--card-bg);
+            background: var(--surface-card);
             border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.85rem;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
             text-align: left;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: var(--card-shadow);
-            position: relative;
-            overflow: hidden;
+            transition: border-color 0.15s ease;
         }
 
         .cairn-feature-card:hover {
             border-color: var(--accent);
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
 
         .cairn-feature-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(56, 189, 248, 0.1);
-            border-radius: 0.75rem;
+            width: 38px;
+            height: 38px;
+            border-radius: 0.375rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #38bdf8;
-            font-size: 1.35rem;
-            margin-bottom: 1.25rem;
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--accent);
         }
 
         .cairn-feature-card h3 {
             font-family: var(--font-heading);
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
             color: var(--text);
         }
 
         .cairn-feature-card p {
-            font-size: 0.925rem;
+            font-size: 0.875rem;
             color: var(--text-muted);
-            line-height: 1.6;
+            line-height: 1.55;
             margin: 0;
         }
 
-        /* Clean Markdown Article Styling */
+        /* Clean Flat CTA Banner */
+        .cairn-cta-section {
+            max-width: 1100px;
+            margin: 0 auto 5rem auto;
+            padding: 0 1.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .cairn-cta-box {
+            background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(56, 189, 248, 0.04));
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+        }
+
+        .cairn-cta-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+        }
+
+        .cairn-cta-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto 1.75rem auto;
+            line-height: 1.6;
+        }
+
+        .cairn-cta-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Clean Flat Markdown Styling */
         .markdown-body h1 {
             font-family: var(--font-heading);
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 800;
             letter-spacing: -0.025em;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
             line-height: 1.25;
             color: var(--text);
         }
 
         .markdown-body h2 {
             font-family: var(--font-heading);
-            font-size: 1.55rem;
+            font-size: 1.45rem;
             font-weight: 700;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
+            margin-top: 2.25rem;
+            margin-bottom: 0.85rem;
             padding-bottom: 0.4rem;
             border-bottom: 1px solid var(--border);
             color: var(--text);
@@ -551,39 +564,39 @@
 
         .markdown-body h3 {
             font-family: var(--font-heading);
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 600;
-            margin-top: 1.75rem;
-            margin-bottom: 0.65rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
             color: var(--text);
             scroll-margin-top: 80px;
         }
 
         .markdown-body p {
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.15rem;
             color: var(--text);
-            font-size: 1.025rem;
-            line-height: 1.75;
+            font-size: 0.975rem;
+            line-height: 1.7;
         }
 
         .markdown-body ul, .markdown-body ol {
             margin-left: 1.25rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.15rem;
             color: var(--text);
         }
 
         .markdown-body li {
-            margin-bottom: 0.4rem;
-            font-size: 1rem;
-            line-height: 1.65;
+            margin-bottom: 0.35rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
-        /* Clean Code Block Container with Top Header */
+        /* Clean Flat Code Block Container */
         .markdown-body .code-block-wrapper {
-            background: #020617;
+            background: var(--code-bg);
             border: 1px solid var(--border);
             border-radius: 0.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             overflow: hidden;
         }
 
@@ -592,64 +605,301 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.4rem 0.85rem;
-            background: #0f172a;
+            background: var(--code-header-bg);
             border-bottom: 1px solid var(--border);
             font-size: 0.75rem;
-            color: #94a3b8;
+            color: var(--text-muted);
             font-family: var(--font-mono);
         }
 
-        .markdown-body .copy-code-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: #38bdf8;
+        .markdown-body .code-block-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .markdown-body .run-code-btn {
+            background: #0284c7;
+            border: 1px solid #38bdf8;
+            color: #ffffff;
             padding: 0.2rem 0.6rem;
             border-radius: 0.25rem;
-            font-size: 0.75rem;
+            font-size: 0.725rem;
+            font-weight: 600;
             cursor: pointer;
             font-family: var(--font-mono);
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
             transition: all 0.15s ease;
         }
 
-        .markdown-body .copy-code-btn:hover {
+        .markdown-body .run-code-btn:hover {
+            background: #0369a1;
+        }
+
+        .markdown-body .copy-code-btn, .markdown-body .open-playground-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.2rem 0.55rem;
+            border-radius: 0.25rem;
+            font-size: 0.725rem;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.15s ease;
+        }
+
+        .markdown-body .copy-code-btn:hover, .markdown-body .open-playground-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Embedded Live Runner Pane */
+        .cairn-live-runner-pane {
+            background: var(--code-bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .cairn-live-runner-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0.85rem;
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .cairn-runner-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .cairn-runner-toolbar-btn {
+            background: var(--btn-sec-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.725rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.15s ease;
+        }
+
+        .cairn-runner-toolbar-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .cairn-runner-toolbar-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
             background: rgba(56, 189, 248, 0.15);
+        }
+
+        .cairn-live-runner-editor {
+            width: 100%;
+            height: 140px;
+            background: #020617;
+            color: #38bdf8;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 0.75rem;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            resize: vertical;
+            outline: none;
+            box-sizing: border-box;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .cairn-live-runner-frame {
+            width: 100%;
+            min-height: 160px;
+            max-height: 420px;
+            border: none;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .code-block-wrapper.cairn-runner-expanded {
+            position: fixed !important;
+            inset: 2rem !important;
+            z-index: 99999 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            max-width: none !important;
+            margin: 0 !important;
+        }
+
+        .code-block-wrapper.cairn-runner-expanded .cairn-live-runner-pane {
+            flex: 1;
+        }
+
+        .code-block-wrapper.cairn-runner-expanded .cairn-live-runner-frame {
+            max-height: none !important;
+            flex: 1;
+            height: 100%;
+        }
+
+        .cairn-live-runner-console {
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            padding: 0.6rem 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            max-height: 140px;
+            overflow-y: auto;
+            display: none;
         }
 
         .markdown-body pre {
             background: transparent;
-            padding: 1rem 1.15rem;
+            padding: 0.9rem 1.1rem;
             border: none;
             overflow-x: auto;
             margin-bottom: 0;
         }
 
         .markdown-body code {
-            background: rgba(56, 189, 248, 0.1);
-            color: #38bdf8;
-            padding: 0.15rem 0.4rem;
+            background: var(--surface);
+            color: var(--accent);
+            padding: 0.15rem 0.35rem;
             border-radius: 0.25rem;
             font-size: 0.85rem;
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            border: 1px solid var(--border);
         }
 
         .markdown-body pre code {
             background: transparent;
             padding: 0;
-            color: #f8fafc;
+            color: var(--text);
             border: none;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
             line-height: 1.6;
+        }
+
+        /* Flat Markdown Interactive Widgets */
+        .cairn-md-widget {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            margin: 1.25rem 0;
+            overflow: hidden;
+        }
+
+        .cairn-md-widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.85rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.775rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .cairn-md-widget-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 140px;
+            background: var(--bg);
+        }
+
+        /* Flat Swatches Grid */
+        .cairn-swatches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.65rem;
+            width: 100%;
+        }
+
+        .cairn-swatch-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+            text-align: center;
+        }
+        .cairn-swatch-card:hover {
+            border-color: var(--accent);
+        }
+        .cairn-swatch-color {
+            height: 40px;
+            border-radius: 0.25rem;
+            margin-bottom: 0.35rem;
+        }
+        .cairn-swatch-label {
+            font-size: 0.725rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .cairn-swatch-hex {
+            font-size: 0.675rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* Flat Animation Box */
+        .cairn-anim-box {
+            width: 70px;
+            height: 70px;
+            border-radius: 0.5rem;
+            background: #0284c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.35rem;
+            border: 1px solid #38bdf8;
+            transition: all 0.2s ease;
+        }
+
+        /* Flat Skeleton Card */
+        .cairn-skeleton-card {
+            width: 100%;
+            max-width: 320px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+        }
+        .cairn-skeleton-line {
+            height: 10px;
+            border-radius: 3px;
+            background: var(--border);
+            margin-bottom: 0.5rem;
         }
 
         .markdown-body table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-bottom: 1.5rem;
-            border-radius: 0.5rem;
+            border-collapse: collapse;
+            margin-bottom: 1.25rem;
+            border-radius: 0.375rem;
             overflow: hidden;
             border: 1px solid var(--border);
             display: block;
@@ -657,140 +907,121 @@
         }
 
         .markdown-body th, .markdown-body td {
-            padding: 0.6rem 1rem;
+            padding: 0.55rem 0.85rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-            font-size: 0.9rem;
+            border-right: 1px solid var(--border);
+            font-size: 0.875rem;
         }
 
         .markdown-body th {
-            background: #0f172a;
+            background: var(--surface);
             font-family: var(--font-heading);
             font-weight: 600;
-            color: #f8fafc;
-            font-size: 0.8rem;
+            color: var(--text);
+            font-size: 0.775rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
         .markdown-body blockquote {
-            border-left: 3px solid #38bdf8;
-            background: rgba(56, 189, 248, 0.05);
-            padding: 0.75rem 1rem;
-            border-radius: 0 0.375rem 0.375rem 0;
-            margin-bottom: 1.25rem;
-            color: #e2e8f0;
-            font-size: 0.95rem;
+            border-left: 3px solid var(--accent);
+            background: var(--surface);
+            padding: 0.65rem 0.95rem;
+            border-radius: 0 0.25rem 0.25rem 0;
+            margin-bottom: 1.15rem;
+            color: var(--text-muted);
+            font-size: 0.925rem;
         }
 
         .markdown-body a {
-            color: #38bdf8;
+            color: var(--accent);
             text-decoration: none;
             font-weight: 500;
         }
 
         .markdown-body a:hover {
-            color: #7dd3fc;
             text-decoration: underline;
         }
 
-        /* Responsive Breakpoints & Fluid Adaptability */
+        /* Responsive Breakpoints */
         @media (max-width: 1150px) {
             .cairn-hero-section {
-                padding: 4rem 1.5rem 3.5rem;
+                padding: 3.5rem 1.5rem 3rem;
             }
             .cairn-feature-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 1.25rem;
             }
         }
 
         @media (max-width: 768px) {
             .cairn-hero-section {
-                padding: 3rem 1rem 2.5rem;
+                padding: 2.25rem 1rem 2rem;
             }
-            .cairn-hero-glow {
-                width: 320px;
-                height: 320px;
-                filter: blur(40px);
+            .cairn-version-badge {
+                font-size: 0.775rem;
+                padding: 0.3rem 0.75rem;
+                gap: 0.4rem;
+                margin-bottom: 1.25rem;
             }
             .cairn-hero-title {
-                font-size: clamp(2rem, 7vw, 2.75rem);
-                line-height: 1.15;
+                font-size: clamp(1.6rem, 5.5vw, 2.1rem);
+                line-height: 1.2;
+                letter-spacing: -0.02em;
+                hyphens: none;
+                word-break: normal;
+                margin-bottom: 0.85rem;
             }
             .cairn-hero-subtitle {
-                font-size: 1.05rem;
-                margin-bottom: 2rem;
+                font-size: 0.925rem;
+                line-height: 1.55;
+                margin-bottom: 1.5rem;
+            }
+            .cairn-install-box {
+                width: 100%;
+                max-width: 320px;
+                font-size: 0.78rem;
+                padding: 0.4rem 0.65rem 0.4rem 0.85rem;
+                gap: 0.5rem;
+                margin-bottom: 1.5rem;
+                box-sizing: border-box;
+            }
+            .cairn-install-box code {
+                font-size: 0.78rem;
+                overflow-x: auto;
+                white-space: nowrap;
             }
             .cairn-hero-actions {
                 flex-direction: column;
                 align-items: stretch;
                 max-width: 320px;
-                margin: 0 auto 2.5rem;
-                gap: 0.75rem;
+                width: 100%;
+                gap: 0.55rem;
+                margin-bottom: 2rem;
             }
-            .cairn-btn-primary, .cairn-btn-secondary {
+            .cairn-btn, .cairn-btn-primary, .cairn-btn-secondary, .cairn-btn-outline {
                 width: 100%;
                 text-align: center;
                 justify-content: center;
-                padding: 0.75rem 1.25rem;
-                font-size: 0.95rem;
+                padding: 0.65rem 1rem;
+                font-size: 0.875rem;
+                box-sizing: border-box;
             }
             .cairn-feature-grid {
                 grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            .cairn-feature-card {
-                padding: 1.35rem;
-            }
-            .markdown-body h1 {
-                font-size: 1.75rem;
-                line-height: 1.25;
-            }
-            .markdown-body h2 {
-                font-size: 1.35rem;
-                margin-top: 1.75rem;
-            }
-            .markdown-body h3 {
-                font-size: 1.1rem;
-            }
-            .markdown-body p, .markdown-body li {
-                font-size: 0.925rem;
-                line-height: 1.6;
-            }
-            .markdown-body pre {
-                padding: 0.75rem 0.85rem;
-                font-size: 0.825rem;
-                -webkit-overflow-scrolling: touch;
-            }
-            .markdown-body table {
-                font-size: 0.825rem;
-                -webkit-overflow-scrolling: touch;
-            }
-            .markdown-body th, .markdown-body td {
-                padding: 0.5rem 0.75rem;
             }
         }
 
         @media (max-width: 480px) {
             .cairn-hero-section {
-                padding: 2rem 0.75rem 2rem;
+                padding: 1.75rem 0.85rem 1.5rem;
             }
             .cairn-hero-title {
-                font-size: 1.85rem;
+                font-size: 1.5rem;
+                line-height: 1.25;
             }
             .cairn-hero-subtitle {
-                font-size: 0.925rem;
-            }
-            .cairn-feature-card h3 {
-                font-size: 1.05rem;
-            }
-            .cairn-feature-card p {
                 font-size: 0.875rem;
-            }
-            .markdown-body h1 {
-                font-size: 1.5rem;
             }
         }
     </style>
@@ -798,6 +1029,16 @@
 <body>
     <div id="docs-root"></div>
 
-    <script type="module" src="./app.js"></script>
+    <script type="module">
+        try {
+            await import('./app.js');
+        } catch (e1) {
+            try {
+                await import('./docs/app.js');
+            } catch (e2) {
+                await import('/docs/app.js');
+            }
+        }
+    </script>
 </body>
 </html>

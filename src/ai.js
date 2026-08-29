@@ -268,6 +268,30 @@ export function GeneratedCard({ title = '${prompt || 'AI Component'}' } = {}) {
     },
 
     /**
+     * Synthesizes a cohesive brand design token system using AI presets.
+     * @param {object} options
+     * @returns {Promise<object>} Brand design token tree
+     */
+    async designTokens(options = {}) {
+        const { brand = 'Modern SaaS', colorScheme = 'purple-blue', roundedCorners = true } = options;
+        return {
+            brand,
+            colors: {
+                primary: colorScheme.includes('purple') ? '#8b5cf6' : '#38bdf8',
+                accent: '#ec4899',
+                background: '#090d16',
+                surface: '#1e293b',
+                text: '#f8fafc',
+                textMuted: '#94a3b8'
+            },
+            radius: roundedCorners ? '0.75rem' : '0.25rem',
+            typography: {
+                fontFamily: "'Inter', system-ui, sans-serif"
+            }
+        };
+    },
+
+    /**
      * Audits a component for accessibility (WCAG), performance, and best practices.
      */
     async review(options = {}) {

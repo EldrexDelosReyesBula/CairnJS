@@ -35,8 +35,12 @@ f5            → F5 key alone
 
 ## Basic Examples
 
-```js
-import { keyboard } from '@eldrex/cairnjs';
+```js static
+import { keyboard, state } from '@eldrex/cairnjs';
+
+const searchModal = state(false);
+const activeModal = state(null);
+const saveDocument = async () => console.log('Document saved');
 
 // Open search on Ctrl+K
 const stopSearch = keyboard.on('ctrl+k', () => {
@@ -64,7 +68,7 @@ stopSearch();
 
 Removes all registered handlers for a specific combo.
 
-```js
+```js static
 keyboard.off('ctrl+k');
 ```
 
@@ -74,7 +78,7 @@ keyboard.off('ctrl+k');
 
 Removes all registered shortcuts.
 
-```js
+```js static
 keyboard.clear();
 ```
 
@@ -84,7 +88,9 @@ keyboard.clear();
 
 Returns an array of all currently registered shortcuts with their descriptions.
 
-```js
+```js static
+import { keyboard, div, span } from '@eldrex/cairnjs';
+
 const shortcuts = keyboard.list();
 // [{ combo: 'ctrl+k', description: 'Open search' }, ...]
 
@@ -105,7 +111,9 @@ const ShortcutPanel = div(
 
 ### Modal Toggle
 
-```js
+```js static
+import { keyboard, state } from '@eldrex/cairnjs';
+
 const isOpen = state(false);
 
 keyboard.on('ctrl+k', () => isOpen.value = !isOpen.value, {
@@ -116,9 +124,11 @@ keyboard.on('escape', () => isOpen.value = false);
 
 ### Dev Tools Toggle
 
-```js
+```js static
+import { keyboard } from '@eldrex/cairnjs';
+
 keyboard.on('ctrl+shift+d', () => {
-  debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+  console.log('Toggle dev panel');
 }, {
   description: 'Toggle dev panel',
   preventDefault: true
@@ -127,21 +137,21 @@ keyboard.on('ctrl+shift+d', () => {
 
 ### Per-Component Shortcuts (with cleanup)
 
-```js
-import { onMount, onUnmount, keyboard } from '@eldrex/cairnjs';
+```js static
+import { onMount, onUnmount, keyboard, component, div } from '@eldrex/cairnjs';
 
 const EditorComponent = component(() => {
   let stopSave;
 
   onMount(() => {
-    stopSave = keyboard.on('ctrl+s', () => saveEditor());
+    stopSave = keyboard.on('ctrl+s', () => console.log('Saved editor'));
   });
 
   onUnmount(() => {
-    stopSave(); // unregister when component unmounts
+    if (stopSave) stopSave(); // unregister when component unmounts
   });
 
-  return div({ id: 'editor' }, '...');
+  return div({ id: 'editor' }, 'Editor Active');
 });
 ```
 
@@ -188,6 +198,8 @@ const i18n = createI18n({
     }
   }
 });
+
+console.log('Greeting:', i18n.t('greeting', { name: 'Eldrex' }));
 ```
 
 ---
@@ -198,7 +210,7 @@ Translates a key in the current locale with optional interpolation.
 
 ### Basic Translation
 
-```js
+```js static
 i18n.t('nav.home'); // 'Home'
 ```
 
@@ -206,7 +218,7 @@ i18n.t('nav.home'); // 'Home'
 
 Use `{variable}` placeholders in your message strings:
 
-```js
+```js static
 i18n.t('greeting', { name: 'Eldrex' }); // 'Hello, Eldrex!'
 ```
 
@@ -214,7 +226,7 @@ i18n.t('greeting', { name: 'Eldrex' }); // 'Hello, Eldrex!'
 
 Use `singular | plural` syntax. Cairn selects the form based on `{ count }`:
 
-```js
+```js static
 i18n.t('items', { count: 1 }); // '1 item'
 i18n.t('items', { count: 5 }); // '5 items'
 ```
@@ -225,7 +237,7 @@ i18n.t('items', { count: 5 }); // '5 items'
 
 Returns a **reactive computed signal** — automatically re-evaluates when the locale changes. Perfect for reactive DOM binding.
 
-```js
+```js static
 const greeting = i18n.rt('greeting', { name: 'Eldrex' });
 // greeting is a reactive signal
 
@@ -239,7 +251,7 @@ p(greeting); // re-renders when locale switches
 
 Switches the active locale reactively.
 
-```js
+```js static
 i18n.setLocale('fr');
 i18n.t('greeting', { name: 'Eldrex' }); // 'Bonjour, Eldrex!'
 ```
@@ -250,11 +262,13 @@ i18n.t('greeting', { name: 'Eldrex' }); // 'Bonjour, Eldrex!'
 
 Reactive state signal of the current locale. Subscribe to changes:
 
-```js
+```js static
 import { effect } from '@eldrex/cairnjs';
 
 effect(() => {
-  document.documentElement.lang = i18n.locale.value;
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = i18n.locale.value;
+  }
 });
 ```
 
@@ -264,7 +278,7 @@ effect(() => {
 
 Array of configured locale codes:
 
-```js
+```js static
 i18n.availableLocales; // ['en', 'fr', 'ja']
 ```
 
@@ -273,23 +287,32 @@ i18n.availableLocales; // ['en', 'fr', 'ja']
 ## Full Reactive UI Example
 
 ```js
-import { createI18n, state, div, p, button, select, option } from '@eldrex/cairnjs';
+import { createI18n, div, p, button, select, option, mount } from '@eldrex/cairnjs';
 
 const i18n = createI18n({
   locale: 'en',
   messages: {
-    en: { title: 'Welcome', cta: 'Get Started' },
-    fr: { title: 'Bienvenue', cta: 'Commencer' }
+    en: { title: 'Welcome to CairnJS', cta: 'Get Started' },
+    fr: { title: 'Bienvenue sur CairnJS', cta: 'Commencer' },
+    ja: { title: 'CairnJS へようこそ', cta: '始める' }
   }
 });
 
-const App = div(
-  p(i18n.rt('title')),
-  button(i18n.rt('cta')),
-  select(
-    { onchange: (e) => i18n.setLocale(e.target.value) },
-    option('English', { value: 'en' }),
-    option('Français', { value: 'fr' })
+const App = div({ style: { padding: '1.5rem', background: '#1e293b', borderRadius: '0.5rem', maxWidth: '400px' } },
+  p({ style: { fontSize: '1.25rem', fontWeight: 'bold', color: '#38bdf8' } }, () => i18n.t('title')),
+  div({ style: { marginTop: '1rem', display: 'flex', gap: '0.5rem' } },
+    button({ style: { padding: '0.5rem 1rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.35rem', cursor: 'pointer' } }, () => i18n.t('cta')),
+    select(
+      {
+        style: { padding: '0.5rem', background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '0.35rem' },
+        onchange: (e) => i18n.setLocale(e.target.value)
+      },
+      option('English', { value: 'en' }),
+      option('Français', { value: 'fr' }),
+      option('日本語', { value: 'ja' })
+    )
   )
 );
+
+mount('#app', App);
 ```

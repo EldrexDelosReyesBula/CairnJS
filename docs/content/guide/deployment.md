@@ -1,12 +1,12 @@
 # Production Deployment & Hosting Guide
 
-How to deploy CairnJS applications, documentation, and standalone components to cloud platforms with maximum performance, security, and global edge caching.
+How to deploy CairnJS applications, documentation, and standalone components to modern hosting platforms.
 
 ---
 
-## 1. Deploying to Vercel (Recommended)
+## 1. Deploying to Vercel
 
-CairnJS is optimized for zero-config Vercel edge deployment with the included [`vercel.json`](vercel.json).
+CairnJS is structured for straightforward Vercel deployment with the included [`vercel.json`](vercel.json).
 
 ### `vercel.json` Configuration:
 ```json
@@ -44,7 +44,7 @@ vercel deploy --prod
 ## 2. Deploying to Cloudflare Pages & Netlify
 
 ### Cloudflare Pages:
-1. Connect your GitHub repository: `https://github.com/EldrexDelosReyesBula/CairnJS`.
+1. Connect your GitHub repository.
 2. Build command: `node build.js`
 3. Output directory: `.` (or `/docs`)
 
@@ -64,10 +64,10 @@ vercel deploy --prod
 
 ## 3. Bundling with Vite, Rollup & esbuild
 
-While CairnJS requires zero build tools for development, you can create optimized production bundles:
+While CairnJS requires zero build tools for development, you can create bundled output if desired:
 
 ### Vite Configuration (`vite.config.js`):
-```javascript
+```javascript static
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -85,9 +85,9 @@ export default defineConfig({
 
 ---
 
-## 4. Production Performance Checklist
+## 4. Production Checklist
 
-- [x] **Enable Gzip / Brotli compression** on all `.js`, `.css`, and `.json` responses.
-- [x] **Set immutable Cache-Control headers** on `/dist/` bundles and `/cairn-font/` font files.
-- [x] **Serve WASM with `application/wasm` MIME type** to allow streaming compilation (`WebAssembly.instantiateStreaming`).
-- [x] **Use HTTP/2 or HTTP/3** for parallel module resolution without bundling bottlenecks.
+- [x] **Enable Compression**: Use Gzip or Brotli compression on text assets (`.js`, `.css`, `.json`).
+- [x] **Cache Headers**: Set long-lived caching headers on `/dist/` build artifacts.
+- [x] **WASM MIME Type**: Serve `.wasm` files with `application/wasm` headers.
+- [x] **Modern HTTP**: Use HTTP/2 or HTTP/3 for parallel module delivery.

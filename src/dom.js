@@ -373,21 +373,28 @@ export function h(tag, ...args) {
             applyAnimateProp(el, val, props.duration, props.delay, props.easing);
         } else if (key === 'gestures' && typeof val === 'object') {
             gesture(el, val);
-        } else if (key === 'value' || key === 'checked' || key === 'disabled' || key === 'selected' || key === 'readOnly') {
+        } else if (key === 'value' || key === 'checked' || key === 'disabled' || key === 'selected' || key === 'readOnly' || key === 'readonly' || key === 'required') {
+            const isBool = (key === 'disabled' || key === 'checked' || key === 'selected' || key === 'readOnly' || key === 'readonly' || key === 'required');
+            const applyVal = (v) => {
+                if (key in el) el[key] = isBool ? Boolean(v) : v;
+                if (isBool) {
+                    if (v && el.setAttribute) el.setAttribute(key, '');
+                    else if (!v && el.removeAttribute) el.removeAttribute(key);
+                } else if (el.setAttribute) {
+                    el.setAttribute(key, v);
+                }
+            };
+
             if (typeof val === 'function') {
                 effect(() => {
-                    const computedVal = val();
-                    if (key in el) el[key] = computedVal;
-                    if (el.setAttribute) el.setAttribute(key, computedVal);
+                    applyVal(val());
                 });
             } else if (val && val._isCairnState) {
                 effect(() => {
-                    if (key in el) el[key] = val.value;
-                    if (el.setAttribute) el.setAttribute(key, val.value);
+                    applyVal(val.value);
                 });
             } else {
-                if (key in el) el[key] = val;
-                if (el.setAttribute) el.setAttribute(key, val);
+                applyVal(val);
             }
         } else if (typeof val === 'function') {
             effect(() => {
@@ -746,31 +753,38 @@ export const createForm = (config = {}) => {
         disabled: () => isSubmitting.value
     }));
 
+    const submitForm = async () => {
+        const valid = validateAll();
+        if (!valid) return false;
+
+        const currentVals = {};
+        Object.entries(values).forEach(([k, sig]) => { currentVals[k] = sig.value; });
+
+        isSubmitting.value = true;
+        try {
+            await onSubmit(currentVals);
+            return true;
+        } finally {
+            isSubmitting.value = false;
+        }
+    };
+
     const formEl = form({
         onsubmit: async (e) => {
             e.preventDefault();
-            const valid = validateAll();
-            if (!valid) return;
-
-            const currentVals = {};
-            Object.entries(values).forEach(([k, sig]) => { currentVals[k] = sig.value; });
-
-            isSubmitting.value = true;
-            try {
-                await onSubmit(currentVals);
-            } finally {
-                isSubmitting.value = false;
-            }
+            await submitForm();
         }
     }, ...fieldElements);
 
     return Object.assign(formEl, {
+        fields: values,
         values,
         errors,
         touched,
         isValid,
         isSubmitting,
         validate: validateAll,
+        submit: submitForm,
         reset: () => {
             Object.entries(fields).forEach(([k, def]) => {
                 if (values[k]) values[k].value = def.default !== undefined ? def.default : '';

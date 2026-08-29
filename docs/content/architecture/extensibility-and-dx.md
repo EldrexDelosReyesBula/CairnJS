@@ -9,20 +9,22 @@ Cairn (`@eldrex/cairnjs`) is designed with a zero-configuration extensibility ar
 Plugins in Cairn are simple functions that receive the `cairn` context object containing `components`, `utils`, `animations`, `hooks`, and `middleware`.
 
 ```javascript
-import { cairn } from '@eldrex/cairnjs';
+import { cairn, button, div, Toast, mount } from '@eldrex/cairnjs';
 
 const myPlugin = (cairnCtx) => {
     // 1. Register new reusable components
     cairnCtx.components.register('GradientButton', ({ children, from, to }) => 
         cairnCtx.button(children, {
             style: {
-                background: `linear-gradient(135deg, ${from}, ${to})`,
+                background: `linear-gradient(135deg, ${from || '#38bdf8'}, ${to || '#0284c7'})`,
                 color: 'white',
-                padding: '12px 24px',
+                padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                cursor: 'pointer'
-            }
+                cursor: 'pointer',
+                fontWeight: '600'
+            },
+            onclick: () => Toast.success('Gradient Button Clicked!')
         })
     );
 
@@ -43,13 +45,19 @@ const myPlugin = (cairnCtx) => {
     });
 
     // 4. Hook into lifecycle events
-    cairnCtx.hooks.mount((el, component) => {
-        console.log('Component mounted:', el);
+    cairnCtx.hooks.mount((el) => {
+        console.log('Component mounted successfully:', el);
     });
 };
 
 // Activate plugin
 cairn.use(myPlugin);
+
+const app = div({ style: { padding: '1.5rem', background: '#0f172a', borderRadius: '0.75rem', textAlign: 'center' } },
+    cairn.components.get('GradientButton')({ children: 'Click Plugin Button', from: '#38bdf8', to: '#6366f1' })
+);
+
+mount('#app', app);
 ```
 
 ---
@@ -59,6 +67,8 @@ cairn.use(myPlugin);
 Middleware allows you to intercept DOM element creation, component mounting, state changes, and style updates across your entire application.
 
 ```javascript
+import { cairn, button, div, p, mount } from '@eldrex/cairnjs';
+
 cairn.middleware.add({
     // Intercept element creation props before rendering
     beforeCreate(tag, props) {
@@ -71,7 +81,7 @@ cairn.middleware.add({
 
     // Intercept element before mounting into the target container
     beforeMount(el, target) {
-        if (el.setAttribute) el.setAttribute('data-cairn-mounted', 'true');
+        if (el && el.setAttribute) el.setAttribute('data-cairn-mounted', 'true');
         return el;
     },
 
@@ -85,6 +95,16 @@ cairn.middleware.add({
         return newStyles;
     }
 });
+
+const app = div({ style: { padding: '1.5rem', background: '#0f172a', borderRadius: '0.75rem', textAlign: 'center', color: '#fff' } },
+    p('Middleware interceptors are active for all DOM elements:'),
+    button('Inspect Button Attributes', {
+        style: { marginTop: '0.75rem', padding: '0.5rem 1rem', background: '#38bdf8', color: '#0f172a', border: 'none', borderRadius: '0.375rem', fontWeight: 'bold' },
+        onclick: (e) => console.log('Button mounted attribute:', e.target.getAttribute('data-cairn-mounted'))
+    })
+);
+
+mount('#app', app);
 ```
 
 ---
@@ -94,25 +114,20 @@ cairn.middleware.add({
 Cairn supports multiple styling solutions concurrently. You do not need to choose a single styling paradigm.
 
 ```javascript
-import { cairn, tailwind } from '@eldrex/cairnjs';
+import { cairn, tailwind, button, div, mount } from '@eldrex/cairnjs';
 
 // Use Tailwind CSS Adapter
 cairn.use(tailwind);
 
 // Mix and match styling approaches on a single element
-cairn.button("Click Me", {
-    // Tailwind utility class string
-    tailwind: "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg",
+const app = div({ style: { padding: '1.5rem', background: '#0f172a', borderRadius: '0.75rem', textAlign: 'center' } },
+    cairn.button('Tailwind Styled Button', {
+        tailwind: 'bg-sky-500 hover:bg-sky-600 text-white font-bold px-4 py-2 rounded-lg shadow-md',
+        style: { padding: '0.5rem 1rem', background: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: '600' }
+    })
+);
 
-    // Plain CSS classes
-    class: "my-custom-button btn-shadow",
-
-    // Inline CSS object
-    style: { borderRadius: "8px" },
-
-    // Design Tokens
-    tokens: { color: "primary", size: "lg" }
-});
+mount('#app', app);
 ```
 
 ---
@@ -122,8 +137,19 @@ cairn.button("Click Me", {
 Register single components or whole libraries with rich metadata for IDE auto-completion, documentation generation, and AI agent context:
 
 ```javascript
+import { cairn, div, h3, p, mount } from '@eldrex/cairnjs';
+
+const CardComponent = (props = {}) => {
+    return div({
+        style: { padding: '1.5rem', background: '#1e293b', borderRadius: '0.75rem', border: '1px solid #334155', color: '#fff' }
+    },
+        h3(props.title || 'Default Title', { style: { color: '#38bdf8', marginBottom: '0.5rem' } }),
+        p(props.content || 'Registered reusable component layout.')
+    );
+};
+
 cairn.register('Card', CardComponent, {
-    description: 'Interactive container card with header and action slots',
+    description: 'Interactive container card with header and content slots',
     props: {
         title: { type: 'string', required: true, description: 'Card header title' },
         elevation: { type: 'number', default: 1, description: 'Box shadow depth' }
@@ -131,12 +157,13 @@ cairn.register('Card', CardComponent, {
     events: ['click', 'hover'],
     examples: [
         { code: 'Card({ title: "Welcome" })', description: 'Basic card layout' }
-    ],
-    ai: {
-        prompt: 'Create a container card with header title and rounded corners',
-        context: 'Use for grouping content sections'
-    }
+    ]
 });
+
+const RegisteredCard = cairn.components.get('Card');
+const app = RegisteredCard({ title: 'Welcome to CairnJS Registry', content: 'This component was retrieved dynamically from the self-documenting component registry.' });
+
+mount('#app', app);
 ```
 
 ---

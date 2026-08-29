@@ -9,7 +9,6 @@
     <meta name="keywords" content="cairnjs playground, online javascript editor, reactive sandbox, signals playground, monaco editor intellisense">
     <meta name="author" content="Eldrex Delos Reyes Bula">
     <link rel="canonical" href="https://cairnjs.vercel.app/docs/playground.html">
-    <base href="/docs/">
 
     <!-- Favicon & Icons -->
     <link rel="icon" type="image/svg+xml" href="./assets/cairn-official-logo.svg">
@@ -53,11 +52,11 @@
     <style>
         :root,
         [data-theme="dark"] {
-            --bg: #0b0f19;
-            --surface: #111827;
-            --surface-card: #1e293b;
-            --surface-hover: #334155;
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #090d16;
+            --surface: #0e131f;
+            --surface-card: #121826;
+            --surface-hover: #1a2234;
+            --border: #1e2638;
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #38bdf8;
@@ -65,14 +64,14 @@
             --font-sans: 'Inter', system-ui, sans-serif;
             --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
-            --editor-bg: #0f172a;
+            --editor-bg: #0d121d;
             --console-bg: #090d16;
         }
 
         [data-theme="light"] {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --surface-card: #ffffff;
+            --bg: #ffffff;
+            --surface: #f8fafc;
+            --surface-card: #f8fafc;
             --surface-hover: #f1f5f9;
             --border: #e2e8f0;
             --text: #0f172a;
@@ -243,71 +242,83 @@
             color: var(--accent);
         }
 
-        /* Workspace Grid */
+        /* Workspace Grid & View Modes */
         .workspace {
             display: grid;
             grid-template-columns: 1fr 1fr;
             flex: 1;
             height: calc(100vh - 56px);
             overflow: hidden;
+            transition: all 0.2s ease;
         }
 
-        @media (max-width: 900px) {
-            .playground-header {
-                height: auto;
-                padding: 0.6rem 0.75rem;
-            }
+        body[data-view="editor"] .workspace {
+            grid-template-columns: 1fr !important;
+        }
 
-            .mobile-view-tabs {
-                display: flex;
-            }
+        body[data-view="editor"] .preview-pane {
+            display: none !important;
+        }
 
-            .workspace {
-                grid-template-columns: 1fr;
-                height: calc(100vh - 102px);
-            }
+        body[data-view="preview"] .workspace {
+            grid-template-columns: 1fr !important;
+        }
 
-            .editor-pane,
-            .preview-pane,
-            .console-pane-wrapper {
-                display: none !important;
-            }
+        body[data-view="preview"] .editor-pane {
+            display: none !important;
+        }
 
-            body[data-mobile-tab="editor"] .editor-pane {
-                display: flex !important;
-                border-right: none;
-            }
+        /* View Mode Segmented Pill Group */
+        .view-mode-group {
+            display: flex;
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 2px;
+            gap: 2px;
+        }
 
-            body[data-mobile-tab="preview"] .preview-pane {
-                display: flex !important;
-            }
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.775rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.15s ease;
+        }
 
-            body[data-mobile-tab="preview"] .console-pane-wrapper {
-                display: flex !important;
-            }
+        .view-btn:hover {
+            color: var(--text);
+            background: var(--surface-hover);
+        }
 
-            body[data-mobile-tab="console"] .preview-pane {
-                display: flex !important;
-            }
+        .view-btn.active {
+            background: var(--surface-card);
+            color: var(--accent);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
 
-            body[data-mobile-tab="console"] .preview-frame-wrap {
-                display: none !important;
-            }
+        /* Draggable Console Resizer Splitter */
+        .console-resizer {
+            height: 6px;
+            background: var(--border);
+            cursor: ns-resize;
+            transition: background 0.15s ease;
+            position: relative;
+            z-index: 5;
+            flex-shrink: 0;
+        }
 
-            body[data-mobile-tab="console"] .console-pane-wrapper {
-                display: flex !important;
-                flex: 1 !important;
-                height: 100% !important;
-            }
-
-            .template-select {
-                max-width: 170px;
-                font-size: 0.775rem;
-            }
-
-            .btn span.btn-label {
-                display: none;
-            }
+        .console-resizer:hover,
+        .console-resizer.dragging {
+            background: var(--accent);
         }
 
         /* Left Editor Pane */
@@ -318,6 +329,7 @@
             background: var(--editor-bg);
             height: 100%;
             overflow: hidden;
+            position: relative;
         }
 
         .pane-toolbar {
@@ -341,6 +353,7 @@
             position: relative;
             overflow: hidden;
             display: flex;
+            height: calc(100% - 38px);
         }
 
         .code-textarea {
@@ -368,6 +381,7 @@
             height: 100%;
             background: var(--bg);
             overflow: hidden;
+            position: relative;
         }
 
         .preview-frame-wrap {
@@ -375,6 +389,7 @@
             position: relative;
             background: var(--bg);
             overflow: hidden;
+            min-height: 80px;
         }
 
         .preview-frame {
@@ -382,11 +397,14 @@
             height: 100%;
             border: none;
             background: var(--bg);
+            display: block;
         }
 
         /* Console Output */
         .console-pane-wrapper {
-            height: 160px;
+            height: var(--console-height, 160px);
+            min-height: 34px;
+            max-height: 85vh;
             background: var(--console-bg);
             border-top: 1px solid var(--border);
             display: flex;
@@ -394,6 +412,12 @@
             font-family: var(--font-mono);
             font-size: 0.8rem;
             flex-shrink: 0;
+            transition: height 0.15s ease;
+        }
+
+        body[data-console-hidden="true"] .console-pane-wrapper,
+        body[data-console-hidden="true"] .console-resizer {
+            display: none !important;
         }
 
         .console-header {
@@ -407,6 +431,7 @@
             font-size: 0.7rem;
             font-weight: 700;
             color: var(--text-muted);
+            user-select: none;
         }
 
         .console-logs {
@@ -423,46 +448,35 @@
             display: flex;
             align-items: flex-start;
             gap: 0.5rem;
-            padding: 0.2rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            font-size: 0.8rem;
+            line-height: 1.5;
+            word-break: break-word;
+            padding: 0.15rem 0;
         }
 
-        .log-entry.log {
-            color: var(--text);
-        }
+        .log-entry.info { color: #38bdf8; }
+        .log-entry.log { color: #e2e8f0; }
+        .log-entry.warn { color: #f59e0b; }
+        .log-entry.error { color: #ef4444; }
 
-        .log-entry.warn {
-            color: #f59e0b;
-        }
-
-        .log-entry.error {
-            color: #ef4444;
-        }
-
-        .log-entry.info {
-            color: #38bdf8;
-        }
-
-        /* Toast */
+        /* Toast Notification */
         .toast-popup {
             position: fixed;
             bottom: 1.5rem;
             right: 1.5rem;
             background: var(--surface-card);
-            border: 1px solid var(--accent);
-            color: var(--text);
-            padding: 0.75rem 1.25rem;
+            border: 1px solid var(--border);
+            padding: 0.6rem 1rem;
             border-radius: 0.5rem;
-            font-size: 0.85rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
             transform: translateY(100px);
             opacity: 0;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1000;
+            font-size: 0.825rem;
+            font-weight: 600;
         }
 
         .toast-popup.show {
@@ -472,7 +486,7 @@
     </style>
 </head>
 
-<body data-mobile-tab="editor">
+<body data-view="split" data-mobile-tab="editor" data-console-hidden="false">
 
     <!-- Top Header -->
     <header class="playground-header">
@@ -486,8 +500,12 @@
 
             <div class="template-select-wrap">
                 <select id="template-picker" class="template-select" aria-label="Select Template Example">
-                    <optgroup label="Beginners & Starter">
-                        <option value="starter" selected>🚀 Hello World (Starter)</option>
+                    <optgroup label="Beginners & Rapid Prototyping">
+                        <option value="html_template" selected>✨ Pure HTML Template Literals (cairn.html)</option>
+                        <option value="js_lab">🧪 JavaScript Studies & Console Lab</option>
+                        <option value="rapid_tool">🛠️ Instant Utility Tool Builder (cairn.tool)</option>
+                        <option value="rapid_app">⚡ 5-Line App Launcher (cairn.app)</option>
+                        <option value="starter">🚀 Hello World (Starter)</option>
                         <option value="typography">📝 HTML Elements & Typography (h1-h6, p, a)</option>
                         <option value="counter">⚡ Reactive Signals & Counter</option>
                     </optgroup>
@@ -521,11 +539,12 @@
                         <option value="accordion">📂 Collapsible Accordion FAQ</option>
                     </optgroup>
                     <optgroup label="Data Display & Full Apps">
+                        <option value="image_grid">🖼️ Responsive Image Grid & Lightbox</option>
                         <option value="datatable">🗂️ Interactive DataTable Grid</option>
                         <option value="posts">📱 Social Media & Image Post Feed</option>
                         <option value="store">🛒 E-Commerce Store & Cart</option>
                     </optgroup>
-                    <optgroup label="v1.2.0 Advanced Ecosystem">
+                    <optgroup label="Ecosystem">
                         <option value="realtime">💬 Real-Time Collab & Chat Room</option>
                         <option value="devtools">🛠️ DevTools & State Time-Travel</option>
                         <option value="personalize">⚙️ Personalization & Preferences</option>
@@ -536,24 +555,43 @@
         </div>
 
         <div class="header-right">
+            <!-- View Mode Switcher -->
+            <div class="view-mode-group" title="Switch layout mode">
+                <button class="view-btn active" data-view-mode="split" title="Split view (50/50)">
+                    <i class="fa-solid fa-table-columns"></i> <span class="btn-label">Split</span>
+                </button>
+                <button class="view-btn" data-view-mode="editor" title="Full Code Editor">
+                    <i class="fa-solid fa-code"></i> <span class="btn-label">Editor</span>
+                </button>
+                <button class="view-btn" data-view-mode="preview" title="Full Live Preview">
+                    <i class="fa-solid fa-desktop"></i> <span class="btn-label">Preview</span>
+                </button>
+            </div>
+
+            <!-- Format Button -->
+            <button id="btn-format" class="btn" title="Format Code (Shift+Alt+F)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="btn-label">Format</span>
+            </button>
+
+            <!-- Run Button -->
             <button id="btn-run" class="btn btn-primary" title="Execute Code (Cmd+Enter / Ctrl+Enter)">
                 <i class="fa-solid fa-play"></i> <span class="btn-label">Run</span>
             </button>
-            <button id="btn-reset" class="btn" title="Reset template">
-                <i class="fa-solid fa-rotate-left"></i> <span class="btn-label">Reset</span>
-            </button>
+
+            <!-- Copy Button -->
             <button id="btn-copy" class="btn" title="Copy code">
                 <i class="fa-regular fa-copy"></i> <span class="btn-label">Copy</span>
             </button>
+
+            <!-- Console Toggle Button -->
+            <button id="btn-toggle-console" class="btn" title="Toggle Console Output">
+                <i class="fa-solid fa-terminal"></i> <span class="btn-label">Console</span>
+            </button>
+
+            <!-- Theme Toggle Button -->
             <button id="btn-theme" class="btn" title="Toggle Dark/Light Mode">
                 <i id="theme-icon" class="fa-solid fa-moon"></i>
             </button>
-            <a href="../examples/index.html" class="btn" title="All Examples Gallery">
-                <i class="fa-solid fa-cubes"></i> <span class="btn-label">Examples</span>
-            </a>
-            <a href="./index.html" class="btn" title="Docs Guide">
-                <i class="fa-solid fa-book-open"></i> <span class="btn-label">Docs</span>
-            </a>
         </div>
     </header>
 
@@ -569,8 +607,7 @@
         <!-- Editor Pane -->
         <section class="editor-pane">
             <div class="pane-toolbar">
-                <span><i class="fa-brands fa-js" style="color: #f7df1e; margin-right: 0.4rem;"></i> Live Code Editor
-                    (ESM)</span>
+                <span><i class="fa-brands fa-js" style="color: #f7df1e; margin-right: 0.4rem;"></i> Live Code Editor (ESM)</span>
                 <span style="font-size: 0.7rem; font-weight: 500; text-transform: none;">Auto-runs on edits</span>
             </div>
             <div class="editor-container">
@@ -583,8 +620,7 @@
         <!-- Preview & Console Pane -->
         <section class="preview-pane">
             <div class="pane-toolbar">
-                <span><i class="fa-solid fa-display" style="color: var(--accent); margin-right: 0.4rem;"></i> Live
-                    Output</span>
+                <span><i class="fa-solid fa-display" style="color: var(--accent); margin-right: 0.4rem;"></i> Live Output</span>
                 <span id="runtime-status" style="color: #10b981; font-size: 0.7rem; text-transform: none;"><i
                         class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Ready</span>
             </div>
@@ -593,13 +629,21 @@
                     sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups"></iframe>
             </div>
 
+            <!-- Draggable Console Resizer Splitter -->
+            <div id="console-resizer" class="console-resizer" title="Drag to resize console output"></div>
+
             <!-- Console Output -->
             <div class="console-pane-wrapper">
                 <div class="console-header">
                     <span><i class="fa-solid fa-terminal" style="margin-right: 0.4rem;"></i> Console Output</span>
-                    <button id="btn-clear-console"
-                        style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.7rem;"
-                        title="Clear console">Clear</button>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button id="btn-clear-console"
+                            style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.7rem;"
+                            title="Clear console">Clear</button>
+                        <button id="btn-close-console"
+                            style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem;"
+                            title="Hide console"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                 </div>
                 <div id="console-logs" class="console-logs">
                     <div class="log-entry info"><i class="fa-solid fa-info-circle"></i> CairnJS runtime ready.</div>
@@ -615,7 +659,17 @@
     </div>
 
     <!-- External Module Engine -->
-    <script type="module" src="./playground.js"></script>
+    <script type="module">
+        try {
+            await import('./playground.js');
+        } catch (e1) {
+            try {
+                await import('./docs/playground.js');
+            } catch (e2) {
+                await import('/docs/playground.js');
+            }
+        }
+    </script>
 </body>
 
 </html>

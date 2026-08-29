@@ -1,79 +1,64 @@
-# 🪨 CairnJS — Monolithic SPA & Scalable Architecture
+# CairnJS — Monolithic SPA & Scalable Architecture
 
-> **From single file to enterprise scale.**  
-> **Cairn grows with you, never against you.**
-
----
-
-## 🎯 The Scaling Philosophy
-
-```
-Cairn scales through SIMPLICITY, not complexity.
-
-Small project:     One file, zero config (CDN / Pure HTML)
-Medium project:    Few folders, clear structure (Direct browser ESM)
-Large project:     Modular, organized, testable (Feature Slices)
-Enterprise:        Complete architecture, full control (DI, Stores, Bridges)
-
-No framework lock-in. No architectural limits.
-Just JavaScript patterns that scale naturally.
-```
+> **A clear, pragmatic guide to structuring and scaling single-page applications with CairnJS — from a single zero-build HTML file to modular enterprise codebases.**
 
 ---
 
-## 📁 Project Structures Across the 4 Scaling Levels
+## 🎯 The Pragmatic Scaling Philosophy
 
-### Level 1: Single File (Prototype / Zero-Build)
+CairnJS is designed around **zero-dependency, direct DOM signals**. It scales not by imposing heavy framework conventions, but by providing clean, composable building blocks that work seamlessly across project sizes:
 
-```
-prototype.html
-└── Everything in one file
-    ├── HTML structure
-    ├── Reactive state signals
-    ├── Functional DOM builders
-    └── Cairn components
-```
+| Architecture Stage | Ideal Project Scope | Core CairnJS Primitives | Key Benefits & Trade-offs |
+| :--- | :--- | :--- | :--- |
+| **Level 1: Zero-Build Prototype** | Single utilities, widgets, rapid mockups | `cairn.html`, `cairn.state`, `cairn.mount` | Zero build step, runs directly in browser via CDN. Ideal for fast exploration. |
+| **Level 2: Multi-File ESM** | Small tools, dashboards, internal portals | ES Modules, `cairn.router`, signals | Native browser imports, simple folder structure, zero bundler configuration needed. |
+| **Level 3: Feature-Sliced SPA** | Medium-to-large single-page apps (SPAs) | Feature slices, shared stores, UI primitives | Clean separation of concerns, isolated unit tests, predictable data flow. |
+| **Level 4: Modular Monolith** | Enterprise platforms, design systems | Store slices, lifecycle hooks, bridges | Highly organized, maintainable monolith. (For distinct team repos, pair with npm packages or custom elements). |
+
+---
+
+## 📁 1. Project Structures Across the 4 Scaling Tiers
+
+### Level 1: Single File Prototype (`prototype.html`)
+
+For calculators, JSON transformers, landing pages, or rapid prototypes, you can write the entire application in a single file with zero build step:
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CairnJS Quick App</title>
+    <title>CairnJS Quick Tool</title>
     <script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #0b0f19; color: #f8fafc; padding: 2rem; }
+        .card { max-width: 480px; margin: 0 auto; background: #1e293b; padding: 1.5rem; border-radius: 0.75rem; }
+        input { width: 100%; padding: 0.6rem; margin: 0.75rem 0; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 0.375rem; box-sizing: border-box; }
+        button { background: #0284c7; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; }
+    </style>
 </head>
 <body>
     <div id="app"></div>
     <script>
-        const { state, component, mount, div, input, button, ul, li, each } = cairn;
+        const { state, html, mount } = cairn;
         
-        // State
-        const todos = state([]);
-        const text = state('');
+        const task = state('');
+        const items = state(['Fast Prototyping', 'Zero Dependencies']);
         
-        // Component
-        const TodoApp = component(() => {
-            return div({ class: 'app' },
-                input({
-                    placeholder: "Add todo...",
-                    value: () => text.value,
-                    oninput: (e) => text.value = e.target.value
-                }),
-                button("Add", {
-                    onclick: () => {
-                        if (!text.value.trim()) return;
-                        todos.value = [...todos.value, { id: Date.now(), title: text.value }];
-                        text.value = '';
-                    }
-                }),
-                ul(
-                    each(todos, t => t.id, t => li(t.title))
-                )
-            );
-        });
-        
-        // Mount
-        mount("#app", TodoApp());
+        mount('#app', html`
+            <div class="card">
+                <h2>✨ Quick Task Tool</h2>
+                <input :bind=${task} placeholder="Enter task..." />
+                <button onclick=${() => {
+                    if (!task.value.trim()) return;
+                    items.value = [...items.value, task.value];
+                    task.value = '';
+                }}>+ Add</button>
+                <ul>
+                    ${() => items.value.map(t => html`<li>${t}</li>`)}
+                </ul>
+            </div>
+        `);
     </script>
 </body>
 </html>
@@ -81,268 +66,100 @@ prototype.html
 
 ---
 
-### Level 2: Multi-File (Small App / Browser ESM)
+### Level 2: Modular Single-Page Application (SPA)
+
+When your application expands beyond a single screen, organize files by feature or technical domain:
 
 ```
-my-app/
-├── index.html              # Entry point
-├── app.js                  # Main app component
-├── components/
-│   ├── TodoList.js         # List component
-│   ├── TodoItem.js         # Item component
-│   └── AddTodo.js          # Add form
-├── state/
-│   └── store.js            # Global state
-└── styles/
-    └── app.css             # Global styles
-```
-
-```javascript
-// app.js
-import { mount } from '@eldrex/cairnjs';
-import { TodoApp } from './components/TodoApp.js';
-
-mount("#app", TodoApp());
-```
-
-```javascript
-// components/TodoApp.js
-import { component, div, h1 } from '@eldrex/cairnjs';
-import { AddTodo } from './AddTodo.js';
-import { TodoList } from './TodoList.js';
-import { todos } from '../state/store.js';
-
-export const TodoApp = component(() => {
-    return div({ class: 'todo-app' },
-        h1("Cairn Todos"),
-        AddTodo(),
-        TodoList({ items: todos })
-    );
-});
-```
-
----
-
-### Level 3: Modular (Medium App / Feature Slices)
-
-```
-my-app/
-├── index.html
+my-spa-project/
+├── index.html                  # HTML entry point with router outlet
 ├── src/
-│   ├── main.js             # Application bootstrap
-│   ├── App.js              # Root component & layout
-│   ├── components/
-│   │   ├── ui/             # Reusable Design System UI
-│   │   │   ├── Button.js
-│   │   │   ├── Input.js
-│   │   │   └── Modal.js
-│   │   ├── features/       # Feature-driven slices
-│   │   │   ├── todos/
-│   │   │   │   ├── TodoApp.js
-│   │   │   │   ├── TodoList.js
-│   │   │   │   └── TodoItem.js
-│   │   │   └── auth/
-│   │   │       ├── LoginForm.js
-│   │   │       └── SignupForm.js
-│   │   └── layout/         # Shell layouts
-│   │       ├── Header.js
-│   │       ├── Sidebar.js
-│   │       └── Footer.js
-│   ├── state/
-│   │   ├── store.js         # Global store
-│   │   ├── todos.js         # Todo reactive slice
-│   │   └── user.js          # User reactive slice
-│   ├── utils/
-│   │   ├── api.js           # API fetch helpers
-│   │   └── helpers.js       # Formatting utilities
+│   ├── main.js                 # App bootstrap & router initialization
+│   ├── App.js                  # Shell layout (Navbar, Sidebar, Outlet)
+│   ├── routes.js               # Route definitions
+│   ├── components/             # Reusable UI building blocks
+│   │   ├── Button.js
+│   │   ├── Card.js
+│   │   └── Modal.js
+│   ├── features/               # Domain-specific screens and logic
+│   │   ├── dashboard/
+│   │   │   ├── DashboardView.js
+│   │   │   └── StatsCard.js
+│   │   └── settings/
+│   │       ├── SettingsView.js
+│   │       └── UserProfileForm.js
+│   ├── state/                  # Shared reactive state stores
+│   │   ├── auth.js
+│   │   └── preferences.js
 │   └── styles/
-│       ├── tokens.js        # Design tokens
-│       └── global.css       # Global styles
-├── tests/
-│   ├── components/
-│   └── state/
+│       └── theme.css           # Global tokens & CSS variables
 └── package.json
 ```
 
 ---
 
-### Level 4: Enterprise (Large-Scale Monolithic Architecture)
+## 🏗️ 2. Architectural Building Blocks
 
-```
-enterprise-app/
-├── src/
-│   ├── main.js
-│   ├── App.js
-│   ├── components/
-│   │   ├── ui/
-│   │   │   ├── Button/
-│   │   │   │   ├── index.js
-│   │   │   │   ├── Button.js
-│   │   │   │   ├── Button.test.js
-│   │   │   │   └── Button.css
-│   │   │   └── ...
-│   │   ├── features/
-│   │   │   ├── dashboard/
-│   │   │   │   ├── index.js
-│   │   │   │   ├── Dashboard.js
-│   │   │   │   ├── components/
-│   │   │   │   └── hooks/
-│   │   │   └── ...
-│   │   └── shared/
-│   │       ├── layout/
-│   │       └── common/
-│   ├── core/
-│   │   ├── state/
-│   │   │   ├── store.js
-│   │   │   ├── actions.js
-│   │   │   └── selectors.js
-│   │   ├── api/
-│   │   │   ├── client.js
-│   │   │   ├── endpoints.js
-│   │   │   └── interceptors.js
-│   │   └── config/
-│   │       ├── environment.js
-│   │       └── constants.js
-│   ├── utils/
-│   ├── styles/
-│   └── assets/
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-├── docs/
-├── package.json
-└── README.md
-```
-
----
-
-## 🏗️ SPA Architecture Primitives
-
-### 1. Built-in Client-Side Router
+### Client-Side Routing (`cairn.router`)
+CairnJS provides a lightweight SPA router with path parameter matching and navigation guards:
 
 ```javascript
-import { router, Link } from '@eldrex/cairnjs';
+import { router, Link, currentPath } from '@eldrex/cairnjs';
 
-// Define route map with nested routes and guards
+// 1. Configure route table
 router({
-    '/': HomePage,
-    '/about': AboutPage,
-    '/users': UsersPage,
-    '/users/:id': UserDetailPage,
-    '/dashboard': {
-        component: DashboardLayout,
-        children: {
-            '/': DashboardHome,
-            '/analytics': AnalyticsPage,
-            '/settings': SettingsPage
-        }
-    },
-    '*': NotFoundPage
+    '/': HomeView,
+    '/dashboard': DashboardView,
+    '/users/:id': UserProfileView,
+    '*': NotFoundView
 });
 
-// Global navigation guard
+// 2. Navigation Guard
 router.beforeEach((to, from) => {
-    if (to.meta?.requiresAuth && !user.value) {
-        return '/login';
+    if (to.startsWith('/dashboard') && !authStore.isAuthenticated.value) {
+        return '/login'; // Redirect unauthenticated users
     }
 });
 ```
 
 ---
 
-### 2. Fine-Grained Reactive State Management
+### Predictable State Management (`cairn.createStore`)
+For shared or cross-cutting application state, use CairnJS stores with actions and computed signals:
 
 ```javascript
-// store.js
 import { state, computed, createStore } from '@eldrex/cairnjs';
 
-// Reactive signals
-export const user = state(null);
-export const todos = state([]);
-export const loading = state(false);
-export const error = state(null);
-
-// Derived computed signals
-export const isLoggedIn = computed(() => user.value !== null);
-export const completedTodos = computed(() => todos.value.filter(t => t.done));
-export const activeTodos = computed(() => todos.value.filter(t => !t.done));
-export const todoCount = computed(() => todos.value.length);
-
-// Actions
-export const addTodo = (title) => {
-    todos.value = [...todos.value, { id: Date.now(), title, done: false }];
-};
-
-export const toggleTodo = (id) => {
-    todos.value = todos.value.map(t => t.id === id ? { ...t, done: !t.done } : t);
-};
-
-export const removeTodo = (id) => {
-    todos.value = todos.value.filter(t => t.id !== id);
-};
-```
-
----
-
-### 3. Keyed List Reconciliation & Node Recycling
-
-```javascript
-import { component, ul, li, each, span, button, input } from '@eldrex/cairnjs';
-
-export const TodoList = component(({ items, onToggle, onRemove }) => {
-    return ul(
-        each(items, (todo) => todo.id, (todo) => {
-            return li({ class: 'todo-item' },
-                input({
-                    type: 'checkbox',
-                    checked: todo.done,
-                    onchange: () => onToggle(todo.id)
-                }),
-                span(todo.title, {
-                    style: {
-                        textDecoration: todo.done ? 'line-through' : 'none'
-                    }
-                }),
-                button('×', { onclick: () => onRemove(todo.id) })
-            );
-        })
-    );
+export const userStore = createStore('user', {
+    state: {
+        profile: null,
+        theme: 'dark'
+    },
+    computed: {
+        isLoggedIn: (s) => s.profile.value !== null,
+        username: (s) => s.profile.value?.name || 'Guest'
+    },
+    actions: {
+        login(s, userData) {
+            s.profile.value = userData;
+        },
+        logout(s) {
+            s.profile.value = null;
+        }
+    }
 });
 ```
 
 ---
 
-### 4. Dependency Injection Container
+## ⚖️ Honest Architecture Trade-Offs
 
-```javascript
-import { cairn } from '@eldrex/cairnjs';
-
-// Service container
-const container = cairn.container ? cairn.container() : new Map();
-
-container.set('api', new ApiClient());
-container.set('auth', new AuthService(container.get('api')));
-container.set('logger', new Logger());
-
-// Access across components
-const userProfile = component(({ api = container.get('api') }) => {
-    return div(api.getUserName());
-});
-```
-
----
-
-### 5. Plugin & Middleware Architecture
-
-```javascript
-import { use, middlewareEngine } from '@eldrex/cairnjs';
-
-// 1. Feature Plugins
-use({
-    name: 'analytics-plugin',
-    install(cairn) {
-        cairn.track = (event, data) => console.log('[Analytics]', event, data);
+| Consideration | What CairnJS Delivers | When to Consider Alternatives |
+| :--- | :--- | :--- |
+| **Bundle Footprint** | Sub-12KB core with zero third-party dependencies. | If you require 500+ pre-built React/Angular UI component libraries out of the box. |
+| **Reactivity Model** | Fine-grained signals that update exact text nodes and attributes without Virtual DOM diffing. | If team workflows mandate JSX compiler setups. (Though Cairn offers `cairn.html` and bridge adapters). |
+| **Monolith vs Micro-Frontends** | Ideal for monolithic SPAs and clean feature modules. | If independent teams must deploy disparate sub-apps on decoupled release cycles. |
+| **Learning Curve** | Standard HTML, JavaScript, and CSS. No proprietary template compilers. | If developers expect full-stack meta-framework conventions like file-based routing. |og('[Analytics]', event, data);
     }
 });
 

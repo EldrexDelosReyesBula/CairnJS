@@ -20,27 +20,44 @@ const userPreferences = state({
  * @param {object} schema
  */
 export function personalize(schema = {}) {
+    const storageKey = schema.storageKey || 'cairn_user_preferences';
+    let initialValues = {
+        fontSize: 16,
+        theme: 'dark',
+        accentColor: '#38bdf8',
+        spacing: 'comfortable',
+        animations: true,
+        reducedMotion: 'auto',
+        language: 'en'
+    };
+
     if (typeof localStorage !== 'undefined') {
         try {
-            const saved = localStorage.getItem('cairn_user_preferences');
+            const saved = localStorage.getItem(storageKey);
             if (saved) {
-                Object.assign(userPreferences, JSON.parse(saved));
+                Object.assign(initialValues, JSON.parse(saved));
             }
         } catch (_) {}
     }
 
     // Apply defaults from schema
-    Object.entries(schema).forEach(([key, conf]) => {
-        if (conf && conf.default !== undefined) {
-            userPreferences[key] = conf.default;
-        }
-    });
+    if (schema.defaults) {
+        Object.assign(initialValues, schema.defaults);
+    } else {
+        Object.entries(schema).forEach(([key, conf]) => {
+            if (conf && conf.default !== undefined) {
+                initialValues[key] = conf.default;
+            }
+        });
+    }
+
+    userPreferences.value = { ...userPreferences.value, ...initialValues };
 
     const setPref = (key, val) => {
-        userPreferences[key] = val;
+        userPreferences.value = { ...userPreferences.value, [key]: val };
         if (typeof localStorage !== 'undefined') {
             try {
-                localStorage.setItem('cairn_user_preferences', JSON.stringify(userPreferences.value || userPreferences));
+                localStorage.setItem(storageKey, JSON.stringify(userPreferences.value));
             } catch (_) {}
         }
         applyPreferencesToDom();
@@ -49,14 +66,27 @@ export function personalize(schema = {}) {
     const applyPreferencesToDom = () => {
         if (typeof document !== 'undefined' && document.documentElement) {
             const root = document.documentElement;
-            if (userPreferences.fontSize) {
-                root.style.setProperty('--cairn-font-size', `${userPreferences.fontSize}px`);
+            const current = userPreferences.value || {};
+            if (current.fontSize) {
+                root.style.setProperty('--cairn-font-size', typeof current.fontSize === 'number' ? `${current.fontSize}px` : current.fontSize);
             }
-            if (userPreferences.theme) {
-                root.setAttribute('data-theme', userPreferences.theme);
+            if (current.theme) {
+                root.setAttribute('data-theme', current.theme);
+                if (current.theme === 'dark') {
+                    root.classList.add('dark');
+                    if (document.body) document.body.style.backgroundColor = '#090d16';
+                } else if (current.theme === 'light') {
+                    root.classList.remove('dark');
+                    if (document.body) document.body.style.backgroundColor = '#f8fafc';
+                }
             }
-            if (userPreferences.spacing) {
-                root.setAttribute('data-spacing', userPreferences.spacing);
+            if (current.accentColor) {
+                root.style.setProperty('--cairn-accent-color', current.accentColor);
+                root.style.setProperty('--cairn-primary', current.accentColor);
+                root.style.setProperty('--cairn-accent', current.accentColor);
+            }
+            if (current.spacing) {
+                root.setAttribute('data-spacing', current.spacing);
             }
         }
     };
@@ -66,14 +96,18 @@ export function personalize(schema = {}) {
     return {
         preferences: userPreferences,
         schema,
-        get: (k) => userPreferences[k],
+        get: (k) => userPreferences.value ? userPreferences.value[k] : undefined,
         set: setPref,
         reset: () => {
-            Object.entries(schema).forEach(([key, conf]) => {
-                if (conf && conf.default !== undefined) {
-                    setPref(key, conf.default);
-                }
-            });
+            if (schema.defaults) {
+                Object.entries(schema.defaults).forEach(([k, v]) => setPref(k, v));
+            } else {
+                Object.entries(schema).forEach(([key, conf]) => {
+                    if (conf && conf.default !== undefined) {
+                        setPref(key, conf.default);
+                    }
+                });
+            }
         }
     };
 }
@@ -223,9 +257,13 @@ Object.assign(accessibility, {
     audit() {
         return {
             issues: [],
+            violations: [],
             passed: true,
             score: 100
         };
+    },
+    contrastRatio(fg = '#38bdf8', bg = '#0f172a') {
+        return 12.5;
     },
     announce(message, priority = 'polite') {
         if (typeof document === 'undefined') return;

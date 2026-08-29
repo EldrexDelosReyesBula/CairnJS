@@ -54,7 +54,7 @@ Cairn includes standard validation rules out of the box:
 
 `createForm()` returns an augmented HTML `<form>` element equipped with reactive state signals:
 
-```javascript
+```javascript static
 const myForm = createForm({ ... });
 
 // 1. Reactive Values
