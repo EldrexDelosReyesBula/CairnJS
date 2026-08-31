@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>404 — Path Not Found | CairnJS</title>
+    <meta name="description"
+        content="The page or trail marker you are looking for has moved or does not exist. Return to the CairnJS documentation and interactive playground.">
+    <meta name="robots" content="noindex, follow">
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="/docs/assets/cairn-official-logo.svg">
+    <link rel="alternate icon" type="image/png" href="/docs/assets/cairn-official-logo.png">
+    <link rel="apple-touch-icon" href="/docs/assets/cairn-official-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root,
+        [data-theme="dark"] {
+            --bg: #090d16;
+            --surface: #0e131f;
+            --surface-card: #121826;
+            --surface-hover: #1a2234;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(56, 189, 248, 0.3);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --accent-glow: rgba(56, 189, 248, 0.25);
+            --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Hero Background Animated GIF & Ambient Dark Vignette */
+        .hero-bg-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero-bg-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            opacity: 0.28;
+            filter: saturate(1.2) contrast(1.1);
+            transform: scale(1.03);
+            transition: opacity 0.5s ease;
+        }
+
+        .hero-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(9, 13, 22, 0.45) 0%, rgba(9, 13, 22, 0.88) 65%, #090d16 100%),
+                linear-gradient(to bottom, rgba(9, 13, 22, 0.6) 0%, rgba(9, 13, 22, 0.3) 50%, #090d16 100%);
+        }
+
+        /* Glassmorphism 404 Card */
+        .error-card {
+            position: relative;
+            z-index: 2;
+            max-width: 620px;
+            width: 100%;
+
+            padding: 3.25rem 2.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+            animation: fadeInCard 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInCard {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Brand Logo with Gentle Glow */
+        .brand-logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 1.25rem;
+            margin-bottom: 0.25rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .brand-logo-img {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
+
+        /* 404 Large Code */
+        .error-code {
+            font-family: var(--font-heading);
+            font-size: clamp(4.5rem, 12vw, 6rem);
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: -0.05em;
+            background: linear-gradient(135deg, #ffffff 20%, #38bdf8 65%, #818cf8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            margin: 0.2rem 0;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .error-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.25rem, 4vw, 1.6rem);
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .error-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 480px;
+        }
+
+        /* Navigation Grid */
+        .links-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .link-btn {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.8rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .link-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(56, 189, 248, 0.2);
+            color: var(--accent);
+        }
+
+        .link-btn-primary {
+            grid-column: 1 / -1;
+            background: #0284c7;
+            color: #ffffff !important;
+            border: 1px solid #38bdf8;
+            padding: 0.9rem 1.25rem;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 18px rgba(2, 132, 199, 0.4);
+        }
+
+        .link-btn-primary:hover {
+            background: #0369a1;
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(2, 132, 199, 0.6);
+        }
+
+        /* Footer Info */
+        .error-footer {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        @media (max-width: 540px) {
+            .error-card {
+                padding: 2.25rem 1.25rem;
+            }
+
+            .links-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .error-code {
+                font-size: 4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Atmospheric Landing GIF Background Wrap -->
+    <div class="hero-bg-container" aria-hidden="true">
+        <img src="/assets/here-background.gif" alt="Cairn Animated Landscape" class="hero-bg-img"
+            onerror="this.onerror=null; this.src='/docs/assets/here-background.gif';">
+        <div class="hero-vignette"></div>
+    </div>
+
+    <!-- 404 Interactive Glassmorphic Card -->
+    <main class="error-card">
+        <h1 class="error-code">404</h1>
+        <h2 class="error-title">Looks Like You Wandered Off-Trail</h2>
+        <p class="error-desc">
+            The cairn you were following has tumbled down, and we can't find this page. Let's get you back to familiar
+            ground so you can keep building:
+        </p>
+
+        <!-- Navigation Links Grid -->
+        <nav class="links-grid" aria-label="Explore CairnJS Navigation">
+            <a href="/docs/index.html" class="link-btn link-btn-primary">
+              Return to Documentation
+            </a>
+            <a href="/docs/playground.html" class="link-btn">
+                <i class="fa-solid fa-play"></i> Start Building
+            </a>
+            <a href="/examples/index.html" class="link-btn">
+                <i class="fa-solid fa-layer-group"></i> See What's Possible
+            </a>
+            <a href="/docs/index.html#/docs/api" class="link-btn">
+                <i class="fa-solid fa-cubes"></i> API Reference
+            </a>
+            <a href="/docs/index.html#/docs/attributions" class="link-btn">
+                <i class="fa-solid fa-heart" style="color: #ec4899;"></i> Attributions & Lineage
+            </a>
+        </nav>
+    </main>
+</body>
+
+</html>

@@ -327,10 +327,14 @@ export function createCanvas2D(target, options = {}) {
 
         /**
          * Registers a draw callback for the render loop.
-         * @param {Function} fn Callback receiving (drawAPI, deltaTime)
+         * Automatically starts the animation loop if autoStart is enabled.
+         * @param {Function} fn Callback receiving (drawAPI, deltaTimeMs)
          */
         onDraw(fn) {
             _drawCallbacks.push(fn);
+            if (!_isRunning && options.autoStart !== false) {
+                this.start();
+            }
             return this;
         },
 
@@ -348,10 +352,13 @@ export function createCanvas2D(target, options = {}) {
         start() {
             if (_isRunning) return this;
             _isRunning = true;
-            let lastTime = performance.now();
+            let lastTime = (typeof globalThis !== 'undefined' && globalThis.performance && typeof globalThis.performance.now === 'function')
+                ? globalThis.performance.now()
+                : Date.now();
 
             const loop = (now) => {
-                const dt = (now - lastTime) / 1000;
+                if (!_isRunning) return;
+                const dt = Math.min(100, Math.max(1, now - lastTime));
                 lastTime = now;
 
                 if (background !== 'transparent') {
@@ -365,7 +372,9 @@ export function createCanvas2D(target, options = {}) {
                     try { fn(drawAPI, dt); } catch (e) { console.error('[Cairn Canvas2D Draw Error]:', e); }
                 });
 
-                _animFrameId = requestAnimationFrame(loop);
+                if (_isRunning) {
+                    _animFrameId = requestAnimationFrame(loop);
+                }
             };
 
             _animFrameId = requestAnimationFrame(loop);

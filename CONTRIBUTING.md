@@ -60,7 +60,7 @@ CairnJS/
 │   ├── cairn.min.js    # Minified UMD Production Bundle
 │   ├── cairn.module.js # ESM Modern Module Bundle
 │   └── cairn-wasm.js   # WASM Accelerated Bundle
-├── docs/               # Interactive documentation & VitePress-style site
+├── docs/               # Interactive documentation & web portal
 │   ├── index.html      # Documentation SPA shell
 │   ├── app.js          # Documentation routing & search logic
 │   ├── playground.html # Live interactive Monaco editor & preview

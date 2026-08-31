@@ -1,5 +1,5 @@
 # CAIRNJS COMPLETE API REFERENCE FOR AI AGENTS
-Version: 1.2.0
+Version: 1.4.0
 Package: @eldrex/cairnjs
 Repository: https://github.com/EldrexDelosReyesBula/CairnJS
 Website: https://cairnjs.vercel.app/
@@ -15,8 +15,8 @@ Purpose: High-Performance Reactive UI Component Builder
 <!-- UMD Global (@latest) -->
 <script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
 
-<!-- Pinned Immutable Release (@1.2.0) -->
-<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.2.0/dist/cairn.min.js"></script>
+<!-- Pinned Immutable Release (@1.4.0) -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.4.0/dist/cairn.min.js"></script>
 ```
 NPM: `npm install @eldrex/cairnjs`
 Import: `import { state, component, div, button, input, mount, cairn } from '@eldrex/cairnjs';`
@@ -59,17 +59,42 @@ Mounts a Cairn component / DOM element to the page.
   mount("#app", div("Hello Cairn"));
   ```
 
-### Element Builders: `div`, `span`, `p`, `h1`-`h6`, `button`, `input`, `img`, `a`, `ul`, `li`, `form`
+### Element Builders: 250+ Standard HTML & Cairn Components
 All follow: `element(content?, props?)` or `element(props?, ...children)`
 - **Content**: `string | number | function | HTMLElement | Array`
-- **Props**: `{ class, style, onclick, oninput, onchange, disabled, placeholder, ...attributes }`
+- **Direct HTML String Support**: `div({}, '<strong>Notice:</strong> Hello World')`
+- **Props**: `{ class, coat, style, html, onclick, oninput, onchange, disabled, placeholder, ...attributes }`
 - **Example**:
   ```js
   button("Click Me", {
-      class: "btn-primary",
+      coat: { background: '#38bdf8', color: '#fff', borderRadius: '8px', padding: '10px 18px' },
       onclick: () => count.value++
   })
   ```
+
+---
+
+## 🎨 COMPLETE CSS1–CSS4 COAT SYSTEM
+
+### `coat(styles)`
+Full CSS support across CSS1, CSS2, CSS3, CSS4, and beyond with zero dependencies:
+- **Nested Selectors**: `&:hover`, `& > child`, `& + sibling`, `&[disabled]`, `&::before`, `&::after`
+- **At-Rules**: `@media (max-width: 768px)`, `@container (min-width: 400px)`, `@supports`, `@keyframes`
+- **Tokens & Variables**: CSS custom properties `--color-primary`, CSS math `clamp()`, `min()`, `color-mix()`
+- **Class Utilities**: `cx()`, `classNames()`, `class:flag` syntax
+- **Metadata Registries**: `cairn.cssProperties`, `cairn.cssFunctions`, `cairn.cssAtRules`, `cairn.cssSelectors`, `cairn.cssCompatibility`
+
+---
+
+## 🛡️ HTML STRING CONTENT & SANITIZATION
+
+- **Direct HTML Strings**: `div({ coat: { padding: '16px' } }, '<strong>Notice:</strong> Hello etc.')`
+- **HTML Prop**: `div({ html: '<strong>Bold</strong> and <em>italic</em>' })`
+- **Safe HTML Sanitization**: `cairn.sanitize(htmlString)` or `cairn.safe(htmlString)` (strips `<script>`, `javascript:`, inline handlers)
+- **Polymorphic `cairn.safe`**: Wraps components in error boundaries or sanitizes HTML strings
+- **Smart Content Detection**: `cairn.smartContent(val)` ➔ `'html' | 'text' | 'element' | 'array' | 'reactive'`
+- **Rich Text Composition**: `cairn.rich('Hello ', strong('World'), '!')`
+- **Content Metadata Registry**: `cairn.contentSupport`
 
 ---
 
@@ -97,93 +122,66 @@ All follow: `element(content?, props?)` or `element(props?, ...children)`
 
 ### Rule 5: Styling
 - **Inline Object**: `style: { color: "red", fontSize: "16px", backgroundColor: "#fff" }` (camelCase)
+- **Coat Modern Engine**: `coat: { color: "#fff", background: "#0ea5e9", "&:hover": { background: "#0284c7" } }`
 - **Reactive Style**: `style: () => ({ color: isActive.value ? "#22c55e" : "#ef4444" })`
 
 ---
 
 ## 🛠️ COMPLETE WORKING RECIPES
 
-### 1. Reactive Counter
+### 1. Reactive Counter with Targeted Styling
 ```js
 import { state, div, h1, button, mount } from '@eldrex/cairnjs';
 
 const Counter = () => {
     let count = state(0);
-    return div({ class: "counter-card" },
-        h1(() => `Count: ${count.value}`),
-        button("Increment (+)", { onclick: () => count.value++ }),
-        button("Decrement (-)", { onclick: () => count.value-- }),
-        button("Reset", { onclick: () => count.value = 0 })
+    return div({
+        coat: {
+            padding: '24px',
+            borderRadius: '12px',
+            background: '#0f172a',
+            border: '1px solid rgba(255,255,255,0.1)',
+            textAlign: 'center'
+        }
+    },
+        h1(() => `Count: ${count.value}`, { coat: { color: '#38bdf8', fontSize: '2rem' } }),
+        div({ style: { display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '16px' } },
+            button("Increment (+)", {
+                coat: { background: '#22c55e', color: '#fff', padding: '8px 16px', borderRadius: '6px' },
+                onclick: () => count.value++
+            }),
+            button("Decrement (-)", {
+                coat: { background: '#ef4444', color: '#fff', padding: '8px 16px', borderRadius: '6px' },
+                onclick: () => count.value--
+            }),
+            button("Reset", {
+                coat: { background: '#64748b', color: '#fff', padding: '8px 16px', borderRadius: '6px' },
+                onclick: () => count.value = 0
+            })
+        )
     );
 };
 
 mount("#app", Counter());
 ```
 
-### 2. Todo Application
+### 2. Direct HTML String Banner
 ```js
-import { state, div, input, button, ul, li, mount } from '@eldrex/cairnjs';
+import { div, mount } from '@eldrex/cairnjs';
 
-const TodoApp = () => {
-    let todos = state(["Learn CairnJS", "Build High-End App"]);
-    let newTodo = state("");
-
-    const addTodo = () => {
-        if (!newTodo.value.trim()) return;
-        todos.value = [...todos.value, newTodo.value.trim()];
-        newTodo.value = "";
-    };
-
-    return div({ class: "todo-container" },
-        input({
-            placeholder: "Add a task...",
-            value: () => newTodo.value,
-            oninput: (e) => newTodo.value = e.target.value
-        }),
-        button("Add Task", { onclick: addTodo }),
-        ul(() => todos.value.map((todo, idx) =>
-            li(todo, {
-                onclick: () => {
-                    todos.value = todos.value.filter((_, i) => i !== idx);
-                }
-            })
-        ))
-    );
-};
-
-mount("#app", TodoApp());
-```
-
-### 3. Reactive Form with Two-Way Binding
-```js
-import { state, form, input, button, p, mount } from '@eldrex/cairnjs';
-
-const LoginForm = () => {
-    let credentials = state({ email: "", password: "" });
-    let submitted = state(false);
-
-    return form({
-        onsubmit: (e) => {
-            e.preventDefault();
-            submitted.value = true;
+const Banner = () => {
+    return div({
+        coat: {
+            padding: '16px',
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '8px',
+            color: '#78350f'
         }
-    },
-        input({
-            type: "email",
-            placeholder: "Email address",
-            oninput: (e) => credentials.value = { ...credentials.value, email: e.target.value }
-        }),
-        input({
-            type: "password",
-            placeholder: "Password",
-            oninput: (e) => credentials.value = { ...credentials.value, password: e.target.value }
-        }),
-        button("Sign In", { type: "submit" }),
-        p(() => submitted.value ? `Signed in as: ${credentials.value.email}` : "")
-    );
+    }, '<strong>Notice:</strong> Please verify your email address to continue.');
 };
 
-mount("#app", LoginForm());
+mount("#app", Banner());
 ```
 
 ---
@@ -194,6 +192,6 @@ mount("#app", LoginForm());
 |---|---|---|
 | `count++` | `count.value++` | State is a signal proxy with a `.value` property. |
 | `div(state.value)` | `div(() => state.value)` | Static value at render vs reactive tracker function. |
-| `style: { "font-size": "14px" }` | `style: { fontSize: "14px" }` | Style objects require standard DOM camelCase. |
+| `style: { "font-size": "14px" }` | `style: { fontSize: "14px" }` or `coat: { fontSize: '14px' }` | Style objects require standard DOM camelCase or coat engine. |
 | `button("Text", { onClick: fn })` | `button("Text", { onclick: fn })` | Cairn DOM builders use native lowercase event names. |
 | `mount("#app", "<div/>")` | `mount("#app", div())` | Mount expects an HTMLElement or Cairn component node. |

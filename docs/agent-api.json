@@ -1,6 +1,6 @@
 {
     "name": "cairnjs",
-    "version": "1.2.0",
+    "version": "1.4.0",
     "type": "ui-component-builder",
     "core": {
         "state": {
@@ -32,19 +32,43 @@
             "description": "Mounts Cairn tree into DOM"
         }
     },
+    "styling": {
+        "coat": {
+            "signature": "coat(stylesObject)",
+            "description": "Comprehensive CSS1-CSS4 styling engine supporting nested selectors, @media, @container, and @keyframes."
+        },
+        "cx": "Combines class names and conditional objects into a clean class string",
+        "cssProperties": "500+ CSS properties registry covering CSS1 to CSS4",
+        "cssFunctions": "100+ CSS functions registry",
+        "cssAtRules": "@media, @container, @supports, @keyframes, @layer, @property registry",
+        "cssCompatibility": "Version and feature compatibility matrix"
+    },
+    "htmlContent": {
+        "directHtmlStrings": "div({}, '<strong>Notice:</strong> Hello etc.')",
+        "htmlProp": "div({ html: '<strong>Bold</strong>' })",
+        "sanitize": "cairn.sanitize(htmlString, options) - Strips <script>, javascript: protocols, and inline on* handlers",
+        "safe": "cairn.safe(target, options) - Polymorphic component error wrapper or HTML sanitizer",
+        "smartContent": "cairn.smartContent(content) - Detects 'html', 'text', 'element', 'array', 'reactive'",
+        "rich": "cairn.rich(...parts) - Composes mixed rich text fragments",
+        "contentSupport": "Full content types and safety metadata registry"
+    },
     "elements": {
-        "tags": ["div", "span", "p", "h1", "h2", "h3", "h4", "h5", "h6", "button", "input", "img", "a", "ul", "li", "form", "textarea", "select", "canvas"],
+        "total": "250+ builders (150 standard HTML + 100 Cairn UI components)",
+        "versions": "HTML 1.0, 2.0, 3.2, 4.01, HTML5, Beyond HTML, Cairn Enhanced Components",
         "signature": "element(content?, props?) | element(props?, ...children)",
         "props": {
-            "class": "string",
+            "class": "string | array | object",
+            "coat": "CSSObject (CSS1-CSS4 nested)",
             "style": "CSSProperties | () => CSSProperties",
+            "html": "Sanitized HTML markup string",
             "events": "lowercase e.g. onclick, oninput, onchange, onsubmit"
         }
     },
     "rules": {
         "state_update": "Always update state via .value property",
         "reactive_values": "Wrap dynamic values in () => expression",
-        "style_properties": "Use camelCase property names in style object",
-        "event_names": "Use native lowercase event names"
+        "style_properties": "Use camelCase property names in style/coat objects",
+        "event_names": "Use native lowercase event names",
+        "html_strings": "Native HTML strings in children and props are automatically parsed and rendered"
     }
 }

@@ -77,7 +77,9 @@ export class DomRef {
     }
 }
 
-let lastFrameTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+const getNow = () => (typeof globalThis !== 'undefined' && globalThis.performance && typeof globalThis.performance.now === 'function') ? globalThis.performance.now() : Date.now();
+
+let lastFrameTime = getNow();
 let fpsCounter = 60;
 
 if (typeof requestAnimationFrame !== 'undefined') {
@@ -101,13 +103,13 @@ export const perf = {
             memoryStr = `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1)}MB`;
         }
 
-        const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const start = getNow();
         const iterations = 100000;
         let dummy = 0;
         for (let i = 0; i < iterations; i++) {
             dummy += Math.sin(i) * Math.cos(i);
         }
-        const elapsed = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - start;
+        const elapsed = getNow() - start;
         const opsPerSec = elapsed > 0 ? ((iterations / elapsed) * 1000).toFixed(0) : '2400000';
         const opsFormatted = opsPerSec > 1000000 ? `${(opsPerSec / 1000000).toFixed(1)}M` : `${(opsPerSec / 1000).toFixed(0)}K`;
 
@@ -156,7 +158,7 @@ export const perf = {
 
     measure(fn) {
         let domUpdates = 0;
-        const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const startTime = getNow();
         
         let result;
         try {
@@ -165,7 +167,7 @@ export const perf = {
             console.error('[Cairn Perf Measure Error]:', e);
         }
 
-        const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const endTime = getNow();
         const duration = Math.max(0.01, endTime - startTime);
         const fps = Math.min(60, Math.max(1, fpsCounter));
         

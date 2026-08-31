@@ -381,7 +381,9 @@ export function createScene3D(target, options = {}) {
         },
 
         animate(fn) {
-            let lastTime = performance.now();
+            let lastTime = (typeof globalThis !== 'undefined' && globalThis.performance && typeof globalThis.performance.now === 'function')
+                ? globalThis.performance.now()
+                : Date.now();
             const loop = (now) => {
                 const dt = (now - lastTime) / 1000;
                 lastTime = now;

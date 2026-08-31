@@ -2237,16 +2237,19 @@ const App = () => div({
     p({ style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }, 'Signals automatically persist to local storage across page reloads:'),
 
     p('Pick Theme Accent Color:', { style: { fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' } }),
-    div({ style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' } },
+    div({ style: { display: 'flex', gap: '0.65rem', justifyContent: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' } },
         colors.map(col => button('', {
             style: {
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%',
                 background: col,
-                border: () => (userPrefs.preferences.value && userPrefs.preferences.value.accentColor === col) ? '3px solid #fff' : 'none',
+                border: () => ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) === col || userPrefs.preferences.accentColor === col) ? '3px solid #ffffff' : '2px solid transparent',
+                outline: () => ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) === col || userPrefs.preferences.accentColor === col) ? ('2px solid ' + col) : 'none',
+                transform: () => ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) === col || userPrefs.preferences.accentColor === col) ? 'scale(1.15)' : 'scale(1)',
+                boxShadow: () => ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) === col || userPrefs.preferences.accentColor === col) ? ('0 0 12px ' + col) : 'none',
                 cursor: 'pointer',
-                transition: 'transform 0.15s ease'
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
             },
             onclick: () => {
                 userPrefs.set('accentColor', col);
@@ -2260,13 +2263,15 @@ const App = () => div({
             padding: '1rem',
             background: '#0f172a',
             borderRadius: '0.5rem',
-            border: () => '2px solid ' + ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || '#38bdf8')
+            border: () => '2px solid ' + ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || userPrefs.preferences.accentColor || '#38bdf8'),
+            boxShadow: () => '0 4px 16px ' + ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || userPrefs.preferences.accentColor || '#38bdf8') + '22',
+            transition: 'all 0.3s ease'
         }
     },
-        p(() => 'Active Accent: ' + ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || '#38bdf8'), {
+        p(() => 'Active Accent: ' + ((userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || userPrefs.preferences.accentColor || '#38bdf8'), {
             style: {
                 fontWeight: '700',
-                color: () => (userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || '#38bdf8'
+                color: () => (userPrefs.preferences.value && userPrefs.preferences.value.accentColor) || userPrefs.preferences.accentColor || '#38bdf8'
             }
         })
     )
@@ -2457,6 +2462,229 @@ const App = () => div({
     cairn.p({ style: { color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', marginBottom: '1.5rem' } }, 'Compile Cairn components into standard Custom Elements or React/Vue wrappers:'),
     cairn.element('cairn-widget', { initial: '12' })
 );
+
+mount('#app', App());`,
+
+    kanban: `import { cairn, state, computed, Toast } from '../src/index.js';
+const { div, h1, h2, h3, p, button, span, input, mount } = cairn;
+
+const tasks = state([
+    { id: 1, title: 'Architect fine-grained signals graph', col: 'todo', tag: 'Core', color: '#38bdf8' },
+    { id: 2, title: 'WASM Physics Matrix Math acceleration', col: 'in_progress', tag: 'Performance', color: '#10b981' },
+    { id: 3, title: 'Touch gesture fling velocity detector', col: 'in_progress', tag: 'Interaction', color: '#f59e0b' },
+    { id: 4, title: 'FLIP layout transition reconciler', col: 'done', tag: 'Engine', color: '#a855f7' }
+]);
+
+const newTitle = state('');
+
+const addTask = () => {
+    if (!newTitle.value.trim()) return;
+    tasks.value = [...tasks.value, {
+        id: Date.now(),
+        title: newTitle.value.trim(),
+        col: 'todo',
+        tag: 'Feature',
+        color: '#38bdf8'
+    }];
+    newTitle.value = '';
+    Toast.success('Task created in Backlog!');
+};
+
+const moveTask = (id, targetCol) => {
+    tasks.value = tasks.value.map(t => t.id === id ? { ...t, col: targetCol } : t);
+};
+
+const removeTask = (id) => {
+    tasks.value = tasks.value.filter(t => t.id !== id);
+};
+
+const COLUMNS = [
+    { id: 'todo', title: '📋 To Do / Backlog', next: 'in_progress', nextLabel: 'Start →' },
+    { id: 'in_progress', title: '⚡ In Progress', prev: 'todo', prevLabel: '← Back', next: 'done', nextLabel: 'Done →' },
+    { id: 'done', title: '✅ Done & Shipped', prev: 'in_progress', prevLabel: '← Re-open' }
+];
+
+const App = () => div({
+    style: { maxWidth: '900px', margin: '1.5rem auto', padding: '1.5rem', background: '#0e131f', borderRadius: '1rem', border: '1px solid #1e2638', color: '#f8fafc' }
+},
+    div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' } },
+        div(
+            h1('Reactive Kanban Board', { style: { fontSize: '1.4rem', fontWeight: '800', color: '#fff', marginBottom: '0.25rem' } }),
+            p('Fine-grained status transitions with dynamic reactive signals.', { style: { color: '#94a3b8', fontSize: '0.85rem' } })
+        ),
+        div({ style: { display: 'flex', gap: '0.5rem' } },
+            input({
+                placeholder: 'New task title...',
+                value: newTitle,
+                style: { background: '#121826', border: '1px solid #1e2638', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', color: '#fff', fontSize: '0.85rem' },
+                oninput: (e) => newTitle.value = e.target.value,
+                onkeydown: (e) => { if (e.key === 'Enter') addTask(); }
+            }),
+            button('+ Add', {
+                style: { background: '#0284c7', color: '#fff', border: 'none', padding: '0.5rem 0.85rem', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' },
+                onclick: addTask
+            })
+        )
+    ),
+
+    div({ style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' } },
+        COLUMNS.map(col => div({
+            style: { background: '#121826', border: '1px solid #1e2638', borderRadius: '0.75rem', padding: '1rem', display: 'flex', flexDirection: 'column', minHeight: '300px' }
+        },
+            h3(col.title, { style: { fontSize: '0.95rem', fontWeight: '700', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)' } }),
+            div({ style: { display: 'flex', flexDirection: 'column', gap: '0.65rem', flex: 1 } },
+                () => tasks.value.filter(t => t.col === col.id).map(t => div({
+                    style: { background: '#1a2234', border: '1px solid #273549', padding: '0.75rem', borderRadius: '0.5rem' }
+                },
+                    div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' } },
+                        span(t.tag, { style: { background: 'rgba(56,189,248,0.12)', color: t.color, fontSize: '0.7rem', fontWeight: '700', padding: '0.15rem 0.4rem', borderRadius: '4px' } }),
+                        button('×', { style: { background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1rem' }, onclick: () => removeTask(t.id) })
+                    ),
+                    p(t.title, { style: { fontSize: '0.85rem', color: '#f8fafc', marginBottom: '0.75rem' } }),
+                    div({ style: { display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' } },
+                        col.prev ? button(col.prevLabel, { style: { background: 'transparent', border: '1px solid #273549', color: '#94a3b8', fontSize: '0.7rem', padding: '0.2rem 0.45rem', borderRadius: '4px', cursor: 'pointer' }, onclick: () => moveTask(t.id, col.prev) }) : null,
+                        col.next ? button(col.nextLabel, { style: { background: '#0284c7', border: 'none', color: '#fff', fontSize: '0.7rem', fontWeight: '700', padding: '0.2rem 0.45rem', borderRadius: '4px', cursor: 'pointer' }, onclick: () => moveTask(t.id, col.next) }) : null
+                    )
+                ))
+            )
+        ))
+    )
+);
+
+mount('#app', App());`,
+
+    command_palette: `import { cairn, state, CommandPalette, Toast } from '../src/index.js';
+const { div, h1, p, button, span, mount } = cairn;
+
+const isPaletteOpen = state(false);
+
+const App = () => div({
+    style: { maxWidth: '480px', margin: '3rem auto', textAlign: 'center', background: '#111827', padding: '2.5rem', borderRadius: '1rem', border: '1px solid #1e2638', color: '#f8fafc' }
+},
+    h1('Spotlight Command Palette', { style: { fontSize: '1.4rem', fontWeight: '800', marginBottom: '0.5rem' } }),
+    p('Press ⌘K or Ctrl+K anywhere to trigger the spotlight overlay.', { style: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' } }),
+    button('Open Command Palette (⌘K)', {
+        style: { background: '#0284c7', color: '#fff', border: 'none', padding: '0.75rem 1.25rem', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer' },
+        onclick: () => {
+            CommandPalette.open({
+                actions: [
+                    { title: 'Create New Document', shortcut: '⌘N', run: () => Toast.success('Created new document!') },
+                    { title: 'Toggle Dark / Light Theme', shortcut: '⌘T', run: () => Toast.info('Switched theme!') },
+                    { title: 'Deploy to Edge Production', shortcut: '⌘D', run: () => Toast.success('Deployment queued!') }
+                ]
+            });
+        }
+    })
+);
+
+mount('#app', App());`,
+
+    audio_visualizer: `import { cairn, state, mount } from '../src/index.js';
+const { div, h1, p, button, canvas } = cairn;
+
+const isPlaying = state(false);
+
+const App = () => {
+    let animId;
+    const cvs = canvas({ width: 440, height: 160, style: { width: '100%', maxWidth: '440px', height: '160px', background: '#090d16', borderRadius: '0.75rem', border: '1px solid #1e2638', margin: '1rem auto', display: 'block' } });
+
+    const startBars = () => {
+        const ctx = cvs.getContext('2d');
+        let phase = 0;
+        const tick = () => {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            phase += 0.05;
+            const bars = 24;
+            const barWidth = cvs.width / bars - 4;
+            for (let i = 0; i < bars; i++) {
+                const h = Math.abs(Math.sin(phase + i * 0.35)) * 120 + 10;
+                const grad = ctx.createLinearGradient(0, cvs.height, 0, cvs.height - h);
+                grad.addColorStop(0, '#0284c7');
+                grad.addColorStop(1, '#38bdf8');
+                ctx.fillStyle = grad;
+                ctx.fillRect(i * (barWidth + 4) + 2, cvs.height - h, barWidth, h);
+            }
+            if (isPlaying.value) animId = requestAnimationFrame(tick);
+        };
+        tick();
+    };
+
+    return div({
+        style: { maxWidth: '480px', margin: '2rem auto', textAlign: 'center', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid #1e2638', color: '#f8fafc' }
+    },
+        h1('Audio Spectrum Visualizer', { style: { fontSize: '1.35rem', fontWeight: '800', marginBottom: '0.5rem' } }),
+        p('Simulated dynamic 60fps audio waveform synthesizer.', { style: { color: '#94a3b8', fontSize: '0.85rem' } }),
+        cvs,
+        button(() => isPlaying.value ? '⏸ Pause Spectrum' : '▶ Synthesize Audio', {
+            style: () => ({
+                background: isPlaying.value ? '#ea580c' : '#0284c7',
+                color: '#fff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '0.5rem', fontWeight: '700', cursor: 'pointer'
+            }),
+            onclick: () => {
+                isPlaying.value = !isPlaying.value;
+                if (isPlaying.value) startBars();
+            }
+        })
+    );
+};
+
+mount('#app', App());`,
+
+    wasm_benchmark: `import { cairn, state, mount } from '../src/index.js';
+const { div, h1, p, button, canvas, span } = cairn;
+
+const particleCount = state(1000);
+const fps = state(60);
+
+const App = () => {
+    const cvs = canvas({ width: 440, height: 180, style: { width: '100%', maxWidth: '440px', height: '180px', background: '#090d16', borderRadius: '0.75rem', border: '1px solid #1e2638', margin: '1rem auto', display: 'block' } });
+
+    let running = true;
+    const ctx = cvs.getContext('2d');
+    const particles = Array.from({ length: 500 }, () => ({
+        x: Math.random() * cvs.width,
+        y: Math.random() * cvs.height,
+        vx: (Math.random() - 0.5) * 3,
+        vy: (Math.random() - 0.5) * 3,
+        color: ['#38bdf8', '#10b981', '#a855f7'][Math.floor(Math.random() * 3)]
+    }));
+
+    let last = Date.now();
+    let frames = 0;
+    const loop = () => {
+        const now = Date.now();
+        frames++;
+        if (now - last >= 1000) {
+            fps.value = frames;
+            frames = 0;
+            last = now;
+        }
+        ctx.fillStyle = 'rgba(9, 13, 22, 0.25)';
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
+        for (const p of particles) {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > cvs.width) p.vx *= -1;
+            if (p.y < 0 || p.y > cvs.height) p.vy *= -1;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, 2.5, 2.5);
+        }
+        if (running) requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+
+    return div({
+        style: { maxWidth: '480px', margin: '2rem auto', textAlign: 'center', background: '#111827', padding: '2rem', borderRadius: '1rem', border: '1px solid #1e2638', color: '#f8fafc' }
+    },
+        h1('WASM Physics Micro-Benchmark', { style: { fontSize: '1.35rem', fontWeight: '800', marginBottom: '0.5rem' } }),
+        p('High-throughput kinematic loop with fine-grained FPS tracking.', { style: { color: '#94a3b8', fontSize: '0.85rem' } }),
+        cvs,
+        div({ style: { display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '0.5rem' } },
+            p(() => \`FPS: \${fps.value}\`, { style: { color: '#10b981', fontWeight: '800' } }),
+            p('500 Live Particles', { style: { color: '#38bdf8', fontWeight: '700' } })
+        )
+    );
+};
 
 mount('#app', App());`
 };
@@ -3064,11 +3292,29 @@ export function initMonaco() {
     }
 }
 
+// Mobile Tabs Switching Controller
+export function setMobileTab(tab) {
+    document.querySelectorAll('.mobile-tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    document.body.setAttribute('data-mobile-tab', tab);
+    if (monacoEditor) {
+        setTimeout(() => monacoEditor.layout(), 60);
+    }
+    if (tab === 'preview') {
+        runCode();
+    }
+}
+
 // Toolbar Buttons
 const btnRun = document.getElementById('btn-run');
 if (btnRun) {
     btnRun.addEventListener('click', () => {
-        runCode();
+        if (window.innerWidth <= 900) {
+            setMobileTab('preview');
+        } else {
+            runCode();
+        }
         showToast('Code executed!');
     });
 }
@@ -3142,6 +3388,15 @@ const btnToggleConsole = document.getElementById('btn-toggle-console');
 const btnCloseConsole = document.getElementById('btn-close-console');
 
 export function toggleConsole(show) {
+    if (window.innerWidth <= 900) {
+        const currentTab = document.body.getAttribute('data-mobile-tab');
+        if (show === false) {
+            setMobileTab('preview');
+        } else {
+            setMobileTab(currentTab === 'console' ? 'preview' : 'console');
+        }
+        return;
+    }
     const currentlyHidden = document.body.getAttribute('data-console-hidden') === 'true';
     const nextHidden = show !== undefined ? !show : !currentlyHidden;
     document.body.setAttribute('data-console-hidden', nextHidden ? 'true' : 'false');
@@ -3212,16 +3467,8 @@ if (btnClearConsole && consoleLogs) {
 // Mobile Tabs Switching
 document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
         const tab = btn.dataset.tab;
-        document.body.setAttribute('data-mobile-tab', tab);
-        if (monacoEditor) {
-            setTimeout(() => monacoEditor.layout(), 50);
-        }
-        if (tab === 'preview') {
-            runCode();
-        }
+        setMobileTab(tab);
     });
 });
 
@@ -3252,6 +3499,13 @@ if (themeBtn) {
 }
 
 // Initialize on Load
+try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('embed') === '1') {
+        document.body.setAttribute('data-embedded', 'true');
+    }
+} catch (e) {}
+
 const initialTheme = localStorage.getItem('cairn-theme') || 'dark';
 syncTheme(initialTheme);
 initMonaco();

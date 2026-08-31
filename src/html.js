@@ -14,17 +14,27 @@
  */
 
 import { effect } from './state.js';
+import { h, sanitize, raw } from './dom.js';
 
 let _placeholderId = 0;
 
 /**
- * Parses a tagged template literal into a reactive DOM tree.
+ * Parses a tagged template literal into a reactive DOM tree, creates an <html> element, or creates sanitized HTML from string.
  *
- * @param {TemplateStringsArray} strings 
+ * @param {TemplateStringsArray|object|string} strings 
  * @param {...any} values 
- * @returns {HTMLElement|DocumentFragment}
+ * @returns {HTMLElement|DocumentFragment|string}
  */
 export function html(strings, ...values) {
+    if (typeof strings === 'string') {
+        const options = (typeof values[0] === 'object' && values[0] !== null) ? values[0] : {};
+        const sanitized = sanitize(strings, options);
+        return raw(sanitized);
+    }
+    if (!strings || !Array.isArray(strings) || !strings.raw) {
+        return h('html', strings, ...values);
+    }
+
     if (typeof document === 'undefined') {
         // SSR / Node Fallback: Render static HTML string
         return strings.reduce((acc, str, i) => {

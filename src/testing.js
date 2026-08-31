@@ -6,6 +6,8 @@
 let currentSuite = 'Global';
 const testResults = [];
 
+const getTimestamp = () => (typeof globalThis !== 'undefined' && globalThis.performance && typeof globalThis.performance.now === 'function') ? globalThis.performance.now() : Date.now();
+
 export const test = {
     describe(suiteName, fn) {
         const prev = currentSuite;
@@ -18,7 +20,7 @@ export const test = {
     },
 
     it(testName, fn) {
-        const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const start = getTimestamp();
         let passed = true;
         let error = null;
 
@@ -29,7 +31,7 @@ export const test = {
             error = err;
         }
 
-        const duration = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - start;
+        const duration = getTimestamp() - start;
         const entry = {
             suite: currentSuite,
             name: testName,

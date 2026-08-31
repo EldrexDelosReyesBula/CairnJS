@@ -1,23 +1,23 @@
-# CairnJS — Monolithic SPA & Scalable Architecture
+# Structuring Single-Page Applications
 
-> **A clear, pragmatic guide to structuring and scaling single-page applications with CairnJS — from a single zero-build HTML file to modular enterprise codebases.**
+> **A simple, practical guide to organizing and growing single-page applications with CairnJS — from a single HTML file to clean, modular components.**
 
 ---
 
-## 🎯 The Pragmatic Scaling Philosophy
+## 🎯 The Simple Scaling Philosophy
 
-CairnJS is designed around **zero-dependency, direct DOM signals**. It scales not by imposing heavy framework conventions, but by providing clean, composable building blocks that work seamlessly across project sizes:
+CairnJS is designed around **zero-dependency, direct DOM signals**. It keeps projects simple by providing clean, composable building blocks that work seamlessly whether you are building a small side-project or an organized web app:
 
-| Architecture Stage | Ideal Project Scope | Core CairnJS Primitives | Key Benefits & Trade-offs |
+| Project Stage | Ideal Scope | Core CairnJS Primitives | Key Benefits |
 | :--- | :--- | :--- | :--- |
-| **Level 1: Zero-Build Prototype** | Single utilities, widgets, rapid mockups | `cairn.html`, `cairn.state`, `cairn.mount` | Zero build step, runs directly in browser via CDN. Ideal for fast exploration. |
-| **Level 2: Multi-File ESM** | Small tools, dashboards, internal portals | ES Modules, `cairn.router`, signals | Native browser imports, simple folder structure, zero bundler configuration needed. |
-| **Level 3: Feature-Sliced SPA** | Medium-to-large single-page apps (SPAs) | Feature slices, shared stores, UI primitives | Clean separation of concerns, isolated unit tests, predictable data flow. |
-| **Level 4: Modular Monolith** | Enterprise platforms, design systems | Store slices, lifecycle hooks, bridges | Highly organized, maintainable monolith. (For distinct team repos, pair with npm packages or custom elements). |
+| **Level 1: Single-File Prototype** | Quick tools, calculators, rapid mockups | `cairn.html`, `cairn.state`, `cairn.mount` | Zero build step, runs directly in browser via CDN. Ideal for fast exploration. |
+| **Level 2: Multi-File ESM** | Dashboards, utilities, community apps | ES Modules, `cairn.router`, signals | Native browser imports, simple folder structure, zero bundler configuration needed. |
+| **Level 3: Feature-Organized App** | Multi-screen web applications | Feature folders, shared stores, UI primitives | Clean separation of concerns, isolated unit tests, predictable data flow. |
+| **Level 4: Modular Packages** | Large apps, custom design systems | Component packages, shared state, bridges | Highly organized, maintainable codebase with clean imports. |
 
 ---
 
-## 📁 1. Project Structures Across the 4 Scaling Tiers
+## 📁 1. Project Structures Across 4 Practical Tiers
 
 ### Level 1: Single File Prototype (`prototype.html`)
 
@@ -68,7 +68,7 @@ For calculators, JSON transformers, landing pages, or rapid prototypes, you can 
 
 ### Level 2: Modular Single-Page Application (SPA)
 
-When your application expands beyond a single screen, organize files by feature or technical domain:
+When your application expands beyond a single screen, organize files cleanly by feature or technical domain:
 
 ```
 my-spa-project/
@@ -81,7 +81,7 @@ my-spa-project/
 │   │   ├── Button.js
 │   │   ├── Card.js
 │   │   └── Modal.js
-│   ├── features/               # Domain-specific screens and logic
+│   ├── features/               # Feature-specific screens and logic
 │   │   ├── dashboard/
 │   │   │   ├── DashboardView.js
 │   │   │   └── StatsCard.js
@@ -101,6 +101,7 @@ my-spa-project/
 ## 🏗️ 2. Architectural Building Blocks
 
 ### Client-Side Routing (`cairn.router`)
+
 CairnJS provides a lightweight SPA router with path parameter matching and navigation guards:
 
 ```javascript
@@ -125,7 +126,8 @@ router.beforeEach((to, from) => {
 ---
 
 ### Predictable State Management (`cairn.createStore`)
-For shared or cross-cutting application state, use CairnJS stores with actions and computed signals:
+
+For shared state across components, use CairnJS stores with actions and computed signals:
 
 ```javascript
 import { state, computed, createStore } from '@eldrex/cairnjs';
@@ -156,30 +158,16 @@ export const userStore = createStore('user', {
 
 | Consideration | What CairnJS Delivers | When to Consider Alternatives |
 | :--- | :--- | :--- |
-| **Bundle Footprint** | Sub-12KB core with zero third-party dependencies. | If you require 500+ pre-built React/Angular UI component libraries out of the box. |
-| **Reactivity Model** | Fine-grained signals that update exact text nodes and attributes without Virtual DOM diffing. | If team workflows mandate JSX compiler setups. (Though Cairn offers `cairn.html` and bridge adapters). |
-| **Monolith vs Micro-Frontends** | Ideal for monolithic SPAs and clean feature modules. | If independent teams must deploy disparate sub-apps on decoupled release cycles. |
-| **Learning Curve** | Standard HTML, JavaScript, and CSS. No proprietary template compilers. | If developers expect full-stack meta-framework conventions like file-based routing. |og('[Analytics]', event, data);
-    }
-});
-
-// 2. DOM Middleware Interceptors
-middlewareEngine.use('beforeCreate', (tag, props) => {
-    // Automatically inject data test attributes
-    if (props.id && !props['data-testid']) {
-        props['data-testid'] = props.id;
-    }
-    return props;
-});
-```
+| **Bundle Footprint** | Sub-12KB core with zero third-party dependencies. | If you require hundreds of heavyweight pre-built UI components. |
+| **Reactivity Model** | Fine-grained signals that update exact text nodes and attributes without Virtual DOM diffing. | If team workflows mandate JSX compiler setups. |
+| **Simplicity** | Standard HTML, JavaScript, and CSS. No proprietary template compilers. | If developers prefer full-stack meta-framework conventions. |
 
 ---
 
-## 📋 Scalability Checklist
+## 📋 Project Organization Checklist
 
-| Stage | Scale | Recommended Architecture |
+| Project Size | Component Count | Recommended Architecture |
 | :--- | :---: | :--- |
 | **Small Apps** | 1–10 Components | Single HTML file or 2-3 ESM files. CDN import. Simple signals. |
-| **Medium Apps** | 10–100 Components | Feature folders. Client-side router. Shared store. Automated test suite. |
-| **Large Apps** | 100–1,000 Components | Component library with design tokens. Keyed list reconcilers. Dependency injection. |
-| **Enterprise** | 1,000+ Components | Monorepo/Multi-package architecture. Custom element bridges. SSR static pre-rendering. CI/CD test automation. |
+| **Medium Apps** | 10–50 Components | Feature folders. Client-side router. Shared store. |
+| **Large Apps** | 50+ Components | Component folders with design tokens. Keyed list reconcilers. Subpath imports. |

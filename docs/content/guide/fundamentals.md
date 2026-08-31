@@ -554,7 +554,7 @@ mount('#app', MasterDashboard());
 
 ## 6. What to Explore Next
 
-- 🎨 **[Styling Guide](./docs/content/architecture/styling.md)**: Explore glassmorphism, responsive `fluid()`, and themes.
-- ⚡ **[Animation & Physics](./docs/content/graphics/animation-and-physics.md)**: Learn spring solvers and particle kinematics.
-- 🛠️ **[Cairn Studio](./docs/content/advanced/studio-and-prototyping.md)**: Visual component builder with live multi-framework code export.
-- 📖 **[Full API Reference](./docs/content/reference/api.md)**: Exhaustive signatures for all 100+ exported APIs.
+- 🎨 **[Styling Guide](#/docs/styling)**: Explore glassmorphism, responsive `fluid()`, and themes.
+- ⚡ **[Animation & Physics](#/docs/animation-and-physics)**: Learn spring solvers and particle kinematics.
+- 🛠️ **[Cairn Studio](#/docs/studio-and-prototyping)**: Visual component builder with live multi-framework code export.
+- 📖 **[Full API Reference](#/docs/api)**: Exhaustive signatures for all 100+ exported APIs.

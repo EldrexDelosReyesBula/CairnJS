@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "CairnJS API Reference",
+  "version": "1.4.0",
+  "description": "Complete machine-readable and verified API reference for CairnJS zero-dependency reactive UI framework.",
+  "modules": {
+    "core": {
+      "state": {
+        "signature": "state(initialValue)",
+        "params": [{ "name": "initialValue", "type": "any", "description": "Initial reactive value" }],
+        "returns": { "type": "Signal<T>", "description": "Object with .value getter/setter and subscriber tracking" }
+      },
+      "computed": {
+        "signature": "computed(fn)",
+        "params": [{ "name": "fn", "type": "() => any", "description": "Derived state computation function" }],
+        "returns": { "type": "ComputedSignal<T>", "description": "Read-only reactive signal" }
+      },
+      "effect": {
+        "signature": "effect(fn)",
+        "params": [{ "name": "fn", "type": "() => void", "description": "Side-effect callback tracking reactive dependencies" }],
+        "returns": { "type": "() => void", "description": "Disposer function to teardown effect" }
+      },
+      "mount": {
+        "signature": "mount(target, element)",
+        "params": [
+          { "name": "target", "type": "string | HTMLElement", "description": "CSS selector or DOM container element" },
+          { "name": "element", "type": "HTMLElement | DocumentFragment | Function", "description": "Cairn component element to mount" }
+        ],
+        "returns": { "type": "() => void", "description": "Unmount cleanup function" }
+      },
+      "component": {
+        "signature": "component(fn)",
+        "params": [{ "name": "fn", "type": "(props: object) => HTMLElement", "description": "Component render closure" }],
+        "returns": { "type": "(props: object) => HTMLElement", "description": "Wrapped Cairn component factory" }
+      }
+    },
+    "dom": {
+      "h": { "signature": "h(tag, props, ...children)", "description": "Hyperscript-style procedural element builder" },
+      "tags": { "description": "Procedural tag helpers: div, span, button, input, h1-h6, p, ul, li, form, table, etc." },
+      "html": { "signature": "html`...`", "description": "Pure HTML tagged template literal supporting :bind, :style, @click" }
+    },
+    "motion": {
+      "spring": {
+        "signature": "spring({ from, to, stiffness, damping, velocity, onUpdate, onComplete })",
+        "description": "60 FPS hardware-accelerated analytical damped harmonic oscillator physics"
+      },
+      "transition": { "signature": "transition(el, options)", "description": "Fluid DOM morph and element transition orchestrator" }
+    },
+    "errors": {
+      "cairnError": {
+        "signature": "cairnError(type, context)",
+        "description": "Outputs standard Three-Part Cairn Diagnostic (Summary, Location, Actionable Fix)"
+      },
+      "customize": {
+        "signature": "errors.customize(type, formatterFn)",
+        "description": "Registers or overrides custom domain-specific error templates"
+      },
+      "setFormatter": {
+        "signature": "errors.setFormatter(fn)",
+        "description": "Connects global error handling directly into custom console formatters or APM telemetry"
+      }
+    },
+    "bridges": {
+      "toReact": { "signature": "cairnToReact(CairnComponent)", "description": "Wraps Cairn component into a native React component" },
+      "toVue": { "signature": "cairnToVue(CairnComponent)", "description": "Wraps Cairn component into a native Vue 3 component definition" },
+      "toSvelte": { "signature": "cairnToSvelte(CairnComponent)", "description": "Wraps Cairn component into a Svelte action handler" },
+      "toAngular": { "signature": "cairnToAngular(CairnComponent)", "description": "Wraps Cairn component into an Angular directive" },
+      "rest": { "signature": "rest.get(url), rest.post(url, data), rest.sync(state, url)", "description": "Universal REST client bridge" },
+      "graphql": { "signature": "graphql.query(query, vars), graphql.mutation(query, vars)", "description": "GraphQL API bridge" },
+      "websocket": { "signature": "websocket.connect(url), websocket.onMessage(ws, fn)", "description": "Real-time WebSocket bridge" },
+      "sse": { "signature": "sse.connect(url), sse.onEvent(source, event, fn)", "description": "Server-Sent Events streaming bridge" },
+      "universal": { "signature": "universal.detect(), universal.mount(target, component, props)", "description": "Auto-detecting multi-framework runtime bridge" }
+    }
+  }
+}

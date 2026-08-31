@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>CairnJS — Interactive Examples &amp; Sandbox Gallery</title>
-    <meta name="description" content="Explore live, interactive CairnJS examples showcasing signals, 60fps spring physics, custom elements, and framework integrations with React, Vue, Svelte, and SolidJS.">
-    <meta name="keywords" content="cairnjs examples, reactive javascript examples, svelte action, react bridge, solidjs signals, web components gallery">
+    <meta name="description"
+        content="Explore ready-to-run CairnJS examples: fine-grained signals, 3D graphics, spring physics, full apps, and framework bridges for React, Vue, Svelte, and SolidJS.">
+    <meta name="keywords"
+        content="cairnjs examples, reactive javascript demos, svelte action, react bridge, solidjs signals, web components gallery, 3d physics">
     <meta name="author" content="Eldrex Delos Reyes Bula">
     <link rel="canonical" href="https://cairnjs.vercel.app/examples/index.html">
 
@@ -18,36 +21,59 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://cairnjs.vercel.app/examples/index.html">
     <meta property="og:title" content="CairnJS — Interactive Examples & Sandbox Gallery">
-    <meta property="og:description" content="Explore live, interactive CairnJS examples showcasing signals, 60fps spring physics, and framework integrations.">
-    <meta property="og:image" content="https://cairnjs.vercel.app/docs/assets/cairn-official-logo.png">
+    <meta property="og:description"
+        content="Explore ready-to-run CairnJS examples showcasing signals, 60fps spring physics, and framework integrations.">
+    <meta property="og:image" content="../docs/assets/cairn-official-logo.png">
 
-    <!-- Twitter Cards -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="CairnJS — Interactive Examples Gallery">
-    <meta name="twitter:description" content="Live CairnJS code examples: React, Vue, Svelte, SolidJS, and Web Components.">
-    <meta name="twitter:image" content="https://cairnjs.vercel.app/docs/assets/cairn-official-logo.png">
-
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
-        :root {
-            --bg: #0b0f19;
-            --surface: #111827;
-            --surface-card: #1e293b;
-            --surface-hover: #273549;
-            --border: rgba(255, 255, 255, 0.08);
+        :root,
+        [data-theme="dark"] {
+            --bg: #090d16;
+            --surface: #0e131f;
+            --surface-card: #121826;
+            --surface-hover: #1a2234;
+            --border: #1e2638;
+            --border-active: #38bdf8;
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #38bdf8;
             --accent-hover: #0284c7;
+            --header-bg: rgba(9, 13, 22, 0.85);
+            --drawer-bg: #0e131f;
             --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
             --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-card: #ffffff;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --border-active: #0284c7;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --header-bg: rgba(248, 250, 252, 0.9);
+            --drawer-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: var(--font-sans);
             background: var(--bg);
@@ -55,37 +81,126 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+            transition: background 0.2s ease, color 0.2s ease;
         }
 
+        /* Header */
         header {
-            background: rgba(17, 24, 39, 0.85);
+            height: 58px;
+            background: var(--header-bg, rgba(9, 13, 22, 0.85));
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
+            padding: 0 1.5rem;
             position: sticky;
             top: 0;
             z-index: 50;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
+            transition: background 0.2s ease, border-color 0.2s ease;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.65rem;
             text-decoration: none;
             color: var(--text);
             font-family: var(--font-heading);
             font-weight: 800;
-            font-size: 1.25rem;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+            cursor: pointer;
+            flex-shrink: 0;
         }
 
-        .nav-links {
+        /* Centered Desktop Nav */
+        .desktop-nav {
+            display: flex;
+            align-items: center;
+            gap: 1.65rem;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.15s ease;
+            cursor: pointer;
+            padding: 0.25rem 0.25rem;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .header-actions {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+        }
+
+        .header-search-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            padding: 0.35rem 0.65rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .header-search-btn:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .header-search-kbd {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.1rem 0.35rem;
+            border-radius: 0.2rem;
+            font-size: 0.65rem;
+            font-family: var(--font-mono, monospace);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        [data-theme="light"] .header-search-kbd {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .btn-get-started {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #ffffff;
+            border: none;
+            padding: 0.4rem 0.85rem;
+            border-radius: 0.5rem;
+            font-size: 0.825rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+            transition: all 0.15s ease;
+        }
+
+        .btn-get-started:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
         }
 
         .btn {
@@ -93,8 +208,8 @@
             color: var(--text);
             border: 1px solid var(--border);
             border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
@@ -102,123 +217,370 @@
             align-items: center;
             gap: 0.4rem;
             transition: all 0.2s ease;
+            user-select: none;
         }
+
         .btn:hover {
             background: var(--surface-hover);
             border-color: var(--accent);
             color: var(--accent);
         }
+
         .btn-primary {
-            background: linear-gradient(135deg, #0284c7, #38bdf8);
-            color: #fff;
-            border: none;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            border: 1px solid #38bdf8 !important;
         }
+
         .btn-primary:hover {
-            filter: brightness(1.1);
-            color: #fff;
+            background: #0369a1 !important;
+            color: #ffffff !important;
         }
 
-        .hero {
-            text-align: center;
-            padding: 3.5rem 1.5rem 2rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .hero h1 {
-            font-family: var(--font-heading);
-            font-size: clamp(2rem, 4vw, 2.75rem);
-            font-weight: 800;
-            margin-bottom: 0.75rem;
-            background: linear-gradient(135deg, #ffffff, #94a3b8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero p {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
-
-        .filter-bar {
-            max-width: 1100px;
-            margin: 1rem auto 2rem;
-            padding: 0 1.5rem;
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .filter-btn {
-            padding: 0.4rem 0.9rem;
-            border-radius: 9999px;
-            background: var(--surface);
+        .icon-btn {
+            background: transparent;
             border: 1px solid var(--border);
             color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 600;
+            width: 34px;
+            height: 34px;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            font-size: 0.95rem;
+            text-decoration: none;
             transition: all 0.15s ease;
         }
-        .filter-btn.active, .filter-btn:hover {
-            background: var(--surface-card);
+
+        .icon-btn:hover {
             border-color: var(--accent);
             color: var(--accent);
         }
 
+        .mobile-toggle {
+            display: none;
+        }
+
+        /* Mobile Drawer */
+        .mobile-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: flex-start;
+        }
+
+        .mobile-drawer-overlay.open {
+            display: flex;
+        }
+
+        .mobile-drawer {
+            background: var(--drawer-bg);
+            width: 280px;
+            max-width: 80vw;
+            height: 100%;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border-right: 1px solid var(--border);
+            box-shadow: 10px 0 25px rgba(0, 0, 0, 0.5);
+            animation: slideInLeft 0.25s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .drawer-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.85rem;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-radius: 0.5rem;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .drawer-link:hover,
+        .drawer-link.active {
+            background: var(--surface-hover);
+            color: var(--accent);
+        }
+
+        /* Hero Section with GIF Background */
+        .hero-section {
+            position: relative;
+            text-align: center;
+            padding: clamp(3rem, 6vw, 4.5rem) 1.5rem clamp(2rem, 4vw, 3rem);
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .hero-bg-wrap {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100vw;
+            max-width: 100vw;
+            height: 100%;
+            min-height: 400px;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0.12;
+            mask-image: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 0) 75%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 0) 75%);
+        }
+
+        .hero-bg-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+        }
+
+        .hero-logo-badge {
+            margin-bottom: 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            filter: drop-shadow(0 8px 24px rgba(56, 189, 248, 0.25));
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.85rem;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            z-index: 2;
+            text-decoration: none;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .hero-badge:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .hero-title {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.85rem;
+            color: var(--text);
+            z-index: 2;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            color: var(--text-muted);
+            font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+            line-height: 1.6;
+            max-width: 650px;
+            margin-bottom: 2rem;
+            z-index: 2;
+        }
+
+        /* Controls Wrapper */
+        .controls-wrapper {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            align-items: center;
+            width: 100%;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 520px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            padding: 0.7rem 1.25rem 0.7rem 2.6rem;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 100%;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.9rem;
+            border-radius: 9999px;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.825rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Examples Grid */
         .grid {
             max-width: 1200px;
-            margin: 0 auto 4rem;
+            margin: 0 auto 5rem;
             padding: 0 1.5rem;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 1.75rem;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 1.5rem;
             width: 100%;
         }
 
         .card {
-            background: var(--surface);
+            background: var(--surface-card);
             border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.5rem;
+            border-radius: 0.875rem;
+            padding: 1.35rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .card:hover {
             transform: translateY(-3px);
             border-color: rgba(56, 189, 248, 0.4);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
 
         .card-tag {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            padding: 0.2rem 0.6rem;
+            padding: 0.2rem 0.55rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.725rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.85rem;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.75rem;
             width: fit-content;
         }
-        .tag-core { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-        .tag-framework { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
-        .tag-app { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .tag-core {
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+
+        .tag-framework {
+            background: rgba(168, 85, 247, 0.12);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.25);
+        }
+
+        .tag-app {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .tag-graphics {
+            background: rgba(244, 63, 94, 0.12);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.25);
+        }
 
         .card h3 {
             font-family: var(--font-heading);
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.15rem;
+            margin-bottom: 0.45rem;
             color: var(--text);
+            font-weight: 700;
         }
+
         .card p {
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             line-height: 1.5;
             margin-bottom: 1.25rem;
             flex: 1;
@@ -227,402 +589,940 @@
         .card-actions {
             display: flex;
             gap: 0.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.85rem;
+            border-top: 1px solid var(--border);
         }
+
         .card-actions .btn {
             flex: 1;
             justify-content: center;
+            padding: 0.4rem 0.65rem;
+            font-size: 0.8rem;
+        }
+
+        /* SPA Interactive Sandbox Viewer */
+        .spa-viewer-view {
+            display: none;
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.25rem 1.5rem 4rem;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .spa-viewer-subnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .spa-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .spa-breadcrumb-back {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .spa-viewer-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 1.5rem;
+            min-height: 600px;
+            align-items: start;
+        }
+
+        .spa-viewer-info {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 0.875rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .spa-viewer-frame-wrap {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 0.875rem;
+            overflow: hidden;
+            min-height: 620px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .spa-viewer-frame-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .spa-viewer-iframe {
+            width: 100%;
+            height: 620px;
+            border: none;
+            background: transparent;
+            flex: 1;
+        }
+
+        .spa-pager {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 960px) {
+            .spa-viewer-layout {
+                grid-template-columns: 1fr;
+            }
+            .spa-viewer-iframe {
+                height: 520px;
+            }
         }
 
         @media (max-width: 768px) {
             header {
-                padding: 0.85rem 1.25rem;
-            }
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 1.25rem;
                 padding: 0 1rem;
+                height: 54px;
             }
-            .hero {
-                padding: 2.5rem 1rem 1.5rem;
-            }
-        }
 
-        @media (max-width: 480px) {
-            header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.75rem;
+            .desktop-nav {
+                display: none;
             }
-            .nav-links {
-                justify-content: space-between;
-                width: 100%;
+
+            .header-actions .btn-get-started {
+                display: none;
             }
-            .nav-links .btn {
-                flex: 1;
+
+            .header-search-btn .search-label,
+            .header-search-btn .header-search-kbd {
+                display: none;
+            }
+
+            .header-search-btn {
+                padding: 0.35rem 0.5rem;
+                border-radius: 0.375rem;
+                width: 34px;
+                height: 34px;
+                display: flex;
+                align-items: center;
                 justify-content: center;
-                padding: 0.4rem 0.6rem;
-                font-size: 0.8rem;
             }
+
+            .icon-btn {
+                width: 34px;
+                height: 34px;
+            }
+
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .hero-section {
+                padding: 2.25rem 1rem 1.5rem;
+            }
+
+            .hero-logo-badge img {
+                width: 60px !important;
+                height: 60px !important;
+            }
+
+            .hero-title {
+                font-size: clamp(1.65rem, 6.5vw, 2.25rem);
+                line-height: 1.2;
+                letter-spacing: -0.02em;
+                margin-bottom: 0.75rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.9rem;
+                line-height: 1.55;
+                margin-bottom: 1.5rem;
+            }
+
+            .controls-wrapper {
+                padding: 0 1rem;
+                margin-bottom: 1.5rem;
+                gap: 1rem;
+            }
+
+            .filter-bar {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                justify-content: flex-start;
+                padding: 0.25rem 0.25rem 0.5rem 0.25rem;
+                gap: 0.45rem;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .filter-bar::-webkit-scrollbar {
+                display: none;
+            }
+
+            .filter-btn {
+                flex-shrink: 0;
+                white-space: nowrap;
+                font-size: 0.78rem;
+                padding: 0.35rem 0.75rem;
+            }
+
             .grid {
                 grid-template-columns: 1fr;
-            }
-            .filter-bar {
-                padding: 0 0.75rem;
-                gap: 0.35rem;
-            }
-            .filter-btn {
-                font-size: 0.8rem;
-                padding: 0.35rem 0.75rem;
+                gap: 1.25rem;
+                padding: 0 1rem;
+                margin-bottom: 3.5rem;
             }
         }
     </style>
 </head>
+
 <body>
+    <!-- Top Header Navigation -->
     <header>
-        <a href="../docs/index.html" class="brand">
-            <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.src='../docs/assets/cairn-logo.png'">
-            <span>CairnJS Examples</span>
+        <!-- Left: Logo + Wordmark -->
+        <a href="../docs/index.html" class="brand" onclick="showGalleryView();">
+            <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS"
+                style="width: 28px; height: 28px; object-fit: contain;"
+                onerror="this.src='../docs/assets/cairn-logo.png'">
+            <span>CairnJS</span>
         </a>
-        <div class="nav-links">
-            <a href="../docs/playground.html" class="btn btn-primary"><i class="fa-solid fa-code"></i> Live Playground</a>
-            <a href="../docs/index.html" class="btn"><i class="fa-solid fa-book-open"></i> Docs</a>
-            <a href="https://github.com/EldrexDelosReyesBula/CairnJS" target="_blank" class="btn"><i class="fa-brands fa-github"></i> GitHub</a>
+
+        <!-- Center: Centered Desktop Nav Links -->
+        <nav class="desktop-nav">
+            <a href="../docs/index.html#/docs/getting-started" class="nav-link">Docs</a>
+            <a href="../docs/index.html#/docs/fundamentals" class="nav-link">Guide</a>
+            <span class="nav-link active" onclick="showGalleryView()">Examples</span>
+            <a href="../docs/playground.html" class="nav-link">Playground</a>
+        </nav>
+
+        <!-- Right Controls: Search + [Get Started →] + Theme + GitHub -->
+        <div class="header-actions">
+            <button id="header-search-btn" class="header-search-btn" onclick="focusSearch()" aria-label="Search examples">
+                <i class="fa-solid fa-magnifying-glass" style="font-size: 0.8rem;"></i>
+                <span class="search-label">Search</span>
+                <span class="header-search-kbd">⌘K</span>
+            </button>
+            <a href="../docs/index.html#/docs/getting-started" class="btn-get-started">Get Started →</a>
+            <button id="theme-btn" class="icon-btn" title="Toggle Theme" onclick="toggleTheme()" aria-label="Toggle Theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <a href="https://github.com/EldrexDelosReyesBula/CairnJS" target="_blank" rel="noreferrer" class="icon-btn" aria-label="GitHub Repository">
+                <i class="fa-brands fa-github"></i>
+            </a>
+            <button class="icon-btn mobile-toggle" aria-label="Toggle navigation menu" onclick="toggleDrawer()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </header>
 
-    <main>
-        <section class="hero">
-            <h1>Ready-to-Run CairnJS Examples</h1>
-            <p>Explore production examples, reactive patterns, and framework integrations with React, Vue, Svelte, SolidJS, and Web Components.</p>
-        </section>
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-drawer-overlay" class="mobile-drawer-overlay" onclick="if(event.target===this) toggleDrawer()">
+        <div class="mobile-drawer">
+            <div class="drawer-header">
+                <div class="brand" style="font-size: 1.05rem;" onclick="showGalleryView(); toggleDrawer();">
+                    <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS"
+                        style="width: 26px; height: 26px; object-fit: contain;"
+                        onerror="this.src='../docs/assets/cairn-logo.png'">
+                    <span>CairnJS</span>
+                </div>
+                <button class="icon-btn" style="width: 30px; height: 30px; border: none;" onclick="toggleDrawer()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <nav style="display: flex; flex-direction: column; gap: 0.35rem;">
+                <a href="../docs/index.html" class="drawer-link"><i class="fa-solid fa-house"></i> Home</a>
+                <a href="../docs/index.html#/docs/getting-started" class="drawer-link"><i class="fa-solid fa-book-open"></i> Docs</a>
+                <a href="../docs/index.html#/docs/fundamentals" class="drawer-link"><i class="fa-solid fa-graduation-cap"></i> Guide</a>
+                <span class="drawer-link active" onclick="showGalleryView(); toggleDrawer();"><i class="fa-solid fa-layer-group"></i> Examples Gallery</span>
+                <a href="../docs/playground.html" class="drawer-link"><i class="fa-solid fa-play"></i> Playground</a>
+                <a href="https://github.com/EldrexDelosReyesBula/CairnJS" target="_blank" rel="noreferrer" class="drawer-link"><i
+                        class="fa-brands fa-github"></i> GitHub Repository</a>
+            </nav>
+        </div>
+    </div>
 
-        <section class="filter-bar">
-            <button class="filter-btn active" data-filter="all">All Examples (23)</button>
-            <button class="filter-btn" data-filter="core">Fundamentals & Reactivity</button>
-            <button class="filter-btn" data-filter="graphics">2D & 3D Graphics</button>
-            <button class="filter-btn" data-filter="app">Real-Time & Full Apps</button>
-            <button class="filter-btn" data-filter="framework">Framework Integrations</button>
-        </section>
+    <!-- Main Body -->
+    <main id="main-content" style="flex: 1; display: flex; flex-direction: column;">
 
-        <section class="grid" id="examples-grid">
-            <!-- 1. 3D Solar System & Planetary Orbits -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-earth-americas"></i> 3D Astronomy</span>
-                    <h3>3D Solar System & Planetary Orbits</h3>
-                    <p>Hierarchical multi-body 3D planetary physics, orbiting satellites, glowing sun mesh, and 3D camera controls.</p>
+        <!-- 1. GALLERY VIEW (Grid of all examples) -->
+        <div id="gallery-view">
+            <!-- Hero Section with Background GIF -->
+            <section class="hero-section">
+                <div class="hero-bg-wrap">
+                    <img src="../assets/here-background.gif" alt="Hero Animation" onerror="this.src='../docs/assets/here-background.gif'">
                 </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=galaxy3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=galaxy3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                <!-- Clean Centered Hero Logo Badge -->
+                <div class="hero-logo-badge">
+                    <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS"
+                        style="width: 72px; height: 72px; object-fit: contain;"
+                        onerror="this.src='../docs/assets/cairn-logo.png'">
                 </div>
-            </article>
+                <div class="hero-badge">
+                    <span class="badge-dot"></span>
+                    <span>36 Interactive Examples &amp; Sandboxes</span>
+                    <span>•</span>
+                    <span style="color: var(--accent); font-weight: 700;">Live Run →</span>
+                </div>
+                <h1 class="hero-title">
+                    <span>Ready-to-Run </span><span class="gradient-text">CairnJS Examples</span>
+                </h1>
+                <p class="hero-subtitle">Production-ready reactive patterns, 3D graphics, spring physics, full application architectures, and zero-overhead framework bridges.</p>
+            </section>
 
-            <!-- 2. 3D Kinetic Helix & Parametric Ring -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-dna"></i> Parametric 3D</span>
-                    <h3>3D Kinetic Helix & Parametric Ring</h3>
-                    <p>18 synchronized polyhedra meshes rotating in wave harmonics with orbiting dynamic lights and central glowing core.</p>
+            <!-- Search & Filter Controls -->
+            <section class="controls-wrapper">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" class="search-input" placeholder="Search examples by title, feature, or keyword...">
                 </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=torus_matrix3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=torus_matrix3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                <div class="filter-bar">
+                    <button class="filter-btn active" data-filter="all">All Demos (<span id="total-count">36</span>)</button>
+                    <button class="filter-btn" data-filter="app">Full Apps &amp; UI</button>
+                    <button class="filter-btn" data-filter="graphics">2D &amp; 3D Graphics</button>
+                    <button class="filter-btn" data-filter="motion">Motion &amp; Physics</button>
+                    <button class="filter-btn" data-filter="framework">Framework Bridges</button>
+                    <button class="filter-btn" data-filter="core">Core Reactivity</button>
                 </div>
-            </article>
+            </section>
 
-            <!-- 3. 3D Interactive Product Studio -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-vr-cardboard"></i> 3D Studio</span>
-                    <h3>3D Interactive Product Studio</h3>
-                    <p>360° mouse orbit controls, pedestal floor, dynamic studio lighting presets (Cyberpunk/Gold/Arctic), and wireframe toggle.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=product_viewer3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=product_viewer3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
+            <!-- Examples Grid Container -->
+            <section class="grid" id="examples-grid"></section>
+        </div>
 
-            <!-- 4. 3D Flippable Interactive Cards -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-cube"></i> 3D Perspective</span>
-                    <h3>3D Flippable Interactive Cards</h3>
-                    <p>CSS 3D perspective transform with smooth flip transitions, backface-visibility, and signal toggles.</p>
+        <!-- 2. SPA INTERACTIVE VIEWER VIEW -->
+        <div id="viewer-view" class="spa-viewer-view">
+            <!-- Breadcrumb Subnav -->
+            <div class="spa-viewer-subnav">
+                <div class="spa-breadcrumb">
+                    <span class="spa-breadcrumb-back" onclick="showGalleryView()"><i class="fa-solid fa-arrow-left"></i> Gallery</span>
+                    <span>/</span>
+                    <span id="viewer-cat-breadcrumb" style="text-transform: capitalize;">Application</span>
+                    <span>/</span>
+                    <strong id="viewer-title-breadcrumb" style="color: var(--text);">Example Title</strong>
                 </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=flipcard" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=flipcard" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <a id="viewer-playground-link" href="../docs/playground.html" class="btn"><i class="fa-solid fa-play"></i> Playground</a>
+                    <button class="btn btn-primary" onclick="reloadViewerFrame()"><i class="fa-solid fa-rotate"></i> Reset</button>
                 </div>
-            </article>
+            </div>
 
-            <!-- 2. Touch & Drag Gesture Physics -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-hand-pointer"></i> Gesture Physics</span>
-                    <h3>Touch & Drag Gesture Physics</h3>
-                    <p>Interactive draggable cards with dynamic rotation angle, fling-out velocity detection, and spring snap-back.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=gestures" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=gestures" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
+            <!-- Viewer Layout -->
+            <div class="spa-viewer-layout">
+                <!-- Info Sidebar -->
+                <div class="spa-viewer-info">
+                    <div>
+                        <span id="viewer-tag" class="card-tag tag-app">Full Application</span>
+                        <h2 id="viewer-title" style="font-size: 1.35rem; font-family: var(--font-heading); margin-bottom: 0.65rem; color: var(--text);">Title</h2>
+                        <p id="viewer-desc" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">Description</p>
+                    </div>
 
-            <!-- 2. N-Body Gravitational Physics -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-atom"></i> Particle Physics</span>
-                    <h3>N-Body Gravitational Physics</h3>
-                    <p>Verlet kinematic particles with elastic wall bounce, cursor attractor gravity well, and click repulsion burst.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=physics" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=physics" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
+                    <div style="padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Features &amp; Tech</h4>
+                        <div id="viewer-feature-list" style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; color: var(--text);"></div>
+                    </div>
 
-            <!-- 3. Fluid View Transitions & Morph -->
-            <article class="card" data-cat="core">
-                <div>
-                    <span class="card-tag tag-core"><i class="fa-solid fa-wand-magic-sparkles"></i> Transitions</span>
-                    <h3>Fluid View Transitions & Morph</h3>
-                    <p>Smooth animated element expansion, staggered entry badges, and 60fps view transitions.</p>
+                    <div style="padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <button class="btn" style="width: 100%; justify-content: center;" onclick="showGalleryView()">
+                            <i class="fa-solid fa-layer-group"></i> Browse All 36 Demos
+                        </button>
+                    </div>
                 </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=transitions" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=transitions" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
 
-            <!-- 4. 3D WebGL Scene Graph -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-cube"></i> 3D WebGL</span>
-                    <h3>3D WebGL Scene Graph Engine</h3>
-                    <p>Lightweight 3D meshes, directional lighting, orbiting camera, rotating shaded cubes, and sphere geometries.</p>
+                <!-- Live Iframe Sandbox -->
+                <div class="spa-viewer-frame-wrap">
+                    <div class="spa-viewer-frame-header">
+                        <span id="viewer-frame-title"><i class="fa-solid fa-circle-play" style="color: #10b981; margin-right: 0.35rem;"></i> Live Sandbox</span>
+                        <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--accent);">60 FPS Hardware Accelerated</span>
+                    </div>
+                    <iframe id="spa-viewer-iframe" class="spa-viewer-iframe" title="Interactive Demo Preview"></iframe>
                 </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=canvas3d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=canvas3d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
+            </div>
 
-            <!-- 2. 2D Canvas & Particle Kinematics -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-palette"></i> 2D Graphics</span>
-                    <h3>2D Canvas & Particle Kinematics</h3>
-                    <p>Hardware accelerated Canvas 2D scene graph, 60fps glowing particle halo, and parametric kinematics.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=canvas2d" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=canvas2d" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
+            <!-- Prev / Next Pager -->
+            <div class="spa-pager">
+                <button id="viewer-prev-btn" class="btn" onclick="navigateDemo(-1)"><i class="fa-solid fa-arrow-left"></i> Previous Demo</button>
+                <button id="viewer-next-btn" class="btn" onclick="navigateDemo(1)">Next Demo <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
 
-            <!-- 3. Real-Time Collaboration & Chat -->
-            <article class="card" data-cat="app">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-comments"></i> Real-Time</span>
-                    <h3>Real-Time Collab & Chat Room</h3>
-                    <p>Multi-user reactive message stream with shared state synchronization, dynamic typing, and instant updates.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=realtime" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=realtime" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
-
-            <!-- 4. Real-Time Streaming Charts -->
-            <article class="card" data-cat="graphics">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-chart-line"></i> Data Viz</span>
-                    <h3>Real-Time Streaming Charts</h3>
-                    <p>Reactive Canvas bar & line charting engine that re-renders dynamically on signal mutations without dependencies.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=charts" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=charts" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
-
-            <!-- 5. DevTools Inspector & Time-Travel -->
-            <article class="card" data-cat="core">
-                <div>
-                    <span class="card-tag tag-core"><i class="fa-solid fa-bug"></i> Developer Tools</span>
-                    <h3>DevTools & State Time-Travel</h3>
-                    <p>Inspect component tree, monitor signal changes, record state timeline snapshots, and benchmark execution traces.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=devtools" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=devtools" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
-
-            <!-- 6. Keyed List Reconciler -->
-            <article class="card" data-cat="core">
-                <div>
-                    <span class="card-tag tag-core"><i class="fa-solid fa-arrows-rotate"></i> Reconciler</span>
-                    <h3>Keyed List Reconciler (`For`)</h3>
-                    <p>Surgical DOM diffing that swaps, reorders, inserts, and removes list items without destroying DOM elements.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="../docs/playground.html?template=reconciler" class="btn btn-primary"><i class="fa-solid fa-play"></i> Open Playground</a>
-                    <a href="../docs/playground.html?template=reconciler" class="btn"><i class="fa-solid fa-code"></i> Edit Live</a>
-                </div>
-            </article>
-
-            <!-- 7. Social Feed & Post Cards -->
-            <article class="card" data-cat="app">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-camera"></i> Social Media</span>
-                    <h3>Interactive Social Feed &amp; Posts</h3>
-                    <p>Rich image cards, 60fps spring bounce like buttons, expandable comments, bookmarking, and tag filtering.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./posts.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=posts" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 8. E-Commerce Cart -->
-            <article class="card" data-cat="app">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-cart-shopping"></i> E-Commerce</span>
-                    <h3>Reactive Store &amp; Cart Drawer</h3>
-                    <p>Dynamic product catalog, computed discounts/taxes, quantity controls, and slide-over cart drawer.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./ecommerce-cart.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=store" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 9. Counter -->
-            <article class="card" data-cat="core">
-                <div>
-                    <span class="card-tag tag-core"><i class="fa-solid fa-bolt"></i> Fundamentals</span>
-                    <h3>Reactive Counter</h3>
-                    <p>Fine-grained signals, computed state multiplier, and direct DOM update bindings with zero virtual diffing.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./counter.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 10. Filterable Todo Application -->
-            <article class="card" data-cat="core">
-                <div>
-                    <span class="card-tag tag-core"><i class="fa-solid fa-list-check"></i> Collections</span>
-                    <h3>Filterable Todo Application</h3>
-                    <p>Dynamic reactive list arrays, filtering (All, Active, Completed), item toggling, and local deletions.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./todos.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=todos" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 11. Kitchen Sink -->
-            <article class="card" data-cat="app">
-                <div>
-                    <span class="card-tag tag-app"><i class="fa-solid fa-kitchen-set"></i> Showcase</span>
-                    <h3>Kitchen Sink Master Playground</h3>
-                    <p>Comprehensive showcase featuring signals, forms, animated accordions, tabs, canvas particles, and overlays.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./kitchen-sink.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=overlays" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 12. Custom Elements -->
-            <article class="card" data-cat="framework">
-                <div>
-                    <span class="card-tag tag-framework"><i class="fa-solid fa-cube"></i> W3C Standards</span>
-                    <h3>Custom Elements & Web Components</h3>
-                    <p>Standard custom elements (`<cairn-counter>`) powered by `defineCustomElement` with observed attributes.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./custom-elements.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=bridges" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 13. React 18/19 -->
-            <article class="card" data-cat="framework">
-                <div>
-                    <span class="card-tag tag-framework"><i class="fa-brands fa-react"></i> React Bridge</span>
-                    <h3>React 18 / 19 Integration</h3>
-                    <p>Bi-directional reactive bridge connecting React parent states and Cairn high-frequency signals seamlessly.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./with-react/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 14. Vue 3 -->
-            <article class="card" data-cat="framework">
-                <div>
-                    <span class="card-tag tag-framework"><i class="fa-brands fa-vuejs"></i> Vue Bridge</span>
-                    <h3>Vue 3 Template Ref Integration</h3>
-                    <p>Mounting Cairn widgets inside Vue 3 composition API template refs with automatic unmount lifecycle handling.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./with-vue/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=tabs" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 15. Svelte -->
-            <article class="card" data-cat="framework">
-                <div>
-                    <span class="card-tag tag-framework"><i class="fa-solid fa-fire"></i> Svelte Bridge</span>
-                    <h3>Svelte Island Action (`use:cairn`)</h3>
-                    <p>Svelte custom action pattern mounting micro-reactive Cairn widgets with reactive prop updates.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./with-svelte/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=motion" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-
-            <!-- 16. SolidJS -->
-            <article class="card" data-cat="framework">
-                <div>
-                    <span class="card-tag tag-framework"><i class="fa-solid fa-bolt"></i> SolidJS Bridge</span>
-                    <h3>SolidJS Signals Pipeline</h3>
-                    <p>Fine-grained signal interoperability between Cairn and SolidJS without Virtual DOM overhead.</p>
-                </div>
-                <div class="card-actions">
-                    <a href="./with-solid/index.html" class="btn btn-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live</a>
-                    <a href="../docs/playground.html?template=counter" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
-                </div>
-            </article>
-        </section>
     </main>
-
     <script>
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const filter = btn.dataset.filter;
-                document.querySelectorAll('.card').forEach(card => {
-                    if (filter === 'all' || card.dataset.cat === filter) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
+        const EXAMPLES = [
+            {
+                id: 'social-feed',
+                title: 'Interactive Social Feed & Posts',
+                cat: 'app',
+                tag: 'Social Application',
+                tagClass: 'tag-app',
+                desc: 'Rich image cards, 60fps spring bounce like buttons, expandable comments, bookmarking, and story avatars.',
+                keywords: 'social feed posts stories comments likes spring media photos',
+                url: './posts.html',
+                playgroundTemplate: 'posts',
+                features: ['Fine-grained reaction counters', 'Hardware spring animations', 'Dynamic comments collection', 'Adaptive light/dark theme']
+            },
+            {
+                id: 'ecommerce-cart',
+                title: 'Reactive Store & Shopping Cart',
+                cat: 'app',
+                tag: 'E-Commerce Store',
+                tagClass: 'tag-app',
+                desc: 'Dynamic product catalog, computed discounts/taxes, quantity controls, and slide-over reactive checkout drawer.',
+                keywords: 'ecommerce store cart shop products pricing discounts drawer',
+                url: './ecommerce-cart.html',
+                playgroundTemplate: 'store',
+                features: ['Computed price subtotal & tax', 'Slide-over cart drawer', 'Dynamic stock inventory', 'Coupon discount signals']
+            },
+            {
+                id: 'kanban-board',
+                title: 'Interactive Kanban Task Board',
+                cat: 'app',
+                tag: 'Productivity UI',
+                tagClass: 'tag-app',
+                desc: 'Multi-column reactive task tracking with drag-and-drop status sorting, priority badges, and instant signal updates.',
+                keywords: 'kanban board drag drop tasks sprint project management',
+                url: '../docs/playground.html?template=kanban&embed=1',
+                playgroundTemplate: 'kanban',
+                features: ['Multi-column task workflows', 'Status column transitions', 'Reactive state filters', 'Priority badge indicators']
+            },
+            {
+                id: 'chat-app',
+                title: 'Real-Time Collaboration & Chat',
+                cat: 'app',
+                tag: 'Real-Time Messaging',
+                tagClass: 'tag-app',
+                desc: 'Multi-user reactive message stream with shared state synchronization, dynamic typing indicators, and instant message feeds.',
+                keywords: 'chat real-time messages collaboration typing room',
+                url: '../docs/playground.html?template=realtime&embed=1',
+                playgroundTemplate: 'realtime',
+                features: ['Instant message stream', 'Typing indicator state', 'Avatar author assignment', 'Simulated peer updates']
+            },
+            {
+                id: 'galaxy3d',
+                title: '3D Solar System & Planetary Orbits',
+                cat: 'graphics',
+                tag: '3D Astronomy',
+                tagClass: 'tag-graphics',
+                desc: 'Hierarchical multi-body 3D planetary physics, orbiting satellites, glowing sun mesh, and 3D camera controls.',
+                keywords: '3d astronomy galaxy space planets solar system orbits sun mesh webgl',
+                url: '../docs/playground.html?template=galaxy3d&embed=1',
+                playgroundTemplate: 'galaxy3d',
+                features: ['3D WebGL camera orbit', 'Multi-body hierarchical nodes', 'Glow shader mesh', 'Configurable orbital speeds']
+            },
+            {
+                id: 'torus3d',
+                title: '3D Kinetic Helix & Parametric Ring',
+                cat: 'graphics',
+                tag: 'Parametric 3D',
+                tagClass: 'tag-graphics',
+                desc: '18 synchronized polyhedra meshes rotating in wave harmonics with orbiting dynamic lights and central glowing core.',
+                keywords: '3d parametric helix ring wave geometry light glowing',
+                url: '../docs/playground.html?template=torus_matrix3d&embed=1',
+                playgroundTemplate: 'torus_matrix3d',
+                features: ['Harmonic wave transforms', 'Synchronized polyhedra', 'Orbiting point lights', 'Parametric mesh geometry']
+            },
+            {
+                id: 'product3d',
+                title: '3D Interactive Product Studio',
+                cat: 'graphics',
+                tag: '3D Studio',
+                tagClass: 'tag-graphics',
+                desc: '360° mouse orbit controls, pedestal floor, dynamic studio lighting presets (Cyberpunk/Gold/Arctic), and wireframe toggle.',
+                keywords: '3d product viewer studio orbit camera lighting cyberpunk pedestal',
+                url: '../docs/playground.html?template=product_viewer3d&embed=1',
+                playgroundTemplate: 'product_viewer3d',
+                features: ['360° touch/mouse rotation', 'Lighting studio presets', 'Wireframe geometry mode', 'Dynamic specular reflections']
+            },
+            {
+                id: 'canvas3d',
+                title: '3D WebGL Scene Graph Engine',
+                cat: 'graphics',
+                tag: '3D WebGL',
+                tagClass: 'tag-graphics',
+                desc: 'Lightweight 3D meshes, directional lighting, orbiting camera, rotating shaded cubes, and sphere geometries.',
+                keywords: '3d webgl scene mesh camera lighting render canvas',
+                url: '../docs/playground.html?template=canvas3d&embed=1',
+                playgroundTemplate: 'canvas3d',
+                features: ['Lightweight 3D scene tree', 'Matrix transformations', 'Directional illumination', 'Zero-dependency WebGL renderer']
+            },
+            {
+                id: 'canvas2d',
+                title: '2D Canvas & Particle Kinematics',
+                cat: 'graphics',
+                tag: '2D Graphics',
+                tagClass: 'tag-graphics',
+                desc: 'Hardware accelerated Canvas 2D scene graph, 60fps glowing particle halo, and parametric kinematics.',
+                keywords: '2d canvas particles kinematics animation halo glowing',
+                url: '../docs/playground.html?template=canvas2d&embed=1',
+                playgroundTemplate: 'canvas2d',
+                features: ['Hardware 2D canvas pipeline', 'Parametric particle trails', '60 FPS frame ticker', 'Zero external libraries']
+            },
+            {
+                id: 'charts',
+                title: 'Real-Time Streaming Charts',
+                cat: 'graphics',
+                tag: 'Data Visualization',
+                tagClass: 'tag-graphics',
+                desc: 'Reactive Canvas bar & line charting engine that re-renders dynamically on signal mutations without dependencies.',
+                keywords: 'charts data visualization bar line streaming metrics graph',
+                url: '../docs/playground.html?template=charts&embed=1',
+                playgroundTemplate: 'charts',
+                features: ['Live telemetry data feed', 'Line & bar chart rendering', 'Auto-scaling Y axis bounds', 'Signal-driven re-draws']
+            },
+            {
+                id: 'gestures',
+                title: 'Touch & Drag Gesture Physics',
+                cat: 'motion',
+                tag: 'Gesture Physics',
+                tagClass: 'tag-core',
+                desc: 'Interactive draggable cards with dynamic rotation angle, fling-out velocity detection, and spring snap-back.',
+                keywords: 'gestures touch drag physics swipe velocity snap fling cards',
+                url: '../docs/playground.html?template=gestures&embed=1',
+                playgroundTemplate: 'gestures',
+                features: ['Pointer velocity tracking', 'Rotational drag physics', 'Spring snap-back damping', 'Fling-out threshold swipe']
+            },
+            {
+                id: 'physics',
+                title: 'N-Body Gravitational Physics',
+                cat: 'motion',
+                tag: 'Particle Physics',
+                tagClass: 'tag-core',
+                desc: 'Verlet kinematic particles with elastic wall bounce, cursor attractor gravity well, and click repulsion burst.',
+                keywords: 'physics particles gravity attractor verlet kinematics repulsion',
+                url: '../docs/playground.html?template=physics&embed=1',
+                playgroundTemplate: 'physics',
+                features: ['Verlet numerical integration', 'Attractor cursor gravity', 'Elastic wall collisions', 'Radial impulse bursts']
+            },
+            {
+                id: 'flipcard',
+                title: '3D Flippable Interactive Cards',
+                cat: 'motion',
+                tag: '3D Perspective',
+                tagClass: 'tag-core',
+                desc: 'CSS 3D perspective transform with smooth flip transitions, backface-visibility, and signal toggles.',
+                keywords: '3d perspective flip cards transition rotate animation',
+                url: '../docs/playground.html?template=flipcard&embed=1',
+                playgroundTemplate: 'flipcard',
+                features: ['Perspective depth camera', 'Card flip state toggle', 'Backface visibility handling', 'Spring-assisted rotation']
+            },
+            {
+                id: 'transitions',
+                title: 'Fluid View Transitions & Morph',
+                cat: 'motion',
+                tag: 'Transitions',
+                tagClass: 'tag-core',
+                desc: 'Smooth animated element expansion, staggered entry badges, and 60fps view transitions.',
+                keywords: 'transitions morph view animation expansion stagger layout',
+                url: '../docs/playground.html?template=transitions&embed=1',
+                playgroundTemplate: 'transitions',
+                features: ['FLIP layout animations', 'Staggered item entries', 'Dynamic geometry morphing', '60 FPS timing curves']
+            },
+            {
+                id: 'devtools',
+                title: 'DevTools & State Time-Travel',
+                cat: 'core',
+                tag: 'Developer Tools',
+                tagClass: 'tag-core',
+                desc: 'Inspect component tree, monitor signal changes, record state timeline snapshots, and benchmark execution traces.',
+                keywords: 'devtools inspector state time-travel debug timeline benchmark',
+                url: '../docs/playground.html?template=devtools&embed=1',
+                playgroundTemplate: 'devtools',
+                features: ['Signal state timeline', 'Snapshot time-travel slider', 'Component tree inspector', 'Execution micro-profiler']
+            },
+            {
+                id: 'reconciler',
+                title: 'Keyed List Reconciler (`For`)',
+                cat: 'core',
+                tag: 'Reconciler',
+                tagClass: 'tag-core',
+                desc: 'Surgical DOM diffing that swaps, reorders, inserts, and removes list items without destroying DOM elements.',
+                keywords: 'reconciler keyed for list dom diffing reorder swap insert',
+                url: '../docs/playground.html?template=reconciler&embed=1',
+                playgroundTemplate: 'reconciler',
+                features: ['Keyed item node reuse', 'O(n) minimal DOM updates', 'Zero virtual DOM tree clones', 'List shuffling benchmark']
+            },
+            {
+                id: 'todos',
+                title: 'Filterable Todo Application',
+                cat: 'core',
+                tag: 'Collections',
+                tagClass: 'tag-core',
+                desc: 'Dynamic reactive list arrays, filtering (All, Active, Completed), item toggling, and local deletions.',
+                keywords: 'todo list mvc filter active completed tasks collection state',
+                url: './todos.html',
+                playgroundTemplate: 'todos',
+                features: ['Reactive array state', 'Filter predicates', 'Batch completion toggle', 'Item deletion transitions']
+            },
+            {
+                id: 'counter',
+                title: 'Reactive Counter Fundamentals',
+                cat: 'core',
+                tag: 'Fundamentals',
+                tagClass: 'tag-core',
+                desc: 'Fine-grained signals, computed state multiplier, and direct DOM update bindings with zero virtual diffing.',
+                keywords: 'counter fundamentals state signal computed multiplier button increment',
+                url: './counter.html',
+                playgroundTemplate: 'counter',
+                features: ['Fine-grained signal primitive', 'Computed multiplier dependency', 'Direct DOM text node bindings', 'Zero build setup']
+            },
+            {
+                id: 'kitchen-sink',
+                title: 'Interactive UI Primitives Playground',
+                cat: 'app',
+                tag: 'UI Primitives',
+                tagClass: 'tag-app',
+                desc: 'Comprehensive showcase featuring signals, forms, animated accordions, tabs, canvas particles, and overlays.',
+                keywords: 'kitchen sink showcase forms accordions tabs overlays dialog modal',
+                url: './kitchen-sink.html',
+                playgroundTemplate: 'overlays',
+                features: ['Accordion & Tab controls', 'Dialog overlay modals', 'Form control bindings', 'Embedded canvas particles']
+            },
+            {
+                id: 'forms',
+                title: 'Reactive Form Validation & Schemas',
+                cat: 'core',
+                tag: 'Forms & State',
+                tagClass: 'tag-core',
+                desc: 'Real-time field validation, computed error boundaries, debounced inputs, and reactive submit state handling.',
+                keywords: 'forms validation input schema error state submit auth',
+                url: '../docs/playground.html?template=forms&embed=1',
+                playgroundTemplate: 'forms',
+                features: ['Real-time regex validation', 'Computed form validity state', 'Dynamic error message feedback', 'Submit signal handlers']
+            },
+            {
+                id: 'custom-elements',
+                title: 'Custom Elements & Web Components',
+                cat: 'framework',
+                tag: 'W3C Standards',
+                tagClass: 'tag-framework',
+                desc: 'Standard custom elements (`<cairn-counter>`) powered by `defineCustomElement` with observed attributes.',
+                keywords: 'custom elements web components shadow dom w3c standards html',
+                url: './custom-elements.html',
+                playgroundTemplate: 'bridges',
+                features: ['Standard W3C custom elements', 'Observed attribute reactivity', 'Shadow DOM encapsulation', 'Framework-agnostic tags']
+            },
+            {
+                id: 'react-bridge',
+                title: 'React 18 / 19 Integration Bridge',
+                cat: 'framework',
+                tag: 'React Bridge',
+                tagClass: 'tag-framework',
+                desc: 'Bi-directional reactive bridge connecting React parent states and Cairn high-frequency signals seamlessly.',
+                keywords: 'react 18 19 bridge hook useSignal component jsx bridge',
+                url: './with-react/index.html',
+                playgroundTemplate: 'counter',
+                features: ['Bi-directional state sync', 'React component wrapper', 'Zero re-render overhead', 'Clean unmount teardown']
+            },
+            {
+                id: 'vue-bridge',
+                title: 'Vue 3 Template Ref Integration',
+                cat: 'framework',
+                tag: 'Vue Bridge',
+                tagClass: 'tag-framework',
+                desc: 'Mounting Cairn widgets inside Vue 3 composition API template refs with automatic unmount lifecycle handling.',
+                keywords: 'vue 3 composition template ref bridge mount lifecycle',
+                url: './with-vue/index.html',
+                playgroundTemplate: 'tabs',
+                features: ['Vue Composition API ref binding', 'Automatic unmount cleanup', 'Signal to reactive ref sync', 'Native Vue template embedding']
+            },
+            {
+                id: 'svelte-bridge',
+                title: 'Svelte Action Integration (`use:cairn`)',
+                cat: 'framework',
+                tag: 'Svelte Bridge',
+                tagClass: 'tag-framework',
+                desc: 'Svelte custom action pattern mounting micro-reactive Cairn widgets with reactive prop updates.',
+                keywords: 'svelte action use:cairn island widget micro frontend',
+                url: './with-svelte/index.html',
+                playgroundTemplate: 'motion',
+                features: ['Svelte use:action directive', 'Micro-reactive component island', 'Reactive parameter passing', 'Teardown lifecycle hook']
+            },
+            {
+                id: 'solid-bridge',
+                title: 'SolidJS Signals Pipeline Bridge',
+                cat: 'framework',
+                tag: 'SolidJS Bridge',
+                tagClass: 'tag-framework',
+                desc: 'Fine-grained signal interoperability between Cairn and SolidJS without Virtual DOM overhead.',
+                keywords: 'solidjs signals fine-grained bridge interoperability',
+                url: './with-solid/index.html',
+                playgroundTemplate: 'counter',
+                features: ['Fine-grained signal bridge', 'Direct DOM text node bindings', 'Zero VDOM overhead', 'Reactive getter bindings']
+            },
+            {
+                id: 'command-palette',
+                title: 'Command Palette & Global Shortcuts',
+                cat: 'app',
+                tag: 'UI Overlay',
+                tagClass: 'tag-app',
+                desc: 'Keyboard-first ⌘K search overlay with fuzzy actions, trap focus, and animated backdrop modals.',
+                keywords: 'command palette modal dialog spotlight search shortcut keybindings',
+                url: '../docs/playground.html?template=command_palette&embed=1',
+                playgroundTemplate: 'command_palette',
+                features: ['⌘K / Ctrl+K hotkey trigger', 'Fuzzy command search', 'Accessible focus trap', 'Interactive keyboard navigation']
+            },
+            {
+                id: 'audio-visualizer',
+                title: 'Audio Reactive Spectrum Visualizer',
+                cat: 'graphics',
+                tag: 'Audio Engine',
+                tagClass: 'tag-graphics',
+                desc: 'Real-time audio frequency analyser connected to Canvas 2D equalizer bars and reactive pulse rings.',
+                keywords: 'audio music sound visualizer equalizer canvas spectrum waves',
+                url: '../docs/playground.html?template=audio_visualizer&embed=1',
+                playgroundTemplate: 'audio_visualizer',
+                features: ['Web Audio API analyser', 'Canvas frequency bars', 'Reactive amplitude pulses', 'Smooth volume damping']
+            },
+            {
+                id: 'wasm-benchmark',
+                title: 'WebAssembly Physics Benchmark',
+                cat: 'core',
+                tag: 'Performance',
+                tagClass: 'tag-core',
+                desc: 'Zero-traffic WebAssembly physics calculations powering 10,000+ kinematic particles at steady 60fps.',
+                keywords: 'wasm webassembly benchmark rust performance 60fps speed',
+                url: '../docs/playground.html?template=wasm_benchmark&embed=1',
+                playgroundTemplate: 'wasm_benchmark',
+                features: ['10,000+ live particles', 'WebAssembly memory buffer', 'Hardware 60 FPS counter', 'Direct linear memory access']
+            }
+        ];
+
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let currentDemoIndex = 0;
+
+        // Render Gallery Cards
+        function renderGallery() {
+            const grid = document.getElementById('examples-grid');
+            if (!grid) return;
+
+            grid.innerHTML = EXAMPLES.map(ex => `
+                <article class="card" data-cat="${ex.cat}" data-keywords="${ex.keywords}">
+                    <div>
+                        <span class="card-tag ${ex.tagClass}">${ex.tag}</span>
+                        <h3>${ex.title}</h3>
+                        <p>${ex.desc}</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" onclick="openDemoViewer('${ex.id}')"><i class="fa-solid fa-play"></i> Live Demo</button>
+                        <a href="../docs/playground.html?template=${ex.playgroundTemplate}" class="btn"><i class="fa-solid fa-code"></i> Playground</a>
+                    </div>
+                </article>
+            `).join('');
+
+            applyFilter();
+        }
+
+        // Apply Filter & Search
+        function applyFilter() {
+            const cards = document.querySelectorAll('.card');
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const cat = card.dataset.cat;
+                const keywords = (card.dataset.keywords || '').toLowerCase();
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const desc = card.querySelector('p').textContent.toLowerCase();
+
+                const matchesCat = (currentFilter === 'all' || cat === currentFilter);
+                const matchesSearch = !searchQuery || title.includes(searchQuery) || desc.includes(searchQuery) || keywords.includes(searchQuery);
+
+                if (matchesCat && matchesSearch) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // SPA Navigation Views
+        function showGalleryView() {
+            window.location.hash = 'gallery';
+            document.getElementById('gallery-view').style.display = 'block';
+            document.getElementById('viewer-view').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openDemoViewer(demoId) {
+            const index = EXAMPLES.findIndex(e => e.id === demoId);
+            if (index < 0) return;
+            currentDemoIndex = index;
+            const demo = EXAMPLES[index];
+
+            window.location.hash = `demo/${demo.id}`;
+            document.getElementById('gallery-view').style.display = 'none';
+            document.getElementById('viewer-view').style.display = 'flex';
+
+            // Populate Info
+            document.getElementById('viewer-cat-breadcrumb').textContent = demo.tag;
+            document.getElementById('viewer-title-breadcrumb').textContent = demo.title;
+            document.getElementById('viewer-title').textContent = demo.title;
+            document.getElementById('viewer-desc').textContent = demo.desc;
+            
+            const tagEl = document.getElementById('viewer-tag');
+            tagEl.className = `card-tag ${demo.tagClass}`;
+            tagEl.textContent = demo.tag;
+
+            document.getElementById('viewer-playground-link').href = `../docs/playground.html?template=${demo.playgroundTemplate}`;
+            
+            const featureList = document.getElementById('viewer-feature-list');
+            featureList.innerHTML = (demo.features || []).map(f => `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-check" style="color: var(--accent); font-size: 0.75rem;"></i>
+                    <span>${f}</span>
+                </div>
+            `).join('');
+
+            // Load iframe
+            const iframe = document.getElementById('spa-viewer-iframe');
+            iframe.src = demo.url;
+
+            // Update Pager Buttons
+            document.getElementById('viewer-prev-btn').style.visibility = index > 0 ? 'visible' : 'hidden';
+            document.getElementById('viewer-next-btn').style.visibility = index < EXAMPLES.length - 1 ? 'visible' : 'hidden';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function navigateDemo(delta) {
+            const newIndex = currentDemoIndex + delta;
+            if (newIndex >= 0 && newIndex < EXAMPLES.length) {
+                openDemoViewer(EXAMPLES[newIndex].id);
+            }
+        }
+
+        function reloadViewerFrame() {
+            const iframe = document.getElementById('spa-viewer-iframe');
+            if (iframe) {
+                const src = iframe.src;
+                iframe.src = 'about:blank';
+                setTimeout(() => { iframe.src = src; }, 50);
+            }
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('cairn_theme', isDark ? 'light' : 'dark');
+            updateThemeIcon(!isDark);
+            reloadViewerFrame();
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.querySelector('#theme-btn i');
+            if (icon) {
+                icon.className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            }
+        }
+
+        function toggleDrawer() {
+            const overlay = document.getElementById('mobile-drawer-overlay');
+            if (overlay) overlay.classList.toggle('open');
+        }
+
+        // Handle Hash Routing
+        function handleHashRoute() {
+            const hash = window.location.hash || '';
+            if (hash.startsWith('#demo/')) {
+                const demoId = hash.replace('#demo/', '');
+                openDemoViewer(demoId);
+            } else {
+                showGalleryView();
+            }
+        }
+
+        function focusSearch() {
+            showGalleryView();
+            setTimeout(() => {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.focus();
+                    searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 50);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                focusSearch();
+            }
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('cairn_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                updateThemeIcon(savedTheme === 'dark');
+            }
+
+            renderGallery();
+
+            // Filter pills listener
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    applyFilter();
                 });
             });
+
+            // Search listener
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    searchQuery = e.target.value.trim().toLowerCase();
+                    applyFilter();
+                });
+            }
+
+            window.addEventListener('hashchange', handleHashRoute);
+            handleHashRoute();
         });
     </script>
 </body>
+
 </html>

@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "cleanUrls": true,
-  "outputDirectory": ".",
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)\\.wasm",
@@ -44,46 +44,46 @@
       ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "^/docs/?$",
-      "dest": "/docs/index.html"
+      "source": "/playground",
+      "destination": "/docs/playground.html"
     },
     {
-      "src": "^/docs/(.*)",
-      "dest": "/docs/$1"
+      "source": "/playground.html",
+      "destination": "/docs/playground.html"
     },
     {
-      "src": "^/examples/(.*)",
-      "dest": "/examples/$1"
+      "source": "/docs/playground",
+      "destination": "/docs/playground.html"
     },
     {
-      "src": "^/dist/(.*)",
-      "dest": "/dist/$1"
+      "source": "/docs/playground.html",
+      "destination": "/docs/playground.html"
     },
     {
-      "src": "^/src/(.*)",
-      "dest": "/src/$1"
+      "source": "/docs",
+      "destination": "/docs/index.html"
     },
     {
-      "src": "^/assets/(.*)",
-      "dest": "/assets/$1"
+      "source": "/docs/",
+      "destination": "/docs/index.html"
     },
     {
-      "src": "^/cairn-font/(.*)",
-      "dest": "/cairn-font/$1"
+      "source": "/examples/posts",
+      "destination": "/examples/posts.html"
     },
     {
-      "src": "^/playground/?$",
-      "dest": "/docs/playground.html"
+      "source": "/examples",
+      "destination": "/examples/index.html"
     },
     {
-      "src": "^/examples/?$",
-      "dest": "/examples/index.html"
+      "source": "/examples/",
+      "destination": "/examples/index.html"
     },
     {
-      "src": "^/$",
-      "dest": "/docs/index.html"
+      "source": "/",
+      "destination": "/docs/index.html"
     }
   ]
 }

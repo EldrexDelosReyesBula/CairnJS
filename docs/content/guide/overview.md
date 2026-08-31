@@ -49,44 +49,44 @@ Welcome to the official documentation for **Cairn** (`@eldrex/cairnjs`) — a re
 ## Table of Contents
 
 ### Guide
-- [Getting Started](./getting-started.md) — CDN, npm, quickstart
-- [Overview & Philosophy](./overview.md) — What Cairn is and how it works
-- [Extensibility & Developer Experience](../architecture/extensibility-and-dx.md) — Plugins, middleware, CLI, Component Explorer, IDE schemas
-- [Low-Level DOM Access](../architecture/low-level-access.md) — Raw DOM access, `raw()`, `element()`, `canvas()`, framework bridges
-- [Rust Engine Zero-Traffic WASM](../architecture/rust-wasm.md) — Shared memory buffers, batch updates, direct DOM pointers
+- [Getting Started](#/docs/getting-started) — CDN, npm, quickstart
+- [Overview & Philosophy](#/docs/overview) — What Cairn is and how it works
+- [Extensibility & Developer Experience](#/docs/extensibility-and-dx) — Plugins, middleware, CLI, Component Explorer, IDE schemas
+- [Low-Level DOM Access](#/docs/low-level-access) — Raw DOM access, `raw()`, `element()`, `canvas()`, framework bridges
+- [Rust Engine Zero-Traffic WASM](#/docs/rust-wasm) — Shared memory buffers, batch updates, direct DOM pointers
 
 ### Core Reactivity
-- [Reactivity Signals](../core/reactivity.md) — `state`, `computed`, `effect`, `collection`, `resource`
-- [Advanced Reactivity](../core/advanced-reactivity.md) — `watch`, `batch`, `portal`, `errorBoundary`, `suspense`
+- [Reactivity Signals](#/docs/reactivity) — `state`, `computed`, `effect`, `collection`, `resource`
+- [Advanced Reactivity](#/docs/advanced-reactivity) — `watch`, `batch`, `portal`, `errorBoundary`, `suspense`
 
 ### Architecture
-- [DOM & Component System](../architecture/dom-and-components.md) — element builders, `component()`, `mount()`
-- [Global Store](../architecture/store.md) — `createStore`, `useStore`, `$patch`, `$reset`
-- [Context & Lifecycle](../architecture/context-and-lifecycle.md) — `createContext`, `onMount`, `onUnmount`
-- [Styling Engine](../architecture/styling.md) — tokens, keyframes, dark mode, media queries
+- [DOM & Component System](#/docs/dom-and-components) — element builders, `component()`, `mount()`
+- [Global Store](#/docs/store) — `createStore`, `useStore`, `$patch`, `$reset`
+- [Context & Lifecycle](#/docs/context-and-lifecycle) — `createContext`, `onMount`, `onUnmount`
+- [Styling Engine](#/docs/styling) — tokens, keyframes, dark mode, media queries
 
 ### Graphics & Data
-- [2D Canvas](../graphics/canvas-2d.md) — `createCanvas2D`, fluent draw API, reactive loop
-- [3D WebGL Scene](../graphics/canvas-3d.md) — `createScene3D`, mesh, camera, lighting, animation
-- [Charts](../graphics/charts.md) — bar, line, donut, scatter, reactive charts
-- [Animation, Shapes & Physics](../graphics/animation-and-physics.md) — spring, gesture, SVG shapes, physics
+- [2D Canvas](#/docs/canvas-2d) — `createCanvas2D`, fluent draw API, reactive loop
+- [3D WebGL Scene](#/docs/canvas-3d) — `createScene3D`, mesh, camera, lighting, animation
+- [Charts](#/docs/charts) — bar, line, donut, scatter, reactive charts
+- [Animation, Shapes & Physics](#/docs/animation-and-physics) — spring, gesture, SVG shapes, physics
 
 ### Features
-- [Keyboard & i18n](../features/keyboard-and-i18n.md) — shortcut registry, `createI18n`, pluralization
-- [Utilities](../features/utilities.md) — color, clipboard, storage, fullscreen, debounce, uuid…
-- [SSR & Reconciler](../features/ssr-and-reconciler.md) — `renderToString`, `hydrate`, `reconcile`, `createList`
+- [Keyboard & i18n](#/docs/keyboard-and-i18n) — shortcut registry, `createI18n`, pluralization
+- [Utilities](#/docs/utilities) — color, clipboard, storage, fullscreen, debounce, uuid…
+- [SSR & Reconciler](#/docs/ssr-and-reconciler) — `renderToString`, `hydrate`, `reconcile`, `createList`
 
 ### Components & UI
-- [50+ UI Component Library](../components/component-library.md) — Layout, Forms, Navigation, Data Display
-- [Common Patterns](../components/patterns.md) — real-world component composition examples
+- [50+ UI Component Library](#/docs/component-library) — Layout, Forms, Navigation, Data Display
+- [Common Patterns](#/docs/patterns) — real-world component composition examples
 
 ### Advanced System
-- [Rust / WASM Engine](../architecture/rust-wasm.md) — performance, SIMD batching, zero traffic
-- [Prototyping Studio](../advanced/studio-and-prototyping.md) — visual canvas, live property editor
-- [Agentic AI & Figma Pipeline](../advanced/ai-and-figma.md) — AI generation, design token synthesis
+- [Rust / WASM Engine](#/docs/rust-wasm) — performance, SIMD batching, zero traffic
+- [Prototyping Studio](#/docs/studio-and-prototyping) — visual canvas, live property editor
+- [Agentic AI & Figma Pipeline](#/docs/ai-and-figma) — AI generation, design token synthesis
 
 ### Reference
-- [Full API Reference](../reference/api.md) — every export with signature and example
+- [Full API Reference](#/docs/api) — every export with signature and example
 
 ---
 

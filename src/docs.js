@@ -167,15 +167,36 @@ export function CodeBlock(props = {}) {
         lang = 'javascript',
         theme = 'cairn',
         copyable = true,
+        copy = true,
         run = false,
         playground = false,
+        console: showConsole = false,
+        editable = false,
+        expand = false,
         lineNumbers = false,
-        title = ''
+        title = '',
+        controls = {}
     } = props;
+
+    // Granular control preferences
+    const nonRunnableLanguages = [
+        'bash', 'sh', 'shell', 'zsh', 'terminal', 'cmd', 'powershell', 'ps1', 'cli',
+        'html', 'xml', 'svg', 'rust', 'rs', 'json', 'yaml', 'yml', 'css', 'scss', 'sass', 'less',
+        'text', 'txt', 'plaintext', 'plain', 'none', 'markdown', 'md', 'tree', 'jsx', 'tsx', 'vue', 'svelte',
+        'config', 'diff', 'env', 'ini', 'dockerfile', 'toml', 'sql', 'graphql', 'properties', 'log', 'output'
+    ];
+    const isLangNonRunnable = nonRunnableLanguages.includes(String(lang).toLowerCase().trim());
+    const hasCopy = controls.copy !== undefined ? controls.copy : (copy && copyable);
+    const hasRun = !isLangNonRunnable && (controls.run !== undefined ? controls.run : run);
+    const hasPlayground = !isLangNonRunnable && (controls.playground !== undefined ? controls.playground : playground);
+    const hasEdit = controls.edit !== undefined ? controls.edit : editable;
+    const hasExpand = controls.expand !== undefined ? controls.expand : expand;
 
     const t = typeof theme === 'string' ? (CODE_THEMES[theme] || CODE_THEMES.cairn) : theme;
     const copied = state(false);
     const isRunning = state(false);
+    const isEditing = state(false);
+    const codeTextState = state(codeContent || '');
 
     const cleanCode = (codeContent || '')
         .replace(/\u00a0/g, ' ')
@@ -230,7 +251,9 @@ export function CodeBlock(props = {}) {
                 padding: '8px 14px',
                 background: t.headerBg,
                 borderBottom: `1px solid ${t.border}`,
-                fontSize: '0.8rem'
+                fontSize: '0.8rem',
+                flexWrap: 'wrap',
+                gap: '6px'
             }
         },
             div({ style: { display: 'flex', alignItems: 'center', gap: '8px' } },
@@ -242,8 +265,8 @@ export function CodeBlock(props = {}) {
                 ),
                 span(title || lang.toUpperCase(), { style: { color: t.keyword || '#38bdf8', fontWeight: 700, marginLeft: '6px' } })
             ),
-            div({ style: { display: 'flex', gap: '6px', alignItems: 'center' } },
-                run ? button(() => isRunning.value ? '💻 Code' : '▶ Run', {
+            div({ style: { display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' } },
+                hasRun ? button(() => isRunning.value ? '💻 Code' : '▶ Run', {
                     style: () => ({
                         background: isRunning.value ? '#334155' : 'linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(79, 70, 229, 0.25))',
                         color: '#38bdf8',
@@ -256,7 +279,20 @@ export function CodeBlock(props = {}) {
                     }),
                     onclick: () => isRunning.value = !isRunning.value
                 }) : null,
-                copyable ? button(() => copied.value ? '✅ Copied!' : '📋 Copy', {
+                hasEdit ? button(() => isEditing.value ? '👁 Preview' : '✏ Edit', {
+                    style: () => ({
+                        background: isEditing.value ? '#334155' : 'rgba(255,255,255,0.06)',
+                        color: '#cbd5e1',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        padding: '4px 10px',
+                        borderRadius: '5px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                    }),
+                    onclick: () => isEditing.value = !isEditing.value
+                }) : null,
+                hasCopy ? button(() => copied.value ? '✅ Copied!' : '📋 Copy', {
                     style: () => ({
                         background: copied.value ? '#10b98122' : 'rgba(255,255,255,0.06)',
                         color: copied.value ? '#10b981' : t.fg,
@@ -270,7 +306,7 @@ export function CodeBlock(props = {}) {
                     }),
                     onclick: handleCopy
                 }) : null,
-                playground ? button('↗ Playground', {
+                hasPlayground ? button('↗ Playground', {
                     style: {
                         background: 'transparent',
                         color: '#94a3b8',

@@ -1,0 +1,26 @@
+{
+  "name": "CairnJS Copy-Ready Patterns Reference",
+  "version": "1.4.0",
+  "patterns": {
+    "reactive_counter": {
+      "title": "Reactive State & Button",
+      "code": "import { cairn, state, div, h1, button, mount } from '@eldrex/cairnjs';\n\nconst count = state(0);\nconst App = () => div({ style: { padding: '2rem', textAlign: 'center' } },\n    h1(() => `Count: ${count.value}`),\n    button('Increment (+1)', {\n        onclick: () => count.value++,\n        style: { padding: '0.5rem 1rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }\n    })\n);\n\nmount('#app', App());"
+    },
+    "pure_html_template": {
+      "title": "Pure HTML Template Literals with Two-Way Binding",
+      "code": "import { cairn } from '@eldrex/cairnjs';\nconst { state, html, mount } = cairn;\n\nconst name = state('');\nconst App = () => html`\n  <div style=\"padding: 2rem;\">\n    <input :bind=${name} placeholder=\"Enter name...\" />\n    <p>Hello, ${() => name.value || 'Friend'}!</p>\n  </div>\n`;\n\nmount('#app', App());"
+    },
+    "spring_motion": {
+      "title": "Hardware-Accelerated Spring Physics",
+      "code": "import { spring } from '@eldrex/cairnjs';\n\nspring({\n    from: 0,\n    to: 100,\n    stiffness: 260,\n    damping: 14,\n    onUpdate: (x) => { element.style.transform = `translateX(${x}px)`; }\n});"
+    },
+    "framework_bridge_react": {
+      "title": "Mounting Cairn Component inside React",
+      "code": "import React from 'react';\nimport { cairnToReact, div, button } from '@eldrex/cairnjs';\n\nconst CairnWidget = (props) => div(\n    button(props.label || 'Click me', { onclick: props.onClick })\n);\n\nexport const ReactWidget = cairnToReact(CairnWidget);"
+    },
+    "custom_error_diagnostics": {
+      "title": "Custom Three-Part Error Handling",
+      "code": "import { errors, cairnError } from '@eldrex/cairnjs';\n\nerrors.customize('missing_config', (ctx) => ({\n    summary: `Missing mandatory config key: ${ctx.key}`,\n    location: `ConfigLoader(${ctx.file})`,\n    fix: `Provide ${ctx.key} in your options object.`\n}));\n\ncairnError('missing_config', { key: 'apiUrl', file: 'app.config.js' });"
+    }
+  }
+}

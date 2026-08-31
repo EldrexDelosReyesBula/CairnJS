@@ -134,6 +134,21 @@
         .btn-checkout { width: 100%; padding: 0.75rem; background: #10b981; color: #fff; border: none; border-radius: 0.5rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-top: 1rem; }
         .btn-checkout:hover { filter: brightness(1.1); }
 
+        /* Embed Mode */
+        body[data-embedded="true"] header .brand,
+        body[data-embedded="true"] header a.btn {
+            display: none !important;
+        }
+
+        body[data-embedded="true"] header {
+            position: sticky;
+            top: 0;
+            background: rgba(17, 24, 39, 0.9);
+            border-bottom: 1px solid var(--border);
+            justify-content: flex-end;
+            padding: 0.6rem 1.25rem;
+        }
+
         @media (max-width: 640px) {
             header { padding: 0.75rem 1rem; }
             .container { padding: 1.5rem 0.75rem; }
@@ -143,7 +158,7 @@
     </style>
 </head>
 <body>
-    <header>
+    <header id="store-header">
         <a href="./index.html" class="brand">
             <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS Logo" style="width: 26px; height: 26px;" onerror="this.src='../docs/assets/cairn-logo.png'">
             <span>CairnJS Store</span>
@@ -163,14 +178,23 @@
         import { cairn, state, computed, spring, Toast, ConfirmDialog } from '../src/index.js';
         const { div, h1, h2, h3, p, button, span, img, input, mount } = cairn;
 
+        try {
+            if (new URLSearchParams(window.location.search).get('embed') === '1') {
+                document.body.setAttribute('data-embedded', 'true');
+            }
+        } catch(e) {}
+
+        // Product SVG Fallback Generators
+        const svgFallback = (title, color) => `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="300" viewBox="0 0 500 300"><rect width="500" height="300" fill="%230e131f"/><circle cx="250" cy="150" r="80" fill="${encodeURIComponent(color)}" opacity="0.15"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold" fill="%23f8fafc">${encodeURIComponent(title)}</text><text x="50%25" y="65%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%2394a3b8">CairnJS Hardware Lab</text></svg>`;
+
         // Products Catalog
         const PRODUCTS = [
-            { id: 1, name: 'Precision Wireless ANC Headphones', category: 'Audio', price: 249, desc: 'Ultra-low latency studio monitor with custom titanium drivers and active noise cancellation.', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80' },
-            { id: 2, name: 'Mechanical Ergonomic Keyboard', category: 'Hardware', price: 189, desc: 'Hot-swappable tactile switches, gasket-mounted aluminum frame, and PBT keycaps.', img: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=80' },
-            { id: 3, name: 'Minimalist Titanium Timepiece', category: 'Accessories', price: 320, desc: 'Sapphire crystal glass, automatic mechanical movement, and waterproof construction.', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=80' },
-            { id: 4, name: 'Studio Monitoring Microphone', category: 'Audio', price: 149, desc: 'Cardioid condenser capsule with integrated pop filter and 24-bit/96kHz DSP audio processing.', img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&auto=format&fit=crop&q=80' },
-            { id: 5, name: 'Wireless Charging Desk Pad', category: 'Desk Setup', price: 79, desc: 'Full grain leather surface with dual fast Qi wireless charging coils.', img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=80' },
-            { id: 6, name: '4K Creator Display Monitor', category: 'Displays', price: 599, desc: 'Factory-calibrated 99% DCI-P3 color gamut with USB-C 90W single-cable power delivery.', img: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&auto=format&fit=crop&q=80' }
+            { id: 1, name: 'Precision Wireless ANC Headphones', category: 'Audio', price: 249, desc: 'Ultra-low latency studio monitor with custom titanium drivers and active noise cancellation.', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80', fallback: svgFallback('ANC Headphones', '#38bdf8') },
+            { id: 2, name: 'Mechanical Ergonomic Keyboard', category: 'Hardware', price: 189, desc: 'Hot-swappable tactile switches, gasket-mounted aluminum frame, and PBT keycaps.', img: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=80', fallback: svgFallback('Mechanical Keyboard', '#10b981') },
+            { id: 3, name: 'Minimalist Titanium Timepiece', category: 'Accessories', price: 320, desc: 'Sapphire crystal glass, automatic mechanical movement, and waterproof construction.', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=80', fallback: svgFallback('Titanium Timepiece', '#f59e0b') },
+            { id: 4, name: 'Studio Monitoring Microphone', category: 'Audio', price: 149, desc: 'Cardioid condenser capsule with integrated pop filter and 24-bit/96kHz DSP audio processing.', img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&auto=format&fit=crop&q=80', fallback: svgFallback('Studio Microphone', '#ec4899') },
+            { id: 5, name: 'Wireless Charging Desk Pad', category: 'Desk Setup', price: 79, desc: 'Full grain leather surface with dual fast Qi wireless charging coils.', img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=80', fallback: svgFallback('Wireless Desk Pad', '#8b5cf6') },
+            { id: 6, name: '4K Creator Display Monitor', category: 'Displays', price: 599, desc: 'Factory-calibrated 99% DCI-P3 color gamut with USB-C 90W single-cable power delivery.', img: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&auto=format&fit=crop&q=80', fallback: svgFallback('4K Creator Display', '#06b6d4') }
         ];
 
         // Reactive Cart Signals
@@ -267,7 +291,7 @@
                         span({ class: 'fa-solid fa-bag-shopping', style: { fontSize: '2.5rem', marginBottom: '1rem', display: 'block', opacity: 0.5 } }),
                         p('Your cart is currently empty.')
                     ) : cart.value.map(item => div({ class: 'cart-item' },
-                        img(item.img, { class: 'cart-item-img', alt: item.name }),
+                        img(item.img, { class: 'cart-item-img', alt: item.name, onerror: (e) => { e.target.src = item.fallback; } }),
                         div({ class: 'cart-item-info' },
                             div({ class: 'cart-item-title' }, item.name),
                             div({ class: 'cart-item-price' }, `$${item.price} each`)
@@ -313,7 +337,7 @@
             ),
             div({ class: 'product-grid' },
                 PRODUCTS.map(prod => div({ class: 'product-card' },
-                    img(prod.img, { class: 'product-img', alt: prod.name, loading: 'lazy' }),
+                    img(prod.img, { class: 'product-img', alt: prod.name, loading: 'lazy', onerror: (e) => { e.target.src = prod.fallback; } }),
                     div({ class: 'product-info' },
                         span({ class: 'product-category' }, prod.category),
                         h3({ class: 'product-title' }, prod.name),

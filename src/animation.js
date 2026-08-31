@@ -180,10 +180,11 @@ export function spring(options = {}) {
     let position = from;
     let velocity = 0;
     let animationFrameId = null;
-    let lastTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const getNow = () => (typeof globalThis !== 'undefined' && globalThis.performance && typeof globalThis.performance.now === 'function') ? globalThis.performance.now() : Date.now();
+    let lastTime = getNow();
 
     function step() {
-        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const now = getNow();
         const dt = Math.min((now - lastTime) / 1000, 0.064);
         lastTime = now;
 

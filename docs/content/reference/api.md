@@ -503,3 +503,84 @@ Renders a Cairn component tree to an HTML string for Node.js / Deno SSR.
 ### `hydrate(target, component)`
 Attaches reactive state signals and event listeners to pre-rendered server HTML without DOM reconstruction.
 
+---
+
+## 22. Complete HTML Element Builder System (`src/elements.js`, `src/html-versions.js`)
+
+CairnJS provides 250+ element builders across every HTML specification version plus 100 high-performance UI components:
+- **HTML 1.0 to HTML5 & Beyond**: `html1`, `html2`, `html3`, `html4`, `html5`, `future`, `enhanced`, `components`.
+- **Complete Registry**: `completeElementRegistry` (150 standard + 100 Cairn UI = 250 total).
+- **Matrix Metadata**: `htmlSupport` detailing full element coverage.
+
+```js
+import { a, i, span, coat } from '@eldrex/cairnjs';
+
+// Flexible composition with targeted styling
+a({ href: '/' },
+    i({ class: 'fa-solid fa-arrow-left' }),
+    span('Back to Home', {
+        coat: { color: '#667eea', fontWeight: '600', marginLeft: '8px' }
+    })
+);
+```
+
+---
+
+## 23. Complete CSS1–CSS4 Coat System (`src/styling.js`)
+
+### `coat(styles)`
+Universal CSS engine supporting all of CSS1, CSS2, CSS3, CSS4, and future draft features with nested selectors, media queries, and keyframe animations:
+- **Nested Selectors**: `&:hover`, `& > child`, `& + sibling`, `& ~ general`, `&[attr]`, `&::before`, `&::after`
+- **At-Rules**: `@media`, `@container`, `@supports`, `@keyframes`, `@layer`, `@property`
+- **Class Utilities**: `cx(...classes)`, `classNames(...classes)`
+- **Metadata Registries**: `cssProperties` (500+ properties), `cssFunctions` (100+ functions), `cssAtRules`, `cssSelectors`, `cssCompatibility`
+
+```js
+import { div, coat } from '@eldrex/cairnjs';
+
+div("Modern Styled Box", {
+    coat: {
+        padding: '24px',
+        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+        borderRadius: '16px',
+        color: '#ffffff',
+        boxShadow: '0 10px 25px -5px rgba(14, 165, 233, 0.4)',
+        '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 20px 35px -5px rgba(14, 165, 233, 0.6)'
+        }
+    }
+});
+```
+
+---
+
+## 24. HTML String Content, Direct Markup & Sanitization (`src/dom.js`)
+
+Directly write HTML strings inside element builders without needing cumbersome innerHTML workarounds:
+
+```js
+import { div, sanitize, safe, smartContent, rich, contentSupport } from '@eldrex/cairnjs';
+
+// 1. Direct HTML strings as content
+div({ coat: { padding: '16px', background: '#fef3c7' } }, '<strong>Notice:</strong> Please verify your account.');
+
+// 2. Explicit html property
+div({ html: '<strong>Bold</strong> and <em>italic</em>' });
+
+// 3. Mixed content array
+div({}, ['<strong>Notice:</strong>', ' Hello World']);
+
+// 4. Safe sanitization against XSS
+const cleanHtml = sanitize('<p>Hello</p><script>alert("XSS")</script>');
+div(cleanHtml);
+
+// 5. Polymorphic safe helper
+const safeEl = safe(BadComponent, { fallback: () => div('Error caught') });
+const safeStr = safe('<strong>Safe markup</strong>');
+
+// 6. Smart content type detection
+console.log(smartContent('<strong>HTML</strong>')); // 'html'
+console.log(smartContent('Plain text')); // 'text'
+```
+

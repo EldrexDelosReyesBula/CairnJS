@@ -133,7 +133,7 @@ assert.strictEqual(testExperiment.track('clicks'), 1, 'Conversion tracked');
 assert.strictEqual(testExperiment.stats().counts.clicks, 1, 'Conversion stats verified');
 
 // 13. Keyboard Shortcut, SSR, and Reconciler Tests
-const unbindKey = cairn.keyboard.on('ctrl+k', () => {}, { description: 'Open Search Modal' });
+const unbindKey = cairn.keyboard.on('ctrl+k', () => { }, { description: 'Open Search Modal' });
 const shortcuts = cairn.keyboard.list();
 assert.strictEqual(shortcuts.length, 1, 'Keyboard shortcut registered');
 assert.strictEqual(shortcuts[0].combo, 'ctrl+k', 'Shortcut combo verified');
@@ -371,7 +371,7 @@ const formField = cairn.Field({ label: 'Email Address', helperText: 'We never sh
 assert.ok(formField, 'Field component with helper text and error message instantiated');
 
 // F. Overlay Stack
-cairn.overlayStack.push('test-modal', () => {});
+cairn.overlayStack.push('test-modal', () => { });
 assert.strictEqual(cairn.overlayStack.isTop('test-modal'), true, 'Overlay stack tracks top-most overlay');
 cairn.overlayStack.pop('test-modal');
 
@@ -555,7 +555,7 @@ assert.strictEqual(ctxMenu.isOpen.value, false, 'ContextMenu close works');
 const isMobile = cairn.useMediaQuery('(max-width: 600px)');
 assert.strictEqual(typeof isMobile.value, 'boolean', 'useMediaQuery returns boolean state signal');
 
-const unbindHotkey = cairn.useHotkeys('ctrl+k', () => {});
+const unbindHotkey = cairn.useHotkeys('ctrl+k', () => { });
 assert.strictEqual(typeof unbindHotkey, 'function', 'useHotkeys returns unsubscribe function');
 unbindHotkey();
 
@@ -996,7 +996,7 @@ assert.ok(cairn.createElement);
 assert.ok(cairn.Fragment);
 assert.ok(cairn.composer);
 
-const jsxBtn = cairn.createElement('button', { className: 'btn-primary', onClick: () => {} }, 'Click JSX');
+const jsxBtn = cairn.createElement('button', { className: 'btn-primary', onClick: () => { } }, 'Click JSX');
 assert.ok(jsxBtn, 'JSX button created');
 
 const jsxCustom = cairn.createElement(({ children }) => cairn.div(children), null, jsxBtn);
@@ -1185,7 +1185,7 @@ assert.ok(gentleSpring.stop, 'Gentle spring created');
 
 const tl = cairn.timeline();
 tl.add(styledEl, 'fade-in', 0, 300)
-  .add(styledEl, 'zoom-in', '+=100', 400);
+    .add(styledEl, 'zoom-in', '+=100', 400);
 assert.ok(tl.play, 'Timeline play method exists');
 
 // 26. CairnJS Form Validation & Reactive Store Verifications
@@ -1213,7 +1213,7 @@ assert.strictEqual(typeof cairn.useEscapeKey, 'function', 'useEscapeKey helper e
 
 // 28. Reconciler Array Safety & Non-Element Guard Verifications
 assert.strictEqual(typeof cairn.reconciler.reconcile, 'function');
-const dummyParent = { children: [], removeChild: () => {}, insertBefore: () => {} };
+const dummyParent = { children: [], removeChild: () => { }, insertBefore: () => { } };
 cairn.reconciler.reconcile(dummyParent, null, null, (item) => item);
 cairn.reconciler.reconcile(null, [1, 2], [2, 3], (item) => item);
 assert.ok(true, 'Reconciler handled null and edge-case arrays gracefully without throwing');
@@ -1249,7 +1249,7 @@ assert.ok(tplResult, 'Template literal parsed successfully');
 // 32. cairn.app 1-Line Reactive App Launcher
 assert.strictEqual(typeof app, 'function', 'app launcher exists');
 assert.strictEqual(typeof cairn.app, 'function', 'cairn.app launcher exists');
-const mockRoot = { appendChild: () => {}, innerHTML: '', querySelector: () => null };
+const mockRoot = { appendChild: () => { }, innerHTML: '', querySelector: () => null };
 const mountedApp = app(mockRoot, {
     state: { query: 'fast prototyping', items: ['A', 'B'] },
     template: ({ state, query, html: tpl }) => {
@@ -1348,6 +1348,1202 @@ const testFullHtmlDoc = `<!DOCTYPE html>
 </html>`;
 const isFull = /^<\s*!doctype|^<\s*html/i.test(testFullHtmlDoc.trim()) || (/<html[\s>]/i.test(testFullHtmlDoc) && /<\/html>/i.test(testFullHtmlDoc));
 assert.strictEqual(isFull, true, 'Full HTML document correctly recognized');
+
+// 37. CairnJS Duplication Safety & Core System Improvements Verifications
+console.log('🧪 Running CairnJS Duplication Safety & Core Improvements Verifications...');
+
+// Duplication Safety
+assert.ok(typeof cairn.importSafety === 'function', 'importSafety function exists');
+assert.ok(typeof cairn.versionSafety === 'function', 'versionSafety function exists');
+const importCfg = cairn.importSafety({
+    onDuplicate: { action: 'warn', once: true }
+});
+assert.strictEqual(importCfg.onDuplicate.action, 'warn');
+const regResult = cairn.importSafety.registerImport({ source: 'test-import', version: '1.3.0' });
+assert.ok(regResult, 'registerImport succeeded');
+const checkResult = cairn.importSafety.check();
+assert.ok(checkResult.count >= 1, 'Import tracking count is active');
+
+// Version Safety
+const cmpSame = cairn.versionSafety.compare('1.3.0', '1.3.0');
+assert.strictEqual(cmpSame, 0, 'Same version comparison is 0');
+const cmpNewer = cairn.versionSafety.compare('2.0.0', '1.3.0');
+assert.strictEqual(cmpNewer, 1, '2.0.0 is newer than 1.3.0');
+const isBreak = cairn.versionSafety.isBreaking('2.0.0', '1.0.0');
+assert.strictEqual(isBreak, true, 'Major version difference is breaking change');
+const confResult = cairn.versionSafety.checkConflict('1.0.0', '2.0.0', 'CDN', 'npm');
+assert.strictEqual(confResult.hasConflict, true, 'Conflict detected between different versions');
+
+// Security Engine
+assert.ok(typeof cairn.security === 'function', 'security function exists');
+const escTest = cairn.security.escape('<script>alert("xss")</script>');
+assert.strictEqual(escTest.includes('<script>'), false, 'HTML entities escaped');
+const stripped = cairn.security.stripTags('<p>Hello <b>World</b></p>');
+assert.strictEqual(stripped, 'Hello World', 'Tags stripped properly');
+const safeUrl = cairn.security.isSafeUrl('https://cairnjs.dev/docs');
+assert.strictEqual(safeUrl, true, 'https is safe URL');
+const unsafeUrl = cairn.security.isSafeUrl('javascript:alert(1)');
+assert.strictEqual(unsafeUrl, false, 'javascript: is unsafe URL');
+const frozenObj = cairn.security.freeze({ a: 1, nested: { b: 2 } });
+assert.ok(Object.isFrozen(frozenObj) && Object.isFrozen(frozenObj.nested), 'Deep freeze works');
+const protoPoll = cairn.security.checkPrototypePollution(JSON.parse('{"__proto__": {"admin": true}}'));
+assert.strictEqual(protoPoll, true, 'Prototype pollution detection works');
+
+// Error System, Degradation & Recovery
+assert.ok(typeof cairn.errors === 'function', 'errors function exists');
+assert.ok(typeof cairn.cairnError === 'function', 'cairnError function exists');
+
+// Custom error customization
+cairn.errors.customize('test_custom_type', (ctx) => ({
+    summary: `Custom error for ${ctx.item}`,
+    location: 'Test Location',
+    fix: 'Use correct item'
+}));
+const formattedCustom = cairn.errors.format('test_custom_type', { item: 'Widget' });
+assert.strictEqual(formattedCustom.summary, 'Custom error for Widget');
+assert.strictEqual(formattedCustom.location, 'Test Location');
+assert.strictEqual(formattedCustom.fix, 'Use correct item');
+
+const diagErr = cairn.cairnError('test_custom_type', { item: 'Gadget' });
+assert.strictEqual(diagErr.summary, 'Custom error for Gadget');
+assert.strictEqual(diagErr.name, 'CairnDiagnosticError');
+
+const errRecord = cairn.errors.handle(new Error('Test handled error'), { component: 'TestComp', type: 'component' });
+assert.strictEqual(errRecord.component, 'TestComp');
+const capturedVal = cairn.errors.capture(() => { throw new Error('Boom'); }, (err) => 'Recovered: ' + err.message);
+assert.strictEqual(capturedVal, 'Recovered: Boom');
+
+// Degradation
+const degradedFn = cairn.degradation.wrap(() => { throw new Error('Render fail'); }, (err) => 'Fallback UI');
+assert.strictEqual(degradedFn(), 'Fallback UI');
+const featVal = cairn.degradation.resolve('experimentalWebGPU', 'fallback-cpu', () => { throw new Error('GPU not available'); });
+assert.strictEqual(featVal, 'fallback-cpu');
+
+// Recovery
+let attemptCount = 0;
+const recoveryTask = async (attempt) => {
+    attemptCount++;
+    if (attempt < 2) throw new Error('Transient error');
+    return 'Success after retry';
+};
+const recResult = await cairn.recovery.attempt(recoveryTask, 'network', { maxRetries: 3, delay: 10 });
+assert.strictEqual(recResult.success, true, 'Recovery engine successfully retried');
+assert.strictEqual(recResult.result, 'Success after retry');
+
+// Data Management, Validation & Transforms
+const managedData = cairn.data.manage({ user: 'Eldrex', items: [1, 2, 3] });
+assert.strictEqual(managedData.user, 'Eldrex');
+
+const schema = {
+    email: { type: 'string', required: true, format: 'email' },
+    age: { type: 'number', min: 18, max: 120 },
+    website: { format: 'url' }
+};
+const valSuccess = cairn.dataValidation.validate({ email: 'test@cairnjs.org', age: 25, website: 'https://cairnjs.org' }, schema);
+assert.strictEqual(valSuccess.valid, true, 'Validation passed for valid data');
+const valFail = cairn.dataValidation.validate({ email: 'not-an-email', age: 15 }, schema);
+assert.strictEqual(valFail.valid, false, 'Validation caught email and age errors');
+assert.ok(valFail.errors.email && valFail.errors.age);
+
+const asyncSchema = {
+    username: {
+        async: async (val) => val === 'admin' ? 'Username already taken' : true
+    }
+};
+const asyncVal = await cairn.dataValidation.validateAsync({ username: 'admin' }, asyncSchema);
+assert.strictEqual(asyncVal.valid, false, 'Async validator caught taken username');
+
+// Transforms
+assert.strictEqual(cairn.transform.currency(49.99), '$49.99');
+assert.strictEqual(cairn.transform.percent(85), '85%');
+assert.strictEqual(cairn.transform.number(1000000), '1,000,000');
+const piped = cairn.transform.pipe('  hello world  ', (s) => s.trim(), (s) => s.toUpperCase());
+assert.strictEqual(piped, 'HELLO WORLD');
+
+// Framework, Stability, Performance & Reliability
+assert.ok(typeof cairn.framework === 'function', 'framework function exists');
+const pool = cairn.stability.createPool(() => ({ buffer: new Array(10) }), (obj) => { obj.buffer.fill(0); });
+const item1 = pool.acquire();
+assert.ok(item1.buffer, 'Pool item acquired');
+pool.release(item1);
+assert.strictEqual(pool.size(), 5, 'Pool item released');
+
+const queue = cairn.stability.createQueue();
+let qOrder = [];
+await Promise.all([
+    queue.add(async () => { qOrder.push(1); }),
+    queue.add(async () => { qOrder.push(2); })
+]);
+assert.deepStrictEqual(qOrder, [1, 2], 'Queue executed sequentially');
+
+// Performance Profiler
+const profiled = cairn.performance.profile('test-task', () => {
+    let sum = 0;
+    for (let i = 0; i < 1000; i++) sum += i;
+    return sum;
+});
+assert.ok(profiled > 0);
+const perfMetrics = cairn.performance.getMetrics();
+assert.ok(perfMetrics['test-task'] && perfMetrics['test-task'].count === 1);
+
+// Reliability
+assert.doesNotThrow(() => cairn.reliability.assert(true, 'Must pass'));
+const guardedVal = cairn.reliability.guard(() => { throw new Error('Fail'); }, 'Guarded Safe Return');
+assert.strictEqual(guardedVal, 'Guarded Safe Return');
+const health = cairn.reliability.getHealth();
+assert.ok(health.uptimeMs >= 0 && health.status);
+
+// Audit & Review Platform
+const fullAudit = cairn.audit.full();
+assert.ok(fullAudit.overallScore >= 80, 'Full audit overall score is >= 80');
+assert.ok(fullAudit.categories.security, 'Security category exists in full audit');
+assert.ok(fullAudit.categories.accessibility, 'Accessibility category exists in full audit');
+
+const mdReport = cairn.audit.report({ auditData: fullAudit, format: 'markdown' });
+assert.ok(typeof mdReport === 'string' && mdReport.includes('CairnJS Audit Report'), 'Markdown report generated');
+const htmlReport = cairn.audit.report({ auditData: fullAudit, format: 'html' });
+assert.ok(typeof htmlReport === 'string' && htmlReport.includes('<!DOCTYPE html>'), 'HTML report generated');
+
+const continuousRunner = cairn.audit.continuous();
+assert.ok(typeof continuousRunner.trigger === 'function');
+continuousRunner.stop();
+
+const reviewResult = cairn.review();
+assert.ok(reviewResult.totalItems > 0, 'Review checklist has items');
+assert.strictEqual(reviewResult.signOff, true, 'Review readiness signOff is true');
+
+// 38. CairnJS Complex Layouts, Components, Animations & Modern Design Verifications
+console.log('🧪 Running CairnJS Complex Layouts, Components, Animations & Modern Design Verifications...');
+
+// 1. Complex Layouts
+const complexGridEl = cairn.grid({
+    layout: {
+        columns: 12,
+        areas: `
+            "header header header"
+            "sidebar main aside"
+            "footer footer footer"
+        `
+    },
+    items: {
+        header: { component: cairn.div('Header Content'), sticky: true, zIndex: 100 },
+        sidebar: { component: cairn.div('Sidebar Content'), width: 250 },
+        main: { component: cairn.div('Main Content'), scrollable: true, padding: true },
+        aside: { component: cairn.div('Aside Content'), hidden: 'mobile' },
+        footer: { component: cairn.div('Footer Content'), borderTop: true }
+    },
+    features: { gap: 16, alignment: 'stretch' }
+});
+assert.ok(complexGridEl, 'Complex grid layout created');
+
+const flexEl = cairn.flex({
+    layout: { direction: 'row', wrap: 'wrap', gap: 20 },
+    arrangement: {
+        holyGrail: {
+            header: { flex: '0 0 100%', height: 60 },
+            nav: { flex: '0 0 200px' },
+            main: { flex: '1 1 auto' },
+            aside: { flex: '0 0 300px' },
+            footer: { flex: '0 0 100%', height: 60 }
+        }
+    }
+});
+assert.ok(flexEl, 'Complex flex layout with holyGrail arrangement created');
+
+const masonryEl = cairn.masonry({
+    columns: 3,
+    gap: 20,
+    items: [cairn.div('Card 1'), cairn.div('Card 2'), cairn.div('Card 3'), cairn.div('Card 4')],
+    algorithm: 'balanced'
+});
+assert.ok(masonryEl, 'Masonry layout created');
+
+const posCoord = cairn.position({
+    sticky: { header: { top: 0, zIndex: 100 } },
+    overlay: { modal: { zIndex: 1000 } },
+    floating: { chat: { bottom: 20, right: 20 } },
+    absolute: { badge: { top: -5, right: -5 } }
+});
+assert.strictEqual(posCoord.getStickyStyle('header').position, 'sticky');
+assert.strictEqual(posCoord.getOverlayStyle('modal').zIndex, 1000);
+
+// 2. Compound Components
+assert.ok(typeof cairn.DataGrid === 'function', 'DataGrid compound component exists');
+assert.ok(typeof cairn.DataGrid.Toolbar === 'function', 'DataGrid.Toolbar exists');
+assert.ok(typeof cairn.DataGrid.Header === 'function', 'DataGrid.Header exists');
+assert.ok(typeof cairn.DataGrid.Body === 'function', 'DataGrid.Body exists');
+assert.ok(typeof cairn.DataGrid.Footer === 'function', 'DataGrid.Footer exists');
+
+const compoundGridInstance = cairn.DataGrid({
+    data: [
+        { id: 1, name: 'Alice', role: 'Admin' },
+        { id: 2, name: 'Bob', role: 'Developer' }
+    ],
+    config: {
+        columns: ['name', 'role'],
+        filters: ['role'],
+        pageSize: 5
+    }
+});
+assert.ok(compoundGridInstance, 'Compound DataGrid component instance created');
+
+const complexFormInstance = cairn.ComplexForm({
+    schema: {
+        fields: {
+            username: { label: 'Username', type: 'text', validation: { type: 'required' } },
+            email: { label: 'Email', type: 'email', validation: { type: 'required' } }
+        }
+    },
+    onSubmit: (vals) => { }
+});
+assert.ok(complexFormInstance, 'ComplexForm component instance created');
+
+const dragDropInstance = cairn.DragDrop({
+    items: [{ id: 'a', label: 'Item A' }, { id: 'b', label: 'Item B' }],
+    onReorder: (from, to) => { }
+});
+assert.ok(dragDropInstance, 'DragDrop compound component instance created');
+
+// 3. Animation Orchestration & State Machine
+assert.ok(typeof cairn.animation.sequence === 'function', 'cairn.animation.sequence exists');
+assert.ok(typeof cairn.animation.parallel === 'function', 'cairn.animation.parallel exists');
+assert.ok(typeof cairn.animation.orchestrate === 'function', 'cairn.animation.orchestrate exists');
+assert.ok(typeof cairn.transition.complex === 'function', 'cairn.transition.complex exists');
+assert.ok(typeof cairn.animation.states === 'function', 'cairn.animation.states exists');
+
+const animController = cairn.animation.orchestrate({
+    timeline: { duration: 2000, easing: 'ease-in-out' },
+    groups: [
+        { name: 'entrance', animations: [{ target: '.header', animation: 'slide-down' }], offset: 0 },
+        { name: 'emphasis', animations: [{ target: '.highlight', animation: 'pulse' }], offset: 500 }
+    ],
+    controls: { autoPlay: false }
+});
+assert.strictEqual(animController.getTimeline().groups, 2);
+animController.play();
+animController.pause();
+
+const sm = cairn.animation.states({
+    states: {
+        idle: { animation: 'pulse', duration: 100 },
+        loading: { animation: 'spin', duration: 100 },
+        success: { animation: 'checkmark', duration: 100 }
+    },
+    transitions: {
+        idle: ['loading'],
+        loading: ['success', 'idle'],
+        success: ['idle']
+    },
+    initialState: 'idle'
+});
+assert.strictEqual(sm.getState(), 'idle');
+assert.strictEqual(sm.canTransition('loading'), true);
+assert.strictEqual(sm.canTransition('success'), false);
+assert.strictEqual(sm.transition('loading'), true);
+assert.strictEqual(sm.getState(), 'loading');
+assert.strictEqual(sm.transition('success'), true);
+assert.strictEqual(sm.getState(), 'success');
+
+// 4. Modern Design Patterns
+assert.ok(typeof cairn.glass === 'function', 'cairn.glass exists');
+assert.ok(typeof cairn.neu === 'function', 'cairn.neu exists');
+assert.ok(typeof cairn.gradients === 'function', 'cairn.gradients exists');
+assert.ok(typeof cairn.micro === 'function', 'cairn.micro exists');
+assert.ok(typeof cairn.responsive === 'function', 'cairn.responsive exists');
+
+const glassCard = cairn.glass.card({}, cairn.div('Glass Card Content'));
+assert.ok(glassCard, 'Glass card element created');
+const neuBtn = cairn.neu.button({}, 'Neumorphic Button');
+assert.ok(neuBtn, 'Neumorphic button created');
+
+const linearGrad = cairn.gradients.linear('#667eea', '#764ba2');
+assert.ok(linearGrad.startsWith('linear-gradient'), 'Linear gradient string generated');
+const animGrad = cairn.gradients.animated('ocean');
+assert.ok(animGrad.background && animGrad.animation, 'Animated gradient generated');
+
+const fluidText = cairn.responsive.fluidTypography(14, 20);
+assert.ok(fluidText.startsWith('clamp('), 'Fluid typography clamp string generated');
+
+// 5. Complex UI Patterns
+const complexDashboardInstance = cairn.dashboard({
+    layout: { header: { height: 64 }, sidebar: { width: 240 }, main: { padding: 24 } },
+    widgets: [
+        { id: 'stats', title: 'Statistics', size: 'full', component: cairn.div('Stats Widget') },
+        { id: 'chart', title: 'Performance', size: '2/3', component: cairn.div('Chart Widget') },
+        { id: 'activity', title: 'Activity', size: '1/3', component: cairn.div('Activity Widget') }
+    ]
+});
+assert.ok(complexDashboardInstance, 'Dashboard layout created with widgets');
+
+const navSuite = cairn.navigation({
+    types: {
+        navbar: { items: [{ label: 'Home', href: '/' }, { label: 'About', href: '/about' }] },
+        breadcrumbs: { items: ['Home', 'Products', 'Details'] },
+        tabs: { items: [{ label: 'General' }, { label: 'Security' }] },
+        stepper: { steps: ['Cart', 'Checkout', 'Complete'], current: 1 }
+    }
+});
+const navBarEl = navSuite.navbar();
+assert.ok(navBarEl, 'Navbar element created');
+const breadcrumbsEl = navSuite.breadcrumbs();
+assert.ok(breadcrumbsEl, 'Breadcrumbs element created');
+const tabsEl = navSuite.tabs();
+assert.ok(tabsEl, 'Tabs element created');
+const stepperEl = navSuite.stepper();
+assert.ok(stepperEl, 'Stepper element created');
+
+// 39. CairnJS Developer DevTools Expansion & Enhancement Verifications
+console.log('🧪 Running CairnJS Developer DevTools Expansion & Enhancement Verifications...');
+
+assert.ok(cairn.devtools, 'DevTools facade exists');
+
+// 1. Inspector
+const inspectorInstance = cairn.devtools.inspector();
+const dummyComp = { name: 'CardWidget', props: { title: 'Welcome' }, state: { count: 5 } };
+const inspectData = inspectorInstance.inspectComponent(dummyComp);
+assert.strictEqual(inspectData.name, 'CardWidget');
+assert.strictEqual(inspectData.props.title, 'Welcome');
+assert.strictEqual(inspectData.state.count, 5);
+assert.ok(inspectorInstance.getTree().length > 0, 'Inspector tree contains inspected component');
+
+// 2. State Debugger & Time Travel
+const stateDebug = cairn.devtools.state();
+const snapId = stateDebug.snapshot('init', { user: 'Eldrex', active: true });
+assert.ok(snapId.startsWith('init-'), 'Snapshot created');
+const restored = stateDebug.restore(snapId);
+assert.strictEqual(restored.user, 'Eldrex');
+
+// 3. Performance Profiler
+const profilerInstance = cairn.devtools.profiler();
+profilerInstance.start('RenderProfile');
+const profileReport = profilerInstance.stop();
+assert.ok(profileReport.durationMs >= 0, 'Profiler session captured duration');
+const analysis = profilerInstance.analyze();
+assert.strictEqual(analysis.status, 'HEALTHY');
+
+// 4. Network Monitor
+const netMonitor = cairn.devtools.network();
+const reqEntry = netMonitor.logRequest({ url: '/api/v1/users', method: 'GET', status: 200, durationMs: 15 });
+assert.strictEqual(reqEntry.status, 200);
+assert.strictEqual(netMonitor.getRequests().length, 1);
+
+// 5. Visual Editor
+const visualEditor = cairn.devtools.visual();
+const dummyNode = { style: {} };
+visualEditor.mutate(dummyNode, { background: '#1e293b' });
+assert.strictEqual(dummyNode.style.background, '#1e293b');
+assert.strictEqual(visualEditor.getHistory().length, 1);
+
+// 6. Console
+const consoleInstance = cairn.devtools.console();
+const logRecord = consoleInstance.log('info', 'App initialized');
+assert.strictEqual(logRecord.level, 'info');
+assert.ok(consoleInstance.getLogs('info').length >= 1);
+
+// 7. Debugging & Breakpoints
+const debugInstance = cairn.devtools.debug();
+debugInstance.setBreakpoint('render-hook');
+assert.strictEqual(debugInstance.getBreakpoints().length, 1);
+debugInstance.removeBreakpoint('render-hook');
+assert.strictEqual(debugInstance.getBreakpoints().length, 0);
+
+// 8. Testing Tools
+const testRunner = cairn.devtools.testing();
+testRunner.test('Math sum check', () => { assert.strictEqual(1 + 1, 2); });
+const testRunRes = await testRunner.run();
+assert.strictEqual(testRunRes.passed, 1);
+assert.strictEqual(testRunRes.failed, 0);
+
+// 9. Stability Engine
+const stabInstance = cairn.devtools.stability();
+const safeRes = stabInstance.isolate(() => 'success', 'fallback');
+assert.strictEqual(safeRes, 'success');
+const failRes = stabInstance.isolate(() => { throw new Error('boom'); }, 'fallback');
+assert.strictEqual(failRes, 'fallback');
+
+// 10. Reliability Engine
+const relInstance = cairn.devtools.reliability();
+relInstance.assert(true, 'Must be true');
+const selfTestRes = relInstance.selfTest();
+assert.strictEqual(selfTestRes.status, 'HEALTHY');
+
+// 11. Predictability Engine
+const predInstance = cairn.devtools.predictability();
+assert.strictEqual(predInstance.compare({ a: 1 }, { a: 1 }), true);
+assert.strictEqual(predInstance.compare({ a: 1 }, { a: 2 }), false);
+
+// 12. Support System
+const supportInstance = cairn.devtools.support();
+const diag = supportInstance.diagnose('Error: myVar is not defined');
+assert.ok(diag.explanation && diag.suggestion, 'Support diagnostic returned');
+
+// 13. IDE Integration
+const ideInstance = cairn.devtools.ide({ editor: 'vscode' });
+const snippets = ideInstance.getSnippets();
+assert.ok(snippets['cairn-component'], 'IDE snippets available');
+
+// 14. CLI Tools
+const cliInstance = cairn.devtools.cli();
+const cliOutput = cliInstance.run('dev');
+assert.ok(cliOutput.includes('dev'), 'CLI command executed');
+
+// 15. Browser Extension
+const extInstance = cairn.devtools.extension();
+assert.strictEqual(extInstance.panels.length, 4);
+
+// 40. CairnJS Instant Project Scaffolding & Architecture Verifications
+console.log('🧪 Running CairnJS Instant Project Scaffolding Verifications...');
+
+assert.ok(typeof cairn.create === 'function', 'cairn.create exists');
+assert.ok(typeof cairn.organize === 'function', 'cairn.organize exists');
+assert.ok(cairn.scaffolding, 'cairn.scaffolding facade exists');
+
+// 1. Basic starter scaffolding
+const basicApp = cairn.create('my-quick-app', { template: 'basic' });
+assert.strictEqual(basicApp.projectName, 'my-quick-app');
+assert.strictEqual(basicApp.template, 'basic');
+assert.ok(basicApp.files.includes('index.html'));
+assert.ok(basicApp.files.includes('src/main.js'));
+assert.ok(basicApp.files.includes('src/App.js'));
+assert.ok(basicApp.files.includes('package.json'));
+assert.ok(basicApp.fileMap['src/App.js'].includes('Welcome to CairnJS'));
+
+// 2. Todo app scaffolding
+const todoApp = cairn.create('my-todo-app', { template: 'todo' });
+assert.strictEqual(todoApp.template, 'todo');
+assert.ok(todoApp.files.includes('src/state/todos.js'));
+assert.ok(todoApp.files.includes('src/components/TodoList.js'));
+
+// 3. Dashboard template scaffolding
+const dashApp = cairn.create('my-dashboard-app', { template: 'dashboard' });
+assert.strictEqual(dashApp.template, 'dashboard');
+assert.ok(dashApp.files.includes('src/main.js'));
+
+// 4. Component template scaffolding
+const compScaffold = cairn.create('Header', { template: 'component' });
+assert.ok(compScaffold.files.includes('src/components/Header.js'));
+
+// 5. File organization
+const orgReport = cairn.organize({ cleanup: true });
+assert.strictEqual(orgReport.status, 'ORGANIZED');
+assert.ok(orgReport.rules.byType.components, 'Components path mapped');
+
+// 41. CairnJS Core Foundation: The Bedrock Verifications
+console.log('🧪 Running CairnJS Core Foundation: The Bedrock Verifications...');
+
+assert.ok(cairn.core, 'cairn.core facade exists');
+assert.strictEqual(cairn.core.kernel.version, '1.3.0');
+
+// 1. Deterministic Core
+const detEngine = cairn.core.deterministic();
+const id1 = detEngine.generateDeterministicId('btn');
+const id2 = detEngine.generateDeterministicId('btn');
+assert.strictEqual(id1, 'btn-1');
+assert.strictEqual(id2, 'btn-2');
+assert.strictEqual(detEngine.verify({ count: 1 }, { count: 1 }), true);
+assert.strictEqual(detEngine.verify({ count: 1 }, { count: 2 }), false);
+
+// 2. Safe & Error-Free Core
+const safeEngine = cairn.core.safe();
+const guardedResult = safeEngine.guard(() => 'success', 'fallback');
+assert.strictEqual(guardedResult, 'success');
+const fallbackResult = safeEngine.guard(() => { throw new Error('critical failure'); }, 'safe-fallback');
+assert.strictEqual(fallbackResult, 'safe-fallback');
+assert.strictEqual(safeEngine.validateInput({ prop: 1 }), true);
+assert.strictEqual(safeEngine.validateInput(null), false);
+
+// 3. Memory-Safe Core
+const memEngine = cairn.core.memory();
+const pooledObj = memEngine.acquire(() => ({ data: 'initial' }));
+assert.ok(pooledObj, 'Pooled object acquired');
+memEngine.release(pooledObj);
+const memStatus = memEngine.getStatus();
+assert.strictEqual(memStatus.status, 'HEALTHY');
+
+// 4. Performance Targets Engine
+const perfEngine = cairn.core.performance();
+const coreBenchRes = perfEngine.measure('stateUpdate', () => {
+    let sum = 0;
+    for (let i = 0; i < 1000; i++) sum += i;
+});
+assert.strictEqual(coreBenchRes.passed, true);
+assert.ok(coreBenchRes.durationMs >= 0);
+
+// 5. Energy & Carbon Efficiency Engine
+const energyEngine = cairn.core.energy();
+const carbonReport = energyEngine.getCarbonReport();
+assert.strictEqual(carbonReport.energyRating, 'A+');
+
+// 6. Reliable & Fault-Tolerant Engine
+const relBedrock = cairn.core.reliable();
+relBedrock.assert(true, 'Must pass');
+const bedrockStatus = relBedrock.getStatus();
+assert.strictEqual(bedrockStatus.health, '100% OPERATIONAL');
+
+// 7. Future-Ready Architecture Engine
+const futureEngine = cairn.core.future();
+futureEngine.registerExtensionPoint('custom-renderer', () => { });
+assert.ok(futureEngine.listExtensions().includes('custom-renderer'));
+
+// 8. Final Stabilization Locks & Invariants
+const frozen = cairn.core.freeze();
+assert.strictEqual(frozen.locked.state, '✅ Frozen');
+assert.strictEqual(frozen.principles.zeroDependencies, '✅ Eternal');
+
+const relLock = cairn.core.reliability();
+assert.strictEqual(relLock.works.allBrowsers, '✅ Chrome, Firefox, Safari, Edge');
+
+const predLock = cairn.core.predictability();
+assert.strictEqual(predLock.deterministic.render, '✅ Same component → Same DOM');
+
+const agentSpecs = cairn.core.agents();
+assert.strictEqual(agentSpecs.supported.copilot.support, '✅ Full');
+
+const workflowPipeline = cairn.core.workflow();
+assert.strictEqual(workflowPipeline.guarantees.firstTry, '✅ 95% first-try success');
+
+// 9. Framework & Backend Bridges
+assert.ok(cairn.bridge, 'cairn.bridge namespace exists');
+assert.ok(typeof cairn.bridge.react === 'function', 'bridge.react exists');
+assert.ok(typeof cairn.bridge.vue === 'function', 'bridge.vue exists');
+assert.ok(typeof cairn.bridge.svelte === 'function', 'bridge.svelte exists');
+assert.ok(typeof cairn.bridge.angular === 'function', 'bridge.angular exists');
+assert.ok(typeof cairn.bridge.rest.get === 'function', 'bridge.rest exists');
+assert.ok(typeof cairn.bridge.graphql.query === 'function', 'bridge.graphql exists');
+assert.ok(typeof cairn.bridge.websocket.connect === 'function', 'bridge.websocket exists');
+assert.ok(typeof cairn.bridge.sse.connect === 'function', 'bridge.sse exists');
+assert.ok(typeof cairn.bridge.universal.detect === 'function', 'bridge.universal exists');
+
+// 10. Guarantees & Pledge
+assert.ok(cairn.core.guarantees.simplicity);
+assert.ok(cairn.core.pledge.sustainability);
+
+// 42. CairnJS Green Code & Clean Code Initiative Verifications
+console.log('🧪 Running CairnJS Green Code & Clean Code Initiative Verifications...');
+
+assert.ok(cairn.green, 'cairn.green facade exists');
+assert.ok(typeof cairn.energy === 'function', 'cairn.energy exists');
+assert.ok(typeof cairn.carbon === 'function', 'cairn.carbon exists');
+assert.ok(typeof cairn.battery === 'function', 'cairn.battery exists');
+assert.ok(typeof cairn.cleanCode === 'function', 'cairn.cleanCode exists');
+assert.ok(typeof cairn.sustainable === 'function', 'cairn.sustainable exists');
+
+// 1. Energy Efficiency Engine
+const energyCtrl = cairn.energy();
+energyCtrl.recordSaving(33.2);
+const energyMetrics = energyCtrl.getMetrics();
+assert.strictEqual(energyMetrics.status, 'OPTIMAL');
+assert.strictEqual(energyMetrics.efficiencyRating, 'A+');
+assert.ok(energyMetrics.cpuSavedMs >= 33);
+
+// 2. Carbon Footprint Tracking Engine
+const carbonCtrl = cairn.carbon();
+carbonCtrl.track(100, 1024 * 1024); // 100ms compute, 1MB data
+const greenCarbonReport = carbonCtrl.getReport();
+assert.ok(greenCarbonReport.summary.includes('kg CO2'));
+const offsetProposal = carbonCtrl.offset(5);
+assert.strictEqual(offsetProposal.targetKg, 5);
+assert.ok(offsetProposal.treesToPlant >= 1);
+
+// 3. Battery-Aware Rendering Engine
+const batteryCtrl = cairn.battery();
+batteryCtrl.setLevel(0.85, false);
+const highProfile = batteryCtrl.getProfile();
+assert.strictEqual(highProfile.tier, 'HIGH');
+assert.strictEqual(highProfile.fps, 60);
+
+batteryCtrl.setLevel(0.35, false);
+const medProfile = batteryCtrl.getProfile();
+assert.strictEqual(medProfile.tier, 'MEDIUM');
+assert.strictEqual(medProfile.fps, 30);
+
+batteryCtrl.setLevel(0.15, false);
+const lowProfile = batteryCtrl.getProfile();
+assert.strictEqual(lowProfile.tier, 'LOW');
+assert.strictEqual(lowProfile.fps, 15);
+
+// 4. Clean Code Quality & Smell Analyzer
+const cleanAnalyzer = cairn.cleanCode();
+const analysisReport = cleanAnalyzer.analyze('const a = 1; function test() { return a + 1; }');
+assert.strictEqual(analysisReport.isClean, true);
+assert.strictEqual(analysisReport.rating, 'A+');
+const smellsReport = cleanAnalyzer.analyze('function bad() { eval("alert(1)"); // TODO fix }');
+assert.strictEqual(smellsReport.isClean, false);
+assert.ok(smellsReport.smells.length >= 2);
+
+// 5. Sustainable Coding Patterns Audit
+const sustainAuditor = cairn.sustainable();
+const sustainAudit = sustainAuditor.audit({ lazyLoading: true, caching: true, batchUpdates: true });
+assert.strictEqual(sustainAudit.score, 100);
+assert.strictEqual(sustainAudit.efficient, true);
+
+// 6. Carbon Grid Factor Estimation
+const carbonTracker = cairn.carbon();
+carbonTracker.track(100, 1024 * 1024);
+const realCarbonReport = carbonTracker.getReport();
+assert.strictEqual(realCarbonReport.computeMs, 100);
+assert.ok(realCarbonReport.estimatedCo2Kg >= 0);
+
+// 43. CairnJS The Framework Paradox: Scope Prevention Plan Verifications
+console.log('🧪 Running CairnJS The Framework Paradox: Scope Prevention Plan Verifications...');
+
+assert.ok(cairn.scope, 'cairn.scope facade exists');
+assert.ok(cairn.boundaries, 'cairn.boundaries exists');
+assert.ok(cairn.neverAdd, 'cairn.neverAdd exists');
+assert.ok(cairn.maybeAsPlugin, 'cairn.maybeAsPlugin exists');
+assert.ok(typeof cairn.featureFilter === 'function', 'cairn.featureFilter exists');
+assert.ok(typeof cairn.simplicityTest === 'function', 'cairn.simplicityTest exists');
+
+// 1. Non-Negotiable Boundaries & Core Identity
+assert.strictEqual(cairn.boundaries.audience.beginners, 'PRIMARY');
+assert.strictEqual(cairn.boundaries.identity.uiFramework, 'YES');
+assert.strictEqual(cairn.boundaries.identity.fullFramework, 'NO');
+assert.strictEqual(cairn.boundaries.capabilities.buildBackend, 'NO');
+
+// 2. The "Never Add" List
+assert.ok(cairn.neverAdd.backend.database.includes('Never'));
+assert.ok(cairn.neverAdd.bloat.virtualDOM.includes('Never'));
+assert.ok(cairn.neverAdd.enterprise.multiTenancy.includes('Never'));
+
+// 3. Feature Request Filter
+const validUiFeature = cairn.scope.filter({
+    isUI: true,
+    helpsBeginners: true,
+    isSimple: true,
+    highValue: true,
+    canBePlugin: false,
+    addsBloat: false
+});
+assert.strictEqual(validUiFeature.accept, true);
+
+const backendFeature = cairn.scope.filter({
+    isUI: false,
+    helpsBeginners: false
+});
+assert.strictEqual(backendFeature.reject, true);
+assert.strictEqual(backendFeature.reason, 'Not UI-related');
+
+const pluginCandidate = cairn.scope.filter({
+    isUI: true,
+    helpsBeginners: true,
+    isSimple: true,
+    highValue: true,
+    canBePlugin: true
+});
+assert.strictEqual(pluginCandidate.defer, true);
+assert.strictEqual(pluginCandidate.reason, 'Make it a plugin');
+
+// 4. The Simplicity Test (5-Minute Test)
+const simpleFeatureTest = cairn.simplicityTest({
+    understandableIn5Min: true,
+    oneSentenceExplanation: true,
+    zeroConfig: true,
+    clearUseCase: true,
+    followsExistingPatterns: true,
+    simplerThanAlternatives: true
+});
+assert.strictEqual(simpleFeatureTest.passed, true);
+assert.strictEqual(simpleFeatureTest.decision, 'Accept');
+
+const complexFeatureTest = cairn.simplicityTest({
+    understandableIn5Min: false,
+    zeroConfig: false
+});
+assert.strictEqual(complexFeatureTest.passed, false);
+assert.strictEqual(complexFeatureTest.decision, 'Reject or make plugin');
+
+// 5. Scope Decision Pipeline
+assert.strictEqual(cairn.scope.decide({ audience: 'enterprise', isUI: false }), 'Rejected');
+assert.strictEqual(cairn.scope.decide({ audience: 'beginners', canBePlugin: true }), 'Suggest plugin');
+assert.strictEqual(cairn.scope.decide({ audience: 'beginners', isUI: true, isSimple: true, highValue: true }), 'Add to core');
+
+// =========================================================================
+// Complete HTML Element Builder System Verifications (140+ Elements, SVG, MathML, Input Types)
+// =========================================================================
+console.log('🧪 Running Cairn Complete HTML Element Builder System Verifications...');
+
+// 1. Core Elements & Registry Stats
+assert.strictEqual(cairn.elementRegistry.standard.count, 150);
+assert.strictEqual(cairn.elementRegistry.standard.coverage, '100%');
+assert.strictEqual(cairn.elementRegistry.total.combined, 250);
+
+// 2. Document & Structure Elements
+const htmlEl = cairn.html({ lang: 'en' });
+assert.strictEqual(htmlEl.tagName, 'HTML');
+
+const mainSection = cairn.main(
+    cairn.header(cairn.h1('Title')),
+    cairn.article(cairn.p('Paragraph text')),
+    cairn.aside(cairn.span('Sidebar')),
+    cairn.footer(cairn.small('Copyright'))
+);
+assert.strictEqual(mainSection.tagName, 'MAIN');
+assert.strictEqual(mainSection.childNodes.length, 4);
+
+// 3. Text Semantics & Formatting
+const inlineText = cairn.p(
+    cairn.strong('Bold'),
+    cairn.em('Italic'),
+    cairn.i('Iconic'),
+    cairn.b('Bolder'),
+    cairn.u('Underline'),
+    cairn.code('const x = 1;'),
+    cairn.kbd('Ctrl+K'),
+    cairn.mark('Highlighted'),
+    cairn.sub('H2O'),
+    cairn.sup('E=mc2')
+);
+assert.strictEqual(inlineText.tagName, 'P');
+assert.strictEqual(inlineText.childNodes.length, 10);
+
+// 4. Forms, Inputs & Specialized Input Types
+const sampleForm = cairn.form(
+    cairn.inputTypes.email({ placeholder: 'test@example.com' }),
+    cairn.inputTypes.password({ placeholder: 'Secret' }),
+    cairn.inputTypes.number({ min: 0, max: 100 }),
+    cairn.inputTypes.checkbox({ checked: true }),
+    cairn.button({ type: 'submit' }, 'Submit')
+);
+assert.strictEqual(sampleForm.tagName, 'FORM');
+assert.strictEqual(sampleForm.childNodes.length, 5);
+
+// 5. Tables & Interactive
+const sampleTable = cairn.table(
+    cairn.thead(cairn.tr(cairn.th('Col 1'), cairn.th('Col 2'))),
+    cairn.tbody(cairn.tr(cairn.td('Val 1'), cairn.td('Val 2')))
+);
+assert.strictEqual(sampleTable.tagName, 'TABLE');
+
+const interactiveDetails = cairn.details(
+    cairn.summary('Click to expand'),
+    cairn.p('Hidden content')
+);
+assert.strictEqual(interactiveDetails.tagName, 'DETAILS');
+
+// 6. SVG Elements & Namespace Builder
+const sampleSvg = cairn.svgElements.svg(
+    { width: '100', height: '100', viewBox: '0 0 100 100' },
+    cairn.svgElements.circle({ cx: '50', cy: '50', r: '40', fill: '#38bdf8' }),
+    cairn.svgElements.path({ d: 'M10 10 H 90 V 90 H 10 L 10 10', fill: 'none' })
+);
+assert.ok(sampleSvg);
+
+// 7. MathML Elements
+const sampleMath = cairn.mathElements.math(
+    { display: 'block' },
+    cairn.mathElements.mrow(
+        cairn.mathElements.mi('x'),
+        cairn.mathElements.mo('='),
+        cairn.mathElements.mfrac(cairn.mathElements.mn('1'), cairn.mathElements.mn('2'))
+    )
+);
+// 8. Flexible Element Composition & Targeted Styling
+console.log('🧪 Running Cairn Flexible Element Composition & Targeted Styling Verifications...');
+
+// Method 1: Inline Composition
+const backLinkInline = cairn.a(
+    { href: '/' },
+    cairn.i({ class: 'fa-solid fa-arrow-left' }),
+    'Back to Home'
+);
+assert.strictEqual(backLinkInline.tagName, 'A');
+assert.strictEqual(backLinkInline.childNodes.length, 2);
+
+// Style only the text (content first, coat second)
+const backLinkStyledText = cairn.a(
+    { href: '/' },
+    cairn.i({ class: 'fa-solid fa-arrow-left' }),
+    cairn.span('Back to Home', {
+        coat: {
+            color: '#667eea',
+            fontWeight: '600',
+            marginLeft: '8px'
+        }
+    })
+);
+assert.strictEqual(backLinkStyledText.tagName, 'A');
+assert.strictEqual(backLinkStyledText.childNodes.length, 2);
+assert.strictEqual(backLinkStyledText.childNodes[1].tagName, 'SPAN');
+
+// Method 2: Nested approach (props first, content second)
+const backLinkNested = cairn.a(
+    { href: '/' },
+    cairn.i({ class: 'fa-solid fa-arrow-left' }),
+    cairn.span(
+        {
+            coat: {
+                color: '#667eea',
+                fontWeight: '600',
+                marginLeft: '8px'
+            }
+        },
+        'Back to Home'
+    )
+);
+assert.strictEqual(backLinkNested.tagName, 'A');
+assert.strictEqual(backLinkNested.childNodes[1].textContent, 'Back to Home');
+
+// Method 3: Array Composition
+const backLinkArray = cairn.a(
+    { href: '/' },
+    [
+        cairn.i({ class: 'fa-solid fa-arrow-left' }),
+        cairn.span('Back to Home', {
+            coat: {
+                color: '#667eea',
+                marginLeft: '8px'
+            }
+        })
+    ]
+);
+assert.strictEqual(backLinkArray.tagName, 'A');
+assert.strictEqual(backLinkArray.childNodes.length, 2);
+
+// Method 4: Fragment Composition
+const backLinkFragment = cairn.a(
+    { href: '/' },
+    cairn.fragment(
+        cairn.i({ class: 'fa-solid fa-arrow-left' }),
+        cairn.span('Back to Home', {
+            coat: {
+                color: '#667eea',
+                marginLeft: '8px'
+            }
+        })
+    )
+);
+assert.strictEqual(backLinkFragment.tagName, 'A');
+
+// Method 5: Component Composition
+const BackLinkComp = cairn.component(({ to = '/', label = 'Back to Home' }) => {
+    return cairn.a(
+        { href: to },
+        cairn.i({ class: 'fa-solid fa-arrow-left' }),
+        cairn.span(label, {
+            coat: {
+                color: '#667eea',
+                fontWeight: '600',
+                marginLeft: '8px'
+            }
+        })
+    );
+});
+const renderedBackLink = BackLinkComp({ to: '/dashboard', label: 'Back to Dashboard' });
+assert.strictEqual(renderedBackLink.tagName, 'A');
+assert.strictEqual(renderedBackLink.getAttribute('href'), '/dashboard');
+
+// Helpers: textStyle, iconText, textIcon, styledLink, flexibility
+const styledTextNode = cairn.textStyle('Styled Text', { color: '#667eea' });
+assert.strictEqual(styledTextNode.tagName, 'SPAN');
+
+const iconTextFrag = cairn.iconText('fa-solid fa-check', 'Completed');
+assert.ok(iconTextFrag);
+
+const textIconFrag = cairn.textIcon('Next', 'fa-solid fa-arrow-right');
+assert.ok(textIconFrag);
+
+const quickStyledLink = cairn.styledLink({
+    href: '/docs',
+    icon: 'fa-solid fa-book',
+    text: 'Documentation'
+});
+assert.strictEqual(quickStyledLink.tagName, 'A');
+assert.strictEqual(quickStyledLink.getAttribute('href'), '/docs');
+
+// 9. Complete CSS & Class System Verifications
+console.log('🧪 Running Cairn Complete CSS & Class System Verifications...');
+
+// 1. String Concatenation & Template Literals
+const baseClass = 'btn';
+const variant = 'primary';
+const size = 'lg';
+const isActive = true;
+
+const btnConcat = cairn.button('Click', { class: baseClass + ' ' + baseClass + '-' + variant + ' ' + baseClass + '-' + size });
+assert.strictEqual(btnConcat.className, 'btn btn-primary btn-lg');
+
+const btnTemplate = cairn.button('Click', { class: `${baseClass} ${baseClass}-${variant} ${baseClass}-${size}` });
+assert.strictEqual(btnTemplate.className, 'btn btn-primary btn-lg');
+
+// 2. Class Array & Object Conditionals
+const btnArray = cairn.button('Click', { class: ['btn', 'btn-primary', false, null, undefined, 'btn-lg'] });
+assert.strictEqual(btnArray.className, 'btn btn-primary btn-lg');
+
+const btnObject = cairn.button('Click', {
+    class: {
+        'btn': true,
+        'btn-primary': true,
+        'btn-secondary': false,
+        'btn-lg': true
+    }
+});
+assert.strictEqual(btnObject.className, 'btn btn-primary btn-lg');
+
+// 3. Reactive Function for Class
+const activeSignal = cairn.state(false);
+const btnReactive = cairn.button('Click', {
+    class: () => activeSignal.value ? 'btn btn-active' : 'btn btn-inactive'
+});
+assert.strictEqual(btnReactive.className, 'btn btn-inactive');
+activeSignal.value = true;
+assert.strictEqual(btnReactive.className, 'btn btn-active');
+
+// 4. Scoped Class Flag Syntax ('class:flag')
+const btnScopedFlag = cairn.button('Click', {
+    class: 'btn',
+    'class:highlighted': true
+});
+assert.ok(btnScopedFlag.className.includes('highlighted'));
+
+// 5. cx Helper Utility
+const generatedCx = cairn.cx(
+    'btn',
+    `btn-${variant}`,
+    isActive && 'active',
+    ['btn-lg', false && 'hidden', ['nested-tag']]
+);
+assert.strictEqual(generatedCx, 'btn btn-primary active btn-lg nested-tag');
+
+// 6. Mixed Styling (class, style, coat)
+const btnMixed = cairn.button('Click', {
+    class: 'btn',
+    style: { color: 'white' },
+    coat: { background: '#667eea', padding: '12px 24px' }
+});
+assert.strictEqual(btnMixed.tagName, 'BUTTON');
+assert.ok(btnMixed.className.includes('btn'));
+assert.strictEqual(btnMixed.style.color, 'white');
+
+// 10. Complete HTML Support: From HTML 1.0 to Beyond Verifications
+console.log('🧪 Running Cairn Complete HTML 1.0 to Beyond & Component Suite Verifications...');
+
+// 1. HTML 1.0 Submodule & Legacy Elements
+assert.ok(cairn.html1.html);
+assert.ok(cairn.html1.plaintext);
+assert.strictEqual(cairn.html1.plaintext('raw text').tagName, 'PLAINTEXT');
+
+// 2. HTML 2.0 Submodule & Form Types
+assert.ok(cairn.html2.form);
+assert.strictEqual(cairn.html2.password({ placeholder: 'secret' }).tagName, 'INPUT');
+
+// 3. HTML 3.2 Submodule
+assert.ok(cairn.html3.table);
+assert.ok(cairn.html3.center);
+assert.strictEqual(cairn.html3.center('centered').tagName, 'CENTER');
+
+// 4. HTML 4.01 Submodule
+assert.ok(cairn.html4.abbr);
+assert.ok(cairn.html4.frameset);
+
+// 5. HTML5 Submodule
+assert.ok(cairn.html5.article);
+assert.ok(cairn.html5.dialog);
+assert.strictEqual(cairn.html5.email({ placeholder: 'user@domain.com' }).tagName, 'INPUT');
+
+// 6. Beyond HTML5 / Experimental Submodule
+assert.ok(cairn.future.portal);
+assert.ok(cairn.future.model);
+assert.strictEqual(cairn.future.model({ src: 'scene.gltf' }).tagName, 'MODEL');
+assert.strictEqual(cairn.future.customElement('x-badge', { text: 'New' }).tagName, 'X-BADGE');
+
+// 7. Enhanced HTML Elements with Superpowers
+const enhancedImg = cairn.enhanced.Image({ src: 'photo.jpg' });
+assert.strictEqual(enhancedImg.tagName, 'IMG');
+assert.strictEqual(enhancedImg.getAttribute('loading'), 'lazy');
+
+const enhancedLink = cairn.enhanced.Link({ href: 'https://cairnjs.dev' });
+assert.strictEqual(enhancedLink.tagName, 'A');
+assert.strictEqual(enhancedLink.getAttribute('rel'), 'noopener noreferrer');
+
+// 8. Cairn's Own Component Suite (100+ Components)
+assert.ok(cairn.components.Button);
+assert.ok(cairn.components.Card);
+assert.ok(cairn.components.Modal);
+assert.ok(cairn.components.LineChart);
+
+// 11. Complete CSS Support: CSS1 to CSS4 & Metadata Verifications
+console.log('🧪 Running Cairn Complete CSS Support: CSS1 to CSS4 Verifications...');
+
+// 1. CSS1 Properties via Coat
+const css1El = cairn.div('CSS1', {
+    coat: {
+        fontFamily: 'serif',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        color: '#000000',
+        backgroundColor: '#ffffff',
+        margin: '10px',
+        padding: '5px',
+        border: '1px solid #000',
+        display: 'block'
+    }
+});
+assert.strictEqual(css1El.tagName, 'DIV');
+assert.ok(css1El.className.startsWith('cairn-coat-'));
+
+// 2. CSS2 Properties & Selectors
+const css2El = cairn.div('CSS2', {
+    coat: {
+        position: 'relative',
+        top: '10px',
+        zIndex: 10,
+        cursor: 'pointer',
+        '&:hover': { color: '#667eea' },
+        '&::before': { content: '""' },
+        '@media screen': { display: 'block' }
+    }
+});
+assert.strictEqual(css2El.tagName, 'DIV');
+assert.ok(css2El.className.startsWith('cairn-coat-'));
+
+// 3. CSS3 Modern Styling (Flexbox, Grid, Transform, Shadow, Custom Props, Keyframes)
+const css3El = cairn.div('CSS3', {
+    coat: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        transform: 'translateY(-2px)',
+        transition: 'all 0.3s ease',
+        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        '--custom-token': '#38bdf8',
+        '@keyframes fade': {
+            '0%': { opacity: 0 },
+            '100%': { opacity: 1 }
+        }
+    }
+});
+assert.strictEqual(css3El.tagName, 'DIV');
+assert.ok(css3El.className.startsWith('cairn-coat-'));
+
+// 4. CSS4 Logical Properties, Individual Transforms, Container Queries
+const css4El = cairn.div('CSS4', {
+    coat: {
+        marginBlock: '10px',
+        marginInline: '20px',
+        aspectRatio: '16 / 9',
+        containerType: 'inline-size',
+        translate: '10px 20px',
+        rotate: '45deg',
+        scale: '1.5',
+        scrollBehavior: 'smooth',
+        textWrap: 'balance',
+        '@container (max-width: 400px)': {
+            paddingInline: '8px'
+        }
+    }
+});
+assert.strictEqual(css4El.tagName, 'DIV');
+assert.ok(css4El.className.startsWith('cairn-coat-'));
+
+// 5. Metadata Registries & Coverage Stats
+assert.strictEqual(cairn.cssProperties.total, '500+ properties, 100% coverage');
+assert.ok(cairn.cssProperties.animation.includes('animation'));
+assert.ok(cairn.cssProperties.grid.includes('gap'));
+assert.ok(cairn.cssProperties.box.includes('marginBlock'));
+
+assert.ok(cairn.cssFunctions.color.includes('color-mix()'));
+assert.ok(cairn.cssFunctions.math.includes('clamp()'));
+assert.ok(cairn.cssFunctions.gradient.includes('conic-gradient()'));
+
+assert.ok(cairn.cssAtRules.media.includes('@media'));
+assert.ok(cairn.cssAtRules.container.includes('@container'));
+assert.ok(cairn.cssAtRules.supports.includes('@supports'));
+
+assert.ok(cairn.cssSelectors.pseudoClasses.includes(':has()'));
+assert.ok(cairn.cssSelectors.pseudoClasses.includes(':is()'));
+
+assert.strictEqual(cairn.cssCompatibility.versions.css1, '✅ 100% (all properties)');
+assert.strictEqual(cairn.cssCompatibility.versions.css4, '✅ 100% (all properties)');
+assert.strictEqual(cairn.cssCompatibility.properties.coverage, '100%');
+// 12. Complete HTML String Content & Rich Text Verifications
+console.log('🧪 Running Cairn HTML String Content & Rich Text Verifications...');
+
+// 1. Exact User Pattern (HTML string as content)
+const exactNotice = cairn.div({
+    coat: {
+        padding: '16px',
+        background: '#fef3c7',
+        border: '1px solid #f59e0b',
+        borderRadius: '8px'
+    }
+}, '<strong>Notice:</strong> Hello etc.');
+assert.strictEqual(exactNotice.tagName, 'DIV');
+assert.ok(exactNotice.innerHTML.includes('<strong>Notice:</strong>'));
+assert.strictEqual(exactNotice.textContent, 'Notice: Hello etc.');
+
+// 2. Different Approaches
+const app1 = cairn.div({}, '<strong>Notice:</strong> Hello etc.');
+assert.ok(app1.innerHTML.includes('<strong>Notice:</strong>'));
+
+const app2 = cairn.div({}, [
+    '<strong>Notice:</strong>',
+    ' Hello etc.'
+]);
+assert.ok(app2.innerHTML.includes('<strong>Notice:</strong>'));
+
+const app3 = cairn.div({},
+    cairn.strong('Notice:'),
+    ' Hello etc.'
+);
+assert.strictEqual(app3.textContent, 'Notice: Hello etc.');
+
+const app4 = cairn.div({}, `<strong>Notice:</strong> Hello etc.`);
+assert.ok(app4.innerHTML.includes('<strong>Notice:</strong>'));
+
+const app5 = cairn.div({}, '<strong>' + 'Notice:' + '</strong>' + ' Hello etc.');
+assert.ok(app5.innerHTML.includes('<strong>Notice:</strong>'));
+
+const app6 = cairn.div({}, cairn.html`<strong>Notice:</strong> Hello etc.`);
+assert.ok(app6);
+
+const app7 = cairn.div({}, cairn.raw('<strong>Notice:</strong> Hello etc.'));
+assert.ok(app7);
+
+const app8 = cairn.div({},
+    cairn.strong('Notice:'),
+    ' ',
+    cairn.span('Hello'),
+    ' ',
+    cairn.em('etc.')
+);
+assert.strictEqual(app8.textContent, 'Notice: Hello etc.');
+
+// 3. HTML Prop Support
+const propHtml = cairn.div('', {
+    html: '<strong>Bold</strong> and <em>italic</em>'
+});
+assert.ok(propHtml.innerHTML.includes('<strong>Bold</strong>'));
+
+// 4. Safe HTML & Sanitization
+const unsafeInput = '<strong>Safe</strong><script>alert("XSS")</script><a href="javascript:attack()">Click</a>';
+const sanitized = cairn.sanitize(unsafeInput);
+assert.strictEqual(sanitized.includes('<script>'), false);
+assert.strictEqual(sanitized.includes('javascript:'), false);
+assert.ok(sanitized.includes('<strong>Safe</strong>'));
+
+const customSanitized = cairn.html('<p>Paragraph</p><script>blocked</script>', {
+    allowedTags: ['p', 'strong', 'em'],
+    stripScripts: true
+});
+assert.ok(customSanitized);
+
+// 5. Smart Content Detection
+assert.strictEqual(cairn.smartContent('<strong>HTML</strong>'), 'html');
+assert.strictEqual(cairn.smartContent('Plain text'), 'text');
+assert.strictEqual(cairn.smartContent(cairn.strong('Element')), 'element');
+assert.strictEqual(cairn.smartContent([cairn.strong('Bold'), ' text']), 'array');
+assert.strictEqual(cairn.smartContent(() => 'Reactive'), 'reactive');
+
+// 6. Rich Text Helper
+const richEl = cairn.div(cairn.rich('Hello ', cairn.strong('World'), '!'));
+assert.ok(richEl);
+
+// 7. Metadata Registry
+assert.strictEqual(cairn.contentSupport.types.plainString, '✅ div("Hello")');
+assert.strictEqual(cairn.contentSupport.types.htmlString, '✅ div("<strong>Hello</strong>")');
+assert.strictEqual(cairn.contentSupport.flexibility.yourPattern, '✅ div({}, "<strong>Notice:</strong> Hello etc.")');
 
 console.log('✅ ALL CAIRN TEST SUITE VERIFICATIONS PASSED PERFECTLY!');
 

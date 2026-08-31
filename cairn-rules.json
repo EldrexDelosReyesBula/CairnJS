@@ -1,0 +1,31 @@
+{
+  "name": "CairnJS Invariant Rules & Quality Standards",
+  "version": "1.4.0",
+  "rules": [
+    {
+      "id": "RULE_01_ZERO_RUNTIME_DEPS",
+      "severity": "MANDATORY",
+      "description": "CairnJS core runtime MUST remain strictly zero-dependency with no external npm runtime dependencies."
+    },
+    {
+      "id": "RULE_02_DIRECT_DOM_UPDATES",
+      "severity": "MANDATORY",
+      "description": "Reactivity must update targeted DOM nodes directly via fine-grained signal subscriptions without whole-tree Virtual DOM diffing."
+    },
+    {
+      "id": "RULE_03_THREE_PART_DIAGNOSTICS",
+      "severity": "MANDATORY",
+      "description": "All developer errors and warnings must follow the 3-part diagnostic structure: 1. Context/Summary, 2. Location/Cause, 3. Actionable Code Fix."
+    },
+    {
+      "id": "RULE_04_PREDICTABLE_DETERMINISM",
+      "severity": "MANDATORY",
+      "description": "Identical component inputs and state primitives must produce deterministic, identical DOM node structures across runs."
+    },
+    {
+      "id": "RULE_05_GREEN_CODE_EFFICIENCY",
+      "severity": "RECOMMENDED",
+      "description": "Keep CPU reflows and memory allocations minimal; utilize CSS keyframes, Canvas 2D, or WebGL/WebGPU for heavy kinetic motion."
+    }
+  ]
+}

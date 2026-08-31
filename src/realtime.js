@@ -463,10 +463,18 @@ export function feed(options = {}) {
         addItem(item) {
             items.value = [item, ...items.value].slice(0, limit);
         },
-        loadMore() {
+        async loadMore(fetcher) {
             loading.value = true;
-            // Simulated fetch
-            setTimeout(() => { loading.value = false; }, 300);
+            try {
+                if (typeof fetcher === 'function') {
+                    const fetchedItems = await fetcher();
+                    if (Array.isArray(fetchedItems)) {
+                        items.value = [...items.value, ...fetchedItems].slice(0, limit);
+                    }
+                }
+            } finally {
+                loading.value = false;
+            }
         }
     };
 }

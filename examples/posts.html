@@ -20,16 +20,17 @@
     <style>
         :root,
         [data-theme="dark"] {
-            --bg: #0b0f19;
-            --surface: #111827;
-            --surface-card: #1e293b;
-            --surface-hover: #273549;
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #090d16;
+            --surface: #0e131f;
+            --surface-card: #121826;
+            --surface-hover: #1a2234;
+            --border: #1e2638;
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #38bdf8;
             --accent-hover: #0284c7;
             --heart: #f43f5e;
+            --drawer-bg: #0e131f;
             --font-sans: 'Inter', system-ui, sans-serif;
             --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
@@ -46,6 +47,7 @@
             --accent: #0284c7;
             --accent-hover: #0369a1;
             --heart: #e11d48;
+            --drawer-bg: #ffffff;
         }
 
         * {
@@ -61,13 +63,14 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: background 0.2s ease, color 0.2s ease;
         }
 
         /* Top Header */
         header {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
-            padding: 0.75rem 1.5rem;
+            padding: 0.65rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -75,6 +78,7 @@
             top: 0;
             z-index: 50;
             backdrop-filter: blur(12px);
+            transition: background 0.2s ease, border-color 0.2s ease;
         }
 
         .brand {
@@ -88,10 +92,29 @@
             font-size: 1.15rem;
         }
 
+        /* Desktop Nav */
+        .desktop-nav {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.15s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent);
+        }
+
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.65rem;
         }
 
         .btn {
@@ -99,7 +122,7 @@
             color: var(--text);
             border: 1px solid var(--border);
             border-radius: 0.5rem;
-            padding: 0.5rem 0.85rem;
+            padding: 0.45rem 0.85rem;
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
@@ -119,7 +142,7 @@
             background: linear-gradient(135deg, #0284c7, #38bdf8);
             color: #ffffff;
             border: none;
-            box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+            box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
         }
 
         .btn-primary:hover {
@@ -127,9 +150,94 @@
             transform: translateY(-1px);
         }
 
+        .icon-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 36px;
+            height: 36px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.15s ease;
+        }
+
+        .icon-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--surface-hover);
+        }
+
+        .mobile-toggle {
+            display: none;
+        }
+
+        /* Mobile Drawer */
+        .mobile-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: flex-start;
+        }
+
+        .mobile-drawer-overlay.open {
+            display: flex;
+        }
+
+        .mobile-drawer {
+            background: var(--drawer-bg);
+            width: 280px;
+            max-width: 80vw;
+            height: 100%;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border-right: 1px solid var(--border);
+            box-shadow: 10px 0 25px rgba(0, 0, 0, 0.5);
+            animation: slideInLeft 0.25s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .drawer-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.85rem;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-radius: 0.5rem;
+            transition: all 0.15s ease;
+        }
+
+        .drawer-link:hover, .drawer-link.active {
+            background: var(--surface-hover);
+            color: var(--accent);
+        }
+
         /* Main Container */
         .container {
-            max-width: 640px;
+            max-width: 620px;
             width: 100%;
             margin: 0 auto;
             padding: 1.5rem 1rem 3rem;
@@ -141,10 +249,14 @@
         /* Stories / Quick Creators */
         .stories-bar {
             display: flex;
-            gap: 1rem;
+            gap: 1.25rem;
             overflow-x: auto;
-            padding: 0.75rem 0;
+            padding: 1rem 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
             scrollbar-width: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         .stories-bar::-webkit-scrollbar {
@@ -155,20 +267,32 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.35rem;
+            gap: 0.5rem;
             cursor: pointer;
             flex-shrink: 0;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .story-item:hover {
+            transform: translateY(-2px);
         }
 
         .story-ring {
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            padding: 2px;
-            background: linear-gradient(45deg, #38bdf8, #818cf8, #ec4899);
+            padding: 2.5px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #ec4899);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+            transition: all 0.25s ease;
+        }
+
+        .story-item:hover .story-ring {
+            box-shadow: 0 0 16px rgba(236, 72, 153, 0.5);
+            transform: scale(1.05);
         }
 
         .story-avatar {
@@ -177,12 +301,14 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--surface);
+            display: block;
         }
 
         .story-name {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            max-width: 64px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text);
+            max-width: 72px;
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -195,15 +321,20 @@
             border: 1px solid var(--border);
             border-radius: 1rem;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            transition: border-color 0.2s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .post-card:hover {
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
         }
 
         .post-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem;
+            padding: 0.85rem 1rem;
         }
 
         .author-info {
@@ -213,20 +344,22 @@
         }
 
         .author-avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             object-fit: cover;
+            border: 1px solid var(--border);
+            display: block;
         }
 
         .author-name {
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.925rem;
             color: var(--text);
         }
 
         .author-handle {
-            font-size: 0.8rem;
+            font-size: 0.775rem;
             color: var(--text-muted);
         }
 
@@ -235,12 +368,12 @@
             color: var(--text-muted);
         }
 
-        /* Post Image */
+        /* Post Media */
         .post-media-wrap {
             position: relative;
             width: 100%;
             background: #020617;
-            max-height: 460px;
+            max-height: 440px;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -250,7 +383,7 @@
         .post-media {
             width: 100%;
             height: auto;
-            max-height: 460px;
+            max-height: 440px;
             object-fit: cover;
             display: block;
             transition: transform 0.3s ease;
@@ -265,41 +398,46 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.65rem;
         }
 
         .action-group {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.35rem;
         }
 
+        /* Action Icon Buttons Reset & Style */
         .action-icon-btn {
-            background: transparent;
-            border: none;
-            color: var(--text);
-            font-size: 1.25rem;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            color: var(--text-muted) !important;
+            font-size: 1.15rem;
             cursor: pointer;
-            padding: 0.25rem;
+            padding: 0.4rem 0.55rem;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.35rem;
-            transition: transform 0.15s ease, color 0.15s ease;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease;
         }
 
         .action-icon-btn:hover {
-            transform: scale(1.15);
-            color: var(--accent);
+            background: var(--surface-hover) !important;
+            color: var(--accent) !important;
+            transform: scale(1.08);
         }
 
         .action-icon-btn.liked {
-            color: var(--heart);
+            color: var(--heart) !important;
         }
 
         .post-likes {
             font-size: 0.875rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             color: var(--text);
         }
 
@@ -324,6 +462,11 @@
             padding: 0.15rem 0.5rem;
             border-radius: 9999px;
             cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tag-badge:hover {
+            background: rgba(56, 189, 248, 0.2);
         }
 
         /* Comments Accordion */
@@ -382,7 +525,7 @@
             border-radius: 0.5rem;
             font-size: 0.875rem;
             font-weight: 600;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
             transform: translateY(100px);
             opacity: 0;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -393,6 +536,19 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .desktop-nav {
+                display: none;
+            }
+            .mobile-toggle {
+                display: flex;
+            }
+            .header-actions .btn {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -400,17 +556,58 @@
 
     <!-- Header Navigation -->
     <header>
-        <a href="./index.html" class="brand">
-            <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS Logo"
-                style="width: 28px; height: 28px; object-fit: contain;"
-                onerror="this.src='../docs/assets/cairn-logo.png'">
-            <span>CairnJS Feed</span>
-        </a>
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <a href="./index.html" class="brand">
+                <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS Logo"
+                    style="width: 28px; height: 28px; object-fit: contain;"
+                    onerror="this.src='../docs/assets/cairn-logo.png'">
+                <span>CairnJS Feed</span>
+            </a>
+
+            <!-- Desktop Nav Links -->
+            <nav class="desktop-nav">
+                <a href="../docs/index.html" class="nav-link">Home</a>
+                <a href="../docs/index.html#/docs/getting-started" class="nav-link">Docs</a>
+                <a href="./index.html" class="nav-link active">Gallery</a>
+                <a href="../docs/playground.html" class="nav-link">Playground</a>
+            </nav>
+        </div>
+
         <div class="header-actions">
+            <button id="theme-btn" class="icon-btn" title="Toggle Theme" onclick="toggleTheme()">
+                <i class="fa-solid fa-moon"></i>
+            </button>
             <a href="./index.html" class="btn"><i class="fa-solid fa-arrow-left"></i> Gallery</a>
             <a href="../docs/playground.html" class="btn btn-primary"><i class="fa-solid fa-code"></i> Playground</a>
+            <button class="icon-btn mobile-toggle" aria-label="Toggle navigation drawer" onclick="toggleDrawer()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </header>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-drawer-overlay" class="mobile-drawer-overlay" onclick="if(event.target===this) toggleDrawer()">
+        <div class="mobile-drawer">
+            <div class="drawer-header">
+                <a href="./index.html" class="brand" style="font-size: 1rem;">
+                    <img src="../docs/assets/cairn-official-logo.png" alt="CairnJS Logo"
+                        style="width: 24px; height: 24px; object-fit: contain;"
+                        onerror="this.src='../docs/assets/cairn-logo.png'">
+                    <span>CairnJS Feed</span>
+                </a>
+                <button class="icon-btn" style="width: 30px; height: 30px; border: none;" onclick="toggleDrawer()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <nav style="display: flex; flex-direction: column; gap: 0.35rem;">
+                <a href="../docs/index.html" class="drawer-link"><i class="fa-solid fa-house"></i> Home</a>
+                <a href="../docs/index.html#/docs/getting-started" class="drawer-link"><i class="fa-solid fa-book-open"></i> Docs</a>
+                <a href="./index.html" class="drawer-link active"><i class="fa-solid fa-layer-group"></i> Gallery</a>
+                <a href="../docs/playground.html" class="drawer-link"><i class="fa-solid fa-code"></i> Playground</a>
+                <a href="https://github.com/EldrexDelosReyesBula/CairnJS" target="_blank" rel="noreferrer" class="drawer-link"><i class="fa-brands fa-github"></i> GitHub</a>
+            </nav>
+        </div>
+    </div>
 
     <!-- Social Feed Root -->
     <main class="container" id="feed-app"></main>
@@ -418,17 +615,32 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast">Post created successfully!</div>
 
+    <!-- Script for Header Interactions -->
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            const icon = document.querySelector('#theme-btn i');
+            if (icon) {
+                icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+        }
+
+        function toggleDrawer() {
+            const overlay = document.getElementById('mobile-drawer-overlay');
+            if (overlay) overlay.classList.toggle('open');
+        }
+    </script>
+
     <!-- Cairn Reactive Engine Module -->
     <script type="module">
-        import { cairn, spring, state, computed, Toast } from '../src/index.js';
+        import { cairn, spring, state, computed } from '../src/index.js';
         const { div, h2, p, button, input, img, span, mount } = cairn;
 
-        // Assets List
-        const ASSETS = [
-            { id: 1, src: './assets/83d40a8a2d26f9d5f3d378fcb961e6bd.jpg', title: 'Minimalist Architecture' },
-            { id: 2, src: './assets/954fef29d383752d08306b5b33714058.jpg', title: 'Urban Geometry' },
-            { id: 3, src: './assets/b1c601cd17e1ff6cb11f91fb5a6029b0.jpg', title: 'Modern Spatial Design' }
-        ];
+        // Fallback placeholder
+        const FALLBACK_IMG = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80';
+        const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80';
 
         // Reactive Feed State
         const posts = state([
@@ -453,7 +665,7 @@
                 id: 2,
                 author: 'Elena Rostova',
                 handle: '@elena_dev',
-                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
                 image: './assets/954fef29d383752d08306b5b33714058.jpg',
                 text: 'High-contrast monochrome perspective photography. Built interactive image cards in less than 20 lines of CairnJS code!',
                 tags: ['#Monochrome', '#Photography', '#ZeroDeps'],
@@ -469,7 +681,7 @@
                 id: 3,
                 author: 'David Kim',
                 handle: '@davidk_ui',
-                avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
+                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
                 image: './assets/b1c601cd17e1ff6cb11f91fb5a6029b0.jpg',
                 text: 'Spatial form and minimal shadows. Testing nested signals with Cairn reactive collections.',
                 tags: ['#SpatialDesign', '#Signals', '#Frontend'],
@@ -534,7 +746,12 @@
                 // Header
                 div({ class: 'post-header' },
                     div({ class: 'author-info' },
-                        img(post.avatar, { class: 'author-avatar', alt: post.author }),
+                        img({
+                            src: post.avatar,
+                            class: 'author-avatar',
+                            alt: post.author,
+                            onerror: (e) => { e.target.src = FALLBACK_AVATAR; }
+                        }),
                         div(
                             div({ class: 'author-name' }, post.author),
                             div({ class: 'author-handle' }, post.handle)
@@ -545,7 +762,13 @@
 
                 // Media
                 div({ class: 'post-media-wrap' },
-                    img(post.image, { class: 'post-media', alt: 'Post image', loading: 'lazy' })
+                    img({
+                        src: post.image,
+                        class: 'post-media',
+                        alt: 'Post image',
+                        loading: 'lazy',
+                        onerror: (e) => { e.target.src = FALLBACK_IMG; }
+                    })
                 ),
 
                 // Body
@@ -553,7 +776,7 @@
                     // Actions Bar
                     div({ class: 'post-actions' },
                         div({ class: 'action-group' },
-                            // Like
+                            // Like Button
                             button({
                                 class: () => `action-icon-btn ${post.isLiked.value ? 'liked' : ''}`,
                                 title: 'Like Post',
@@ -568,9 +791,9 @@
                                 onclick: () => isCommentsOpen.value = !isCommentsOpen.value
                             },
                                 span({ class: 'fa-regular fa-comment' }),
-                                span(() => ` ${post.comments.value.length}`, { style: { fontSize: '0.8rem', color: '#94a3b8' } })
+                                span(() => ` ${post.comments.value.length}`, { style: { fontSize: '0.8rem', color: 'var(--text-muted)' } })
                             ),
-                            // Share
+                            // Share Link
                             button({
                                 class: 'action-icon-btn',
                                 title: 'Share Link',
@@ -591,7 +814,7 @@
                                 showToast(post.isBookmarked.value ? 'Saved to bookmarks!' : 'Removed from bookmarks');
                             }
                         },
-                            () => span({ class: `fa-${post.isBookmarked.value ? 'solid' : 'regular'} fa-bookmark`, style: { color: post.isBookmarked.value ? '#38bdf8' : '' } })
+                            () => span({ class: `fa-${post.isBookmarked.value ? 'solid' : 'regular'} fa-bookmark`, style: { color: post.isBookmarked.value ? 'var(--accent)' : '' } })
                         )
                     ),
 
@@ -635,7 +858,12 @@
         const StoriesHeader = () => div({ class: 'stories-bar' },
             posts.value.map(p => div({ class: 'story-item', onclick: () => showToast(`Viewing story of ${p.author}`) },
                 div({ class: 'story-ring' },
-                    img(p.avatar, { class: 'story-avatar', alt: p.author })
+                    img({
+                        src: p.avatar,
+                        class: 'story-avatar',
+                        alt: p.author,
+                        onerror: (e) => { e.target.src = FALLBACK_AVATAR; }
+                    })
                 ),
                 span({ class: 'story-name' }, p.author.split(' ')[0])
             ))

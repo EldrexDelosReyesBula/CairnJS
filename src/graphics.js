@@ -108,9 +108,18 @@ export function physics2D(options = {}) {
         bodies,
         constraints,
         collisions,
-        debug,
         addBody: (body) => { bodies.push(body); return body; },
-        step: (delta = 16.6) => ({ simulated: true, delta })
+        step: (delta = 16.6) => {
+            const dt = delta / 1000;
+            for (const body of bodies) {
+                if (!body.isStatic) {
+                    body.vy = (body.vy || 0) + gravity * dt;
+                    body.x = (body.x || 0) + (body.vx || 0) * dt;
+                    body.y = (body.y || 0) + (body.vy || 0) * dt;
+                }
+            }
+            return { delta, bodiesCount: bodies.length, active: true };
+        }
     };
 }
 

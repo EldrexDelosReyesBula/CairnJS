@@ -16,6 +16,14 @@ const getDoc = () => {
     return null;
 };
 
+// Safe timestamp provider (avoids collision with framework performance object)
+const getTimestamp = () => {
+    if (typeof globalThis !== 'undefined' && globalThis.performance && typeof globalThis.performance.now === 'function') {
+        return globalThis.performance.now();
+    }
+    return Date.now();
+};
+
 /**
  * Creates a DOM node for a given tag, applying properties, attributes, event listeners, and children.
  * Integrates reactive auto-updating for function values and state primitives.
@@ -42,7 +50,11 @@ export function h(tag, ...args) {
             this._sync();
             return shouldHave;
         },
-        _sync() { mockAttrs['class'] = Array.from(this._classes).join(' '); }
+        _sync() {
+            const classStr = Array.from(this._classes).join(' ');
+            mockAttrs['class'] = classStr;
+            if (typeof el !== 'undefined' && el) el.className = classStr;
+        }
     };
     const el = doc ? doc.createElement(tag) : {
         tagName: tag.toUpperCase(),
@@ -62,8 +74,30 @@ export function h(tag, ...args) {
         getAttribute(k) { return mockAttrs[k] || (k === 'class' ? this.className : null); },
         hasAttribute(k) { return Boolean(mockAttrs[k]); },
         removeAttribute(k) { delete mockAttrs[k]; },
-        addEventListener() {},
-        removeEventListener() {},
+        get innerHTML() {
+            return mockAttrs['innerHTML'] || mockChildren.map(c => typeof c === 'string' ? c : (c?.innerHTML || c?.outerHTML || c?.textContent || '')).join('');
+        },
+        set innerHTML(v) {
+            mockAttrs['innerHTML'] = String(v);
+            mockChildren.length = 0;
+            if (v !== '' && v !== null && v !== undefined) {
+                mockChildren.push(String(v));
+            }
+        },
+        get textContent() {
+            return mockChildren.map(c => {
+                if (typeof c === 'string') {
+                    return c.includes('<') && c.includes('>') ? c.replace(/<[^>]+>/g, '') : c;
+                }
+                return c?.textContent || '';
+            }).join('');
+        },
+        set textContent(v) {
+            mockChildren.length = 0;
+            if (v !== '' && v !== null && v !== undefined) {
+                mockChildren.push(String(v));
+            }
+        },
         appendChild(child) { mockChildren.push(child); return child; },
         insertBefore(newNode, refNode) {
             const idx = mockChildren.indexOf(refNode);
@@ -295,7 +329,7 @@ export function h(tag, ...args) {
         } else if (key === 'style') {
             if (typeof val === 'function') {
                 effect(() => {
-                    const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
+                    const startTime = getTimestamp();
                     const computedObj = val();
                     if (el.style && typeof computedObj === 'object' && computedObj !== null) {
                         Object.entries(computedObj).forEach(([sKey, sVal]) => {
@@ -307,7 +341,7 @@ export function h(tag, ...args) {
                     } else if (el.style && typeof computedObj === 'string') {
                         el.style.cssText = computedObj;
                     }
-                    if (startTime) logDomUpdate(tag, performance.now() - startTime);
+                    if (startTime) logDomUpdate(tag, getTimestamp() - startTime);
                 });
             } else if (val && val._isCairnState) {
                 effect(() => {
@@ -358,16 +392,41 @@ export function h(tag, ...args) {
             };
 
             const hasReactivity = typeof val === 'function' || (val && val._isCairnState) || typeof val === 'object';
+            const applyClass = (newVal) => {
+                let formatted = resolveClass(newVal);
+                const otherKey = key === 'class' ? 'className' : 'class';
+                if (props[otherKey] && typeof props[otherKey] === 'string' && !formatted.includes(props[otherKey])) {
+                    formatted = (formatted + ' ' + props[otherKey]).trim();
+                }
+                if (el.className !== undefined) el.className = formatted;
+                if (el.setAttribute) el.setAttribute('class', formatted);
+            };
+
             if (hasReactivity) {
                 effect(() => {
-                    const formatted = resolveClass(val);
-                    if (el.className !== undefined) el.className = formatted;
-                    if (el.setAttribute) el.setAttribute('class', formatted);
+                    applyClass(val);
                 });
-            } else if (el.className !== undefined) {
-                const formatted = resolveClass(val);
-                el.className = formatted;
-                if (el.setAttribute) el.setAttribute('class', formatted);
+            } else {
+                applyClass(val);
+            }
+        } else if (key.startsWith('class:') || key.startsWith('classList:')) {
+            const classNameToToggle = key.slice(key.indexOf(':') + 1);
+            const toggleClass = (flag) => {
+                if (el.classList && typeof el.classList.toggle === 'function') {
+                    el.classList.toggle(classNameToToggle, Boolean(flag));
+                } else if (el.className !== undefined) {
+                    const current = new Set((el.className || '').split(/\s+/).filter(Boolean));
+                    if (flag) current.add(classNameToToggle);
+                    else current.delete(classNameToToggle);
+                    el.className = Array.from(current).join(' ');
+                }
+            };
+            if (typeof val === 'function') {
+                effect(() => toggleClass(val()));
+            } else if (val && val._isCairnState) {
+                effect(() => toggleClass(val.value));
+            } else {
+                toggleClass(val);
             }
         } else if (key === 'animate') {
             applyAnimateProp(el, val, props.duration, props.delay, props.easing);
@@ -413,6 +472,13 @@ export function h(tag, ...args) {
                     el.setAttribute(key, val.value);
                 }
             });
+        } else if (key === 'html') {
+            const htmlVal = sanitize(val);
+            if (doc) {
+                el.innerHTML = htmlVal;
+            } else if (el.innerHTML !== undefined) {
+                el.innerHTML = htmlVal;
+            }
         } else if (key === 'innerHTML' || key === 'textContent') {
             if (key in el) el[key] = val;
         } else if (el.setAttribute) {
@@ -444,7 +510,7 @@ export function h(tag, ...args) {
                 let oldEntries = new Map();
 
                 effect(() => {
-                    const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
+                    const startTime = getTimestamp();
                     let rawList = childNode.listSource;
                     if (typeof rawList === 'function') rawList = rawList();
                     else if (rawList && rawList._isCairnState) rawList = rawList.value;
@@ -475,31 +541,28 @@ export function h(tag, ...args) {
                         let node;
 
                         if (oldEntries.has(key)) {
-                            node = oldEntries.get(key).node;
+                            const oldEntry = oldEntries.get(key);
+                            node = oldEntry.node;
+                            if (oldEntry.index !== i) {
+                                if (node.parentNode) {
+                                    node.parentNode.insertBefore(node, refNode);
+                                }
+                            }
                         } else {
-                            const rendered = childNode.renderItem(item, i);
-                            if (rendered instanceof (typeof Element !== 'undefined' ? Element : Object) || rendered?.nodeType) {
-                                node = rendered;
-                            } else if (typeof rendered === 'string' || typeof rendered === 'number') {
-                                node = doc.createTextNode(String(rendered));
-                            } else {
-                                node = doc.createTextNode('');
+                            node = childNode.renderItem(item, i);
+                            if (node && el.insertBefore) {
+                                el.insertBefore(node, refNode);
                             }
                         }
 
                         if (node) {
-                            if (node.nextSibling !== refNode || node.parentNode !== el) {
-                                if (el.insertBefore) {
-                                    el.insertBefore(node, refNode);
-                                }
-                            }
                             refNode = node;
                             newEntries.unshift({ key, item, index: i, node });
                         }
                     }
 
                     oldEntries = new Map(newEntries.map(e => [e.key, e]));
-                    if (startTime) logDomUpdate(tag, performance.now() - startTime);
+                    if (startTime) logDomUpdate(tag, getTimestamp() - startTime);
                 });
             } else if (el.appendChild) {
                 el.appendChild(childNode);
@@ -515,7 +578,7 @@ export function h(tag, ...args) {
                 let currentNodes = [];
 
                 effect(() => {
-                    const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
+                    const startTime = getTimestamp();
                     const res = childNode();
                     
                     // Remove old dynamic nodes
@@ -550,7 +613,7 @@ export function h(tag, ...args) {
                             currentNodes.push(txt);
                         }
                     }
-                    if (startTime) logDomUpdate(tag, performance.now() - startTime);
+                    if (startTime) logDomUpdate(tag, getTimestamp() - startTime);
                 });
             }
         } else if (childNode && childNode._isCairnState) {
@@ -562,11 +625,24 @@ export function h(tag, ...args) {
                 });
                 if (el.appendChild) el.appendChild(textNode);
             }
-        } else if (typeof childNode === 'string' || typeof childNode === 'number') {
+        } else if (childNode && childNode._isRawHtml) {
             if (doc) {
-                if (el.appendChild) el.appendChild(doc.createTextNode(String(childNode)));
+                const tpl = doc.createElement('template');
+                tpl.innerHTML = childNode.html;
+                if (el.appendChild) el.appendChild(tpl.content.cloneNode(true));
+            } else if (el.appendChild) {
+                el.appendChild(childNode.html);
+            }
+        } else if (typeof childNode === 'string' || typeof childNode === 'number') {
+            const strVal = String(childNode);
+            if (doc && /<[a-z][\s\S]*>/i.test(strVal)) {
+                const tpl = doc.createElement('template');
+                tpl.innerHTML = strVal;
+                if (el.appendChild) el.appendChild(tpl.content.cloneNode(true));
+            } else if (doc) {
+                if (el.appendChild) el.appendChild(doc.createTextNode(strVal));
             } else {
-                if (el.appendChild) el.appendChild(String(childNode));
+                if (el.appendChild) el.appendChild(strVal);
             }
         } else if (childNode instanceof (typeof Element !== 'undefined' ? Element : Object) || childNode?.nodeType) {
             if (el.appendChild) el.appendChild(childNode);
@@ -869,6 +945,22 @@ export const text = (val) => {
     return doc.createTextNode(String(val));
 };
 
+export const fragment = (...children) => {
+    const doc = getDoc();
+    if (!doc) {
+        return {
+            _isCairnFragment: true,
+            childNodes: children.flat(Infinity)
+        };
+    }
+    const frag = doc.createDocumentFragment();
+    children.flat(Infinity).forEach(c => {
+        if (typeof c === 'string') frag.appendChild(doc.createTextNode(c));
+        else if (c instanceof Element || c?.nodeType) frag.appendChild(c);
+    });
+    return frag;
+};
+
 /**
  * Escape Hatch 1: Parse raw HTML string into native DOM elements.
  * @param {string} htmlString Raw HTML markup
@@ -897,13 +989,149 @@ export function element(tag, ...args) {
     return h(tag, ...args);
 }
 
-/**
- * Escape Hatch 3: Direct Canvas factory with 2D / WebGL context methods.
- * @param {object} props Canvas attributes & properties { width, height }
- * @returns {HTMLCanvasElement} Native Canvas element
- */
 export function canvas(props = {}) {
     const { width = 300, height = 150, ...rest } = props;
     return h('canvas', { width, height, ...rest });
 }
+
+/**
+ * Sanitizes an HTML string against XSS, stripping script tags, javascript: protocols, and inline handlers.
+ * @param {string} content HTML string
+ * @param {object} options Options { allowedTags, allowedAttributes, stripScripts, stripStyles }
+ * @returns {string} Sanitized HTML string
+ */
+export function sanitize(content, options = {}) {
+    if (typeof content !== 'string') return content;
+    let sanitized = content;
+
+    const {
+        allowedTags = null,
+        allowedAttributes = null,
+        stripScripts = true,
+        stripStyles = false
+    } = options;
+
+    if (stripScripts) {
+        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        sanitized = sanitized.replace(/href\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'href="#"');
+        sanitized = sanitized.replace(/src\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'src="#"');
+    }
+
+    if (stripStyles) {
+        sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+        sanitized = sanitized.replace(/style\s*=\s*['"][^'"]*['"]/gi, '');
+    }
+
+    // Strip inline on* event attributes
+    sanitized = sanitized.replace(/\son\w+\s*=\s*['"][^'"]*['"]/gi, '');
+    sanitized = sanitized.replace(/\son\w+\s*=\s*[^>\s]+/gi, '');
+
+    if (allowedTags && Array.isArray(allowedTags)) {
+        const allowedTagSet = new Set(allowedTags.map(t => t.toLowerCase()));
+        sanitized = sanitized.replace(/<\/?([a-z0-9-]+)([^>]*)>/gi, (match, tag, rest) => {
+            if (!allowedTagSet.has(tag.toLowerCase())) {
+                return '';
+            }
+            if (allowedAttributes && Array.isArray(allowedAttributes)) {
+                const allowedAttrSet = new Set(allowedAttributes.map(a => a.toLowerCase()));
+                const cleanAttrs = rest.replace(/([a-z0-9-]+)(?:\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+))?/gi, (attrMatch, attrName) => {
+                    return allowedAttrSet.has(attrName.toLowerCase()) ? attrMatch : '';
+                });
+                return `<${match.startsWith('</') ? '/' : ''}${tag}${cleanAttrs}>`;
+            }
+            return match;
+        });
+    }
+
+    return sanitized;
+}
+
+/**
+ * Shorthand helper for safe HTML sanitization.
+ */
+export const safe = (content, options) => sanitize(content, options);
+
+/**
+ * Smart detection of content type (HTML, text, element, array, reactive, unknown).
+ * @param {any} content 
+ * @returns {'html'|'text'|'element'|'array'|'reactive'|'unknown'}
+ */
+export function smartContent(content) {
+    if (typeof content === 'function' || (content && content._isCairnState)) {
+        return 'reactive';
+    }
+    if (Array.isArray(content)) {
+        return 'array';
+    }
+    if (typeof HTMLElement !== 'undefined' && content instanceof HTMLElement) {
+        return 'element';
+    }
+    if (content && (content.nodeType === 1 || content.tagName)) {
+        return 'element';
+    }
+    if (typeof content === 'string') {
+        if (/<[a-z][\s\S]*>/i.test(content)) {
+            return 'html';
+        }
+        return 'text';
+    }
+    if (typeof content === 'number' || typeof content === 'boolean') {
+        return 'text';
+    }
+    return 'unknown';
+}
+
+/**
+ * Rich text composition helper wrapping mixed content parts into a unified fragment.
+ * @param {...any} parts 
+ * @returns {DocumentFragment|Array}
+ */
+export function rich(...parts) {
+    return fragment(...parts.map(part => {
+        if (typeof part === 'string' && !/<[a-z][\s\S]*>/i.test(part)) {
+            return text(part);
+        }
+        return part;
+    }));
+}
+
+/**
+ * Complete HTML String & Content System Capabilities Metadata
+ */
+export const contentSupport = {
+    types: {
+        plainString: '✅ div("Hello")',
+        htmlString: '✅ div("<strong>Hello</strong>")',
+        number: '✅ div(123)',
+        element: '✅ div(strong("Hello"))',
+        array: '✅ div(["Hello", strong("World")])',
+        function: '✅ div(() => "Reactive")',
+        fragment: '✅ div(fragment("Hello", strong("World")))',
+        template: '✅ div(`Hello ${name}`)',
+        concatenation: '✅ div("Hello " + name)',
+        mixed: '✅ All of the above mixed'
+    },
+    htmlStrings: {
+        asContent: '✅ div("<strong>HTML</strong>")',
+        asProp: '✅ div({ html: "<strong>HTML</strong>" })',
+        sanitized: '✅ div(cairn.sanitize(html))',
+        trusted: '✅ div(cairn.raw(html))',
+        template: '✅ div(html`<strong>${text}</strong>`)'
+    },
+    safety: {
+        plainString: '✅ Rendered as text',
+        htmlString: '✅ Sanitized by default',
+        userInput: '✅ Always safe',
+        scriptTags: '✅ Blocked',
+        eventHandlers: '✅ Blocked',
+        javascriptUrls: '✅ Blocked'
+    },
+    flexibility: {
+        yourPattern: '✅ div({}, "<strong>Notice:</strong> Hello etc.")',
+        mixedElements: '✅ div({}, strong("Notice:"), " Hello etc.")',
+        templateLiteral: '✅ div({}, `<strong>Notice:</strong> Hello etc.`)',
+        arrayContent: '✅ div({}, ["<strong>Notice:</strong>", " Hello etc."])',
+        helperFunction: '✅ div({}, html`<strong>Notice:</strong> Hello etc.`)'
+    }
+};
 

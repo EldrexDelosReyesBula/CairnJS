@@ -73,6 +73,21 @@ const htmlCode = fs.readFileSync(path.join(__dirname, 'src', 'html.js'), 'utf-8'
 const appCode = fs.readFileSync(path.join(__dirname, 'src', 'app-launcher.js'), 'utf-8');
 const toolCode = fs.readFileSync(path.join(__dirname, 'src', 'tool-builder.js'), 'utf-8');
 const predictiveUiCode = fs.readFileSync(path.join(__dirname, 'src', 'predictive-ui.js'), 'utf-8');
+const duplicationSafetyCode = fs.readFileSync(path.join(__dirname, 'src', 'duplication-safety.js'), 'utf-8');
+const securityCode = fs.readFileSync(path.join(__dirname, 'src', 'security.js'), 'utf-8');
+const errorSystemCode = fs.readFileSync(path.join(__dirname, 'src', 'error-system.js'), 'utf-8');
+const dataSystemCode = fs.readFileSync(path.join(__dirname, 'src', 'data-system.js'), 'utf-8');
+const frameworkCoreCode = fs.readFileSync(path.join(__dirname, 'src', 'framework-core.js'), 'utf-8');
+const auditSystemCode = fs.readFileSync(path.join(__dirname, 'src', 'audit-system.js'), 'utf-8');
+const layoutsCode = fs.readFileSync(path.join(__dirname, 'src', 'layouts.js'), 'utf-8');
+const compoundComponentsCode = fs.readFileSync(path.join(__dirname, 'src', 'compound-components.js'), 'utf-8');
+const animationOrchestratorCode = fs.readFileSync(path.join(__dirname, 'src', 'animation-orchestrator.js'), 'utf-8');
+const modernDesignCode = fs.readFileSync(path.join(__dirname, 'src', 'modern-design.js'), 'utf-8');
+const uiPatternsCode = fs.readFileSync(path.join(__dirname, 'src', 'ui-patterns.js'), 'utf-8');
+const scaffoldingCode = fs.readFileSync(path.join(__dirname, 'src', 'scaffolding.js'), 'utf-8');
+const coreFoundationCode = fs.readFileSync(path.join(__dirname, 'src', 'core-foundation.js'), 'utf-8');
+const greenCodeCode = fs.readFileSync(path.join(__dirname, 'src', 'green-code.js'), 'utf-8');
+const scopePreventionCode = fs.readFileSync(path.join(__dirname, 'src', 'scope-prevention.js'), 'utf-8');
 
 function stripImportsExports(code) {
     return code
@@ -142,21 +157,46 @@ ${stripImportsExports(threeCode)}
 ${stripImportsExports(docsCode)}
 ${stripImportsExports(iterationCode)}
 ${stripImportsExports(bridgesCode)}
+${stripImportsExports(duplicationSafetyCode)}
+${stripImportsExports(securityCode)}
+${stripImportsExports(errorSystemCode)}
+${stripImportsExports(dataSystemCode)}
+${stripImportsExports(frameworkCoreCode)}
+${stripImportsExports(auditSystemCode)}
+${stripImportsExports(layoutsCode)}
+${stripImportsExports(compoundComponentsCode)}
+${stripImportsExports(animationOrchestratorCode)}
+${stripImportsExports(modernDesignCode)}
+${stripImportsExports(uiPatternsCode)}
+${stripImportsExports(scaffoldingCode)}
+${stripImportsExports(coreFoundationCode)}
+${stripImportsExports(greenCodeCode)}
+${stripImportsExports(scopePreventionCode)}
 
 const cairn = {
-    version: '1.2.0',
+    version: '1.3.0',
     html, app, tool, createTool,
-    btn, card, badge, stack, row, grid, title, divider, toggle,
+    btn, card, badge, stack, row,
+    grid: Object.assign(grid, { auto: grid.auto }),
+    flex, masonry, position,
+    DataGrid, ComplexForm, DragDrop,
+    title, divider, toggle,
     state, computed, effect, collection, resource, component, mount, ${tagList},
-    spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility,
-    animation: { spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility },
+    spring, transition: Object.assign(transition, { complex: complexTransition }), gesture, applyAnimateProp, page, scroll, particles, timeline,
+    sequence, parallel, orchestrate, states,
+    stagger, loop, accessibility,
+    animation: {
+        spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline,
+        sequence, parallel, orchestrate, states,
+        stagger, loop, accessibility
+    },
     shapes, tokens, keyframes, media, styleHelper,
     wasmEngine, isWasmSupported, engine, perf, SharedStateBuffer, DomRef, VirtualList,
     physics, router, debug, ui: UI, UI, studio, ai, figma: { figmaToCairn },
     use, config, register: (name, fn, meta) => componentsRegistry.register(name, fn, meta),
     components: componentsRegistry, utils: utilsRegistry, animations: animationRegistry, hooks: hooksBus, middleware: middlewareEngine,
     mobile, three, docs,
-    hmr: iteration.hmr, live: iteration.live, version: iteration.version, abTest: iteration.abTest,
+    hmr: iteration.hmr, live: iteration.live, iterationVersion: iteration.version, abTest: iteration.abTest,
     cairnToReact, cairnToVue, cairnToAngular, cairnToSvelte, cairnToCustomElement, defineCustomElement, useCairn,
     createStore, useStore, listStores,
     createContext, provideContext, useContext, removeContext,
@@ -166,12 +206,27 @@ const cairn = {
     createCanvas2D, createScene3D, Charts, keyboard,
     utils, color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep,
     renderToString, hydrate, ssr: { renderToString, hydrate },
-    reconcile, each, For, createList, patchProps, reconciler
+    reconcile, each, For, createList, patchProps, reconciler,
+    importSafety, versionSafety, registerGlobalInstance, getGlobalInstance,
+    security,
+    audit,
+    errors, degradation, recovery,
+    data, dataValidation, transform,
+    framework, stability, performance, reliability,
+    review,
+    glass, neu, gradients, micro, responsive,
+    dashboard, navigation,
+    create, organize, scaffolding, templates,
+    core,
+    green, energy, carbon, battery, cleanCode, sustainable, impact,
+    scope, boundaries, neverAdd, maybeAsPlugin, featureFilter, simplicityTest
 };
+
+registerGlobalInstance(cairn);
 `;
 
 const umdBundle = `/**
- * Cairn v1.2.0 — Complete Fine-Grained Reactive Framework Release
+ * Cairn v1.3.0 — Complete Fine-Grained Reactive Framework Release
  * (c) Eldrex Bula & Cairn Contributors. MIT License.
  */
 (function (global, factory) {
@@ -193,9 +248,14 @@ const esmBundle = `/**
 ${bundledBody}
 export {
     html, app, tool, createTool,
-    btn, card, badge, stack, row, grid, title, divider, toggle,
+    btn, card, badge, stack, row,
+    grid, flex, masonry, position,
+    DataGrid, ComplexForm, DragDrop,
+    title, divider, toggle,
     state, computed, effect, collection, resource, component, mount, ${tagList},
-    spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline, sequence, stagger, loop, accessibility,
+    spring, transition, gesture, applyAnimateProp, page, scroll, particles, timeline,
+    sequence, parallel, orchestrate, states, complexTransition,
+    stagger, loop, accessibility,
     shapes, tokens, keyframes, media, styleHelper,
     wasmEngine, isWasmSupported, engine, perf, SharedStateBuffer, DomRef, VirtualList, physics, router, debug, UI, studio, ai, figmaToCairn,
     use, config, componentsRegistry, utilsRegistry, animationRegistry, hooksBus, middlewareEngine, registerComponent, tailwind, resolveAdapters,
@@ -207,6 +267,19 @@ export {
     utils, color, clipboard, storage, fullscreen, onVisible, useResize, debounce, throttle, uuid, sleep,
     renderToString, hydrate, ssr,
     reconcile, each, For, createList, patchProps, reconciler,
+    importSafety, versionSafety, registerGlobalInstance, getGlobalInstance,
+    security,
+    audit,
+    errors, degradation, recovery,
+    data, dataValidation, transform,
+    framework, stability, performance, reliability,
+    review,
+    glass, neu, gradients, micro, responsive,
+    dashboard, navigation,
+    create, organize, scaffolding, templates,
+    core,
+    green, energy, carbon, battery, cleanCode, sustainable, impact,
+    scope, boundaries, neverAdd, maybeAsPlugin, featureFilter, simplicityTest,
     cairn
 };
 export default cairn;

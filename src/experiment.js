@@ -8,6 +8,8 @@ import { state } from './state.js';
 // Feature flags store
 const activeFeatureFlags = state({});
 
+const getTimestamp = () => (typeof globalThis !== 'undefined' && globalThis.performance && typeof globalThis.performance.now === 'function') ? globalThis.performance.now() : Date.now();
+
 /**
  * Creates an isolated sandbox environment for executing experimental code safely.
  * @param {object} options
@@ -24,7 +26,7 @@ export function sandbox(options = {}) {
     return {
         options,
         async run(fn) {
-            const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            const start = getTimestamp();
             let result = null;
             let error = null;
 
@@ -37,7 +39,7 @@ export function sandbox(options = {}) {
                 error = err;
             }
 
-            const duration = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - start;
+            const duration = getTimestamp() - start;
 
             return {
                 passed: !error,
@@ -65,16 +67,16 @@ export async function experiment(options = {}) {
     } = options;
 
     // Benchmark current implementation
-    const oldStart = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const oldStart = getTimestamp();
     for (let i = 0; i < iterations; i++) {
         compare();
     }
-    const oldDuration = ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - oldStart) / iterations;
+    const oldDuration = (getTimestamp() - oldStart) / iterations;
 
     // Benchmark new experimental code
     let passed = true;
     let error = null;
-    const newStart = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const newStart = getTimestamp();
     try {
         for (let i = 0; i < iterations; i++) {
             code();
@@ -83,7 +85,7 @@ export async function experiment(options = {}) {
         passed = false;
         error = e;
     }
-    const newDuration = ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - newStart) / iterations;
+    const newDuration = (getTimestamp() - newStart) / iterations;
 
     const diffPct = oldDuration > 0 ? (((oldDuration - newDuration) / oldDuration) * 100).toFixed(1) : '0.0';
 
@@ -159,11 +161,11 @@ export function benchmark(config = {}) {
             test.fn();
         }
 
-        const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const start = getTimestamp();
         for (let i = 0; i < iterations; i++) {
             test.fn();
         }
-        const total = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - start;
+        const total = getTimestamp() - start;
         const avg = total / iterations;
         const opsPerSec = avg > 0 ? (1000 / avg).toFixed(0) : 'N/A';
 

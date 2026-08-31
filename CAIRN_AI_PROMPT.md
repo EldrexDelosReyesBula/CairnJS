@@ -229,6 +229,60 @@ export const VueWidget = cairnToVue(MyComponent);
 
 ---
 
+### 2.8. Complete CSS1–CSS4 Coat Styling Engine (`src/styling.js`)
+
+```javascript
+import { coat, cx, classNames, cssProperties, cssFunctions, cssAtRules, cssSelectors, cssCompatibility } from '@eldrex/cairnjs';
+
+// Full CSS1 to CSS4 coverage with nested selectors, media queries, and keyframes
+div({
+    coat: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '16px 24px',
+        backgroundColor: '#0f172a',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        // Nested selector support
+        '&:hover': {
+            backgroundColor: '#1e293b',
+            transform: 'translateY(-2px)'
+        },
+        // At-rules
+        '@media (max-width: 768px)': {
+            flexDirection: 'column',
+            gap: '8px'
+        }
+    }
+}, 'Modern Styled Container');
+```
+
+---
+
+### 2.9. HTML String Content, Direct Markup & Sanitization (`src/dom.js`)
+
+```javascript
+import { div, strong, span, em, sanitize, safe, smartContent, rich, contentSupport } from '@eldrex/cairnjs';
+
+// 1. Direct HTML strings as content
+div({ coat: { padding: '16px', background: '#fef3c7' } }, '<strong>Notice:</strong> Hello World');
+
+// 2. Explicit html prop
+div({ html: '<strong>Bold</strong> and <em>italic</em>' });
+
+// 3. Mixed content array
+div({}, ['<strong>Notice:</strong>', ' Hello etc.']);
+
+// 4. Safe sanitization (strips script tags & javascript: protocols)
+div(safe(userSuppliedHtml));
+
+// 5. Rich text composition
+div(rich('Hello ', strong('World'), '!'));
+```
+
+---
+
 ## 3. Pre-Styled UI Library (`UI.*`)
 
 - **Layout**: `UI.Box`, `UI.Container`, `UI.Grid`, `UI.Stack`, `UI.Center`, `UI.Cluster`, `UI.Split`, `UI.AspectRatio`, `Show`, `Hide`

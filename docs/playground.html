@@ -69,9 +69,9 @@
         }
 
         [data-theme="light"] {
-            --bg: #ffffff;
-            --surface: #f8fafc;
-            --surface-card: #f8fafc;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-card: #ffffff;
             --surface-hover: #f1f5f9;
             --border: #e2e8f0;
             --text: #0f172a;
@@ -266,6 +266,53 @@
 
         body[data-view="preview"] .editor-pane {
             display: none !important;
+        }
+
+        /* Embedded Mode (?embed=1) for Gallery SPA — Pure Live Application Output */
+        body[data-embedded="true"] .playground-header,
+        body[data-embedded="true"] .mobile-view-tabs,
+        body[data-embedded="true"] .editor-pane,
+        body[data-embedded="true"] .pane-toolbar,
+        body[data-embedded="true"] .console-resizer,
+        body[data-embedded="true"] .console-pane-wrapper {
+            display: none !important;
+        }
+
+        body[data-embedded="true"] .workspace {
+            height: 100vh !important;
+            grid-template-columns: 1fr !important;
+            display: block !important;
+            position: relative !important;
+            overflow: hidden !important;
+            background: transparent !important;
+        }
+
+        body[data-embedded="true"] .preview-pane {
+            display: flex !important;
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute !important;
+            inset: 0 !important;
+            transform: none !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            border-left: none !important;
+            background: transparent !important;
+        }
+
+        body[data-embedded="true"] .preview-frame-wrap {
+            display: flex !important;
+            flex: 1 !important;
+            height: 100% !important;
+            width: 100% !important;
+            background: transparent !important;
+        }
+
+        body[data-embedded="true"] #preview-frame {
+            width: 100% !important;
+            height: 100% !important;
+            border: none !important;
+            background: transparent !important;
         }
 
         /* View Mode Segmented Pill Group */
@@ -482,6 +529,177 @@
         .toast-popup.show {
             transform: translateY(0);
             opacity: 1;
+        }
+
+        /* Responsive Breakpoints & Mobile Optimization */
+        @media (max-width: 900px) {
+            .playground-header {
+                min-height: 48px;
+                padding: 0.35rem 0.65rem;
+                gap: 0.4rem;
+            }
+
+            .brand-link span {
+                display: none;
+            }
+
+            .brand-badge {
+                display: none;
+            }
+
+            .template-select {
+                max-width: 150px;
+                font-size: 0.75rem;
+                padding: 0.3rem 0.5rem;
+            }
+
+            .view-mode-group {
+                display: none;
+            }
+
+            .btn span {
+                display: none;
+            }
+
+            .btn {
+                padding: 0.35rem 0.55rem;
+                font-size: 0.75rem;
+            }
+
+            .btn-primary span {
+                display: inline;
+            }
+
+            .mobile-view-tabs {
+                display: flex;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                padding: 0.35rem 0.65rem;
+                gap: 0.4rem;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .mobile-tab-btn {
+                flex: 1;
+                padding: 0.45rem 0.5rem;
+                font-size: 0.8rem;
+                border-radius: 0.5rem;
+                transition: all 0.15s ease;
+            }
+
+            .mobile-tab-btn.active {
+                background: rgba(56, 189, 248, 0.12);
+                border-color: var(--accent);
+                color: var(--accent);
+                font-weight: 700;
+            }
+
+            .workspace {
+                display: block !important;
+                position: relative !important;
+                overflow: hidden !important;
+                height: calc(100vh - 96px) !important;
+                width: 100% !important;
+            }
+
+            .editor-pane,
+            .preview-pane {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+            }
+
+            /* Tab 1: Editor Active */
+            body[data-mobile-tab="editor"] .editor-pane {
+                transform: translateX(0) !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                z-index: 2 !important;
+                display: flex !important;
+                border-right: none !important;
+            }
+
+            body[data-mobile-tab="editor"] .preview-pane {
+                transform: translateX(100%) !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                z-index: 1 !important;
+                display: flex !important;
+            }
+
+            /* Tab 2: Live Preview Active */
+            body[data-mobile-tab="preview"] .editor-pane {
+                transform: translateX(-100%) !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                z-index: 1 !important;
+                display: flex !important;
+            }
+
+            body[data-mobile-tab="preview"] .preview-pane {
+                transform: translateX(0) !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                z-index: 2 !important;
+                display: flex !important;
+            }
+
+            body[data-mobile-tab="preview"] .pane-toolbar {
+                display: flex !important;
+            }
+
+            body[data-mobile-tab="preview"] .preview-frame-wrap {
+                display: flex !important;
+                flex: 1 !important;
+                height: calc(100% - 38px) !important;
+            }
+
+            body[data-mobile-tab="preview"] .console-resizer,
+            body[data-mobile-tab="preview"] .console-pane-wrapper {
+                display: none !important;
+            }
+
+            /* Tab 3: Dedicated Fullscreen Console */
+            body[data-mobile-tab="console"] .editor-pane {
+                transform: translateX(-100%) !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                z-index: 1 !important;
+                display: flex !important;
+            }
+
+            body[data-mobile-tab="console"] .preview-pane {
+                transform: translateX(0) !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                z-index: 2 !important;
+                display: flex !important;
+            }
+
+            body[data-mobile-tab="console"] .pane-toolbar,
+            body[data-mobile-tab="console"] .preview-frame-wrap,
+            body[data-mobile-tab="console"] .console-resizer {
+                display: none !important;
+            }
+
+            body[data-mobile-tab="console"] .console-pane-wrapper {
+                display: flex !important;
+                flex: 1 !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                border-top: none !important;
+            }
+
+            body[data-mobile-tab="console"] .console-logs {
+                flex: 1 !important;
+                height: calc(100% - 34px) !important;
+                padding: 0.75rem 1rem !important;
+                font-size: 0.825rem !important;
+            }
         }
     </style>
 </head>

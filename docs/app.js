@@ -1,5 +1,5 @@
 /**
- * Cairn Official Documentation Web Portal — VitePress Inspired Experience
+ * Cairn Official Documentation Web Portal
  * Mobile Responsive Menu Drawer, Mobile TOC Overlay, Landing Hero, Search Overlay,
  * Hash-Based Route Persistence, Prism Syntax Highlighting, and Accessible 3-Column Guide View.
  */
@@ -17,8 +17,10 @@ const docsSidebar = [
         title: 'Guide & Essentials',
         items: [
             { id: 'getting-started', title: 'Getting Started', file: 'content/guide/getting-started.md' },
+            { id: 'scaffolding', title: 'Instant Project Scaffolding', file: 'content/guide/scaffolding.md' },
             { id: 'fundamentals', title: 'Beginner Fundamentals', file: 'content/guide/fundamentals.md' },
             { id: 'overview', title: 'Overview & Philosophy', file: 'content/guide/overview.md' },
+            { id: 'emotional-framework', title: 'DX & Error Philosophy', file: 'content/guide/emotional-framework.md' },
             { id: 'faq', title: 'Frequently Asked Questions (FAQ)', file: 'content/guide/faq.md' },
             { id: 'troubleshooting', title: 'Troubleshooting & Gotchas', file: 'content/guide/troubleshooting.md' },
             { id: 'deployment', title: 'Production Deployment & Hosting', file: 'content/guide/deployment.md' },
@@ -30,12 +32,17 @@ const docsSidebar = [
         title: 'Live Examples & Demos',
         items: [
             { id: 'social-feed', title: 'Social Community Feed', file: 'content/examples/social-feed.md' },
-            { id: 'ecommerce-cart', title: 'E-Commerce Store & Cart', file: 'content/examples/ecommerce-cart.md' }
+            { id: 'ecommerce-cart', title: 'E-Commerce Store & Cart', file: 'content/examples/ecommerce-cart.md' },
+            { id: 'analytics-dashboard', title: 'Analytics Dashboard', file: 'content/examples/analytics-dashboard.md' },
+            { id: 'kanban-board', title: 'Interactive Kanban Board', file: 'content/examples/kanban-board.md' },
+            { id: 'chat-app', title: 'Real-Time Chat & Messaging', file: 'content/examples/chat-app.md' },
+            { id: 'motion-gallery', title: 'Kinetic Motion Physics', file: 'content/examples/motion-gallery.md' }
         ]
     },
     {
         title: 'Core Reactivity',
         items: [
+            { id: 'bedrock-foundation', title: 'Bedrock Core Foundation', file: 'content/core/bedrock-foundation.md' },
             { id: 'reactivity', title: 'Reactivity Signals', file: 'content/core/reactivity.md' },
             { id: 'advanced-reactivity', title: 'Reactivity Patterns', file: 'content/core/advanced-reactivity.md' },
             { id: 'form-validation', title: 'Form Validation & Arrays', file: 'content/core/form-validation.md' }
@@ -44,7 +51,8 @@ const docsSidebar = [
     {
         title: 'Architecture & System',
         items: [
-            { id: 'monolithic-spa-scaling', title: 'Monolithic SPA & Scaling', file: 'content/architecture/monolithic-spa-scaling.md' },
+            { id: 'scope-and-philosophy', title: 'Scope Prevention & Philosophy', file: 'content/architecture/scope-and-philosophy.md' },
+            { id: 'monolithic-spa-scaling', title: 'SPA Architecture & Structure', file: 'content/architecture/monolithic-spa-scaling.md' },
             { id: 'dom-and-components', title: 'DOM & Component System', file: 'content/architecture/dom-and-components.md' },
             { id: 'extensibility-and-dx', title: 'Extensibility & DX', file: 'content/architecture/extensibility-and-dx.md' },
             { id: 'low-level-access', title: 'Low-Level DOM Access', file: 'content/architecture/low-level-access.md' },
@@ -76,6 +84,7 @@ const docsSidebar = [
     {
         title: 'Features',
         items: [
+            { id: 'green-and-clean-code', title: 'Green Code & Clean Code', file: 'content/features/green-and-clean-code.md' },
             { id: 'realtime-and-collab', title: 'Real-Time & Collaboration', file: 'content/features/realtime-and-collab.md' },
             { id: 'personalize-and-voice', title: 'Personalization & Voice', file: 'content/features/personalize-and-voice.md' },
             { id: 'i18n-and-rtl', title: 'i18n, RTL & Formatters', file: 'content/features/i18n-and-rtl.md' },
@@ -85,7 +94,7 @@ const docsSidebar = [
         ]
     },
     {
-        title: 'Advanced & Testing',
+        title: 'Developer Tooling & AI',
         items: [
             { id: 'devtools', title: 'DevTools Suite & Inspector', file: 'content/advanced/devtools.md' },
             { id: 'plugins-and-marketplace', title: 'Plugins & Community', file: 'content/advanced/plugins-and-marketplace.md' },
@@ -155,13 +164,50 @@ const navigateHome = () => {
     }
 };
 
+// Helper to resolve any doc link, path, or filename to a valid SPA hash route
+const resolveDocLink = (rawHref) => {
+    if (!rawHref) return { isExternal: false, href: '#/home', pageId: 'getting-started' };
+    const trimmed = String(rawHref).trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('mailto:') || trimmed.startsWith('tel:')) {
+        return { isExternal: true, href: trimmed };
+    }
+    if (trimmed === '#/home' || trimmed === '#' || trimmed === '/') {
+        return { isExternal: false, href: '#/home', pageId: 'home' };
+    }
+    if (trimmed.startsWith('#/docs/')) {
+        const cleanPageId = trimmed.replace('#/docs/', '').split('?')[0].split('#')[0].replace(/_/g, '-');
+        return { isExternal: false, href: `#/docs/${cleanPageId}`, pageId: cleanPageId };
+    }
+    if (trimmed.startsWith('#')) {
+        return { isExternal: false, href: trimmed, isAnchor: true };
+    }
+
+    // Extract basename from markdown file path (e.g. ./docs/content/architecture/styling.md -> styling)
+    const cleanPath = trimmed.split('?')[0].split('#')[0];
+    let basename = cleanPath.split('/').pop().replace(/\.md$/, '').replace(/_/g, '-');
+    if (basename === 'api-reference') basename = 'api';
+    if (basename === 'attributions-and-inspirations') basename = 'attributions';
+
+    const matched = flatPages.find(p => p.id === basename || p.file.endsWith(cleanPath.replace(/^\.?\//, '')) || p.file.includes(basename));
+    if (matched) {
+        return { isExternal: false, href: `#/docs/${matched.id}`, pageId: matched.id };
+    }
+
+    if (cleanPath.includes('playground')) return { isExternal: false, href: './playground.html', isDirect: true };
+    if (cleanPath.includes('posts.html')) return { isExternal: false, href: '../examples/posts.html', isDirect: true };
+    if (cleanPath.includes('examples/index.html') || cleanPath === 'examples') return { isExternal: false, href: '../examples/index.html', isDirect: true };
+
+    return { isExternal: false, href: `#/docs/${basename}`, pageId: basename };
+};
+
 // URL Hash Parser for Initial Load & Back/Forward Browser Buttons
 const parseHash = () => {
     if (typeof window === 'undefined') return;
     const rawHash = window.location.hash || '';
     if (rawHash.startsWith('#/docs/')) {
         const rawPageId = rawHash.replace('#/docs/', '').split('?')[0].split('#')[0];
-        const pageId = rawPageId.replace(/_/g, '-');
+        let pageId = rawPageId.replace(/_/g, '-');
+        if (pageId === 'api-reference') pageId = 'api';
         const matched = flatPages.find(p => p.id === pageId || p.id === rawPageId);
         if (matched) {
             activeView.value = 'docs';
@@ -173,7 +219,7 @@ const parseHash = () => {
         activeView.value = 'home';
         return;
     }
-    const cleanId = rawHash.replace(/^#\/?/, '').replace(/_/g, '-');
+    const cleanId = rawHash.replace(/^#\/?/, '').replace(/_/g, '-').split('?')[0].split('#')[0];
     const matchedClean = flatPages.find(p => p.id === cleanId);
     if (matchedClean) {
         activeView.value = 'docs';
@@ -184,6 +230,32 @@ const parseHash = () => {
 if (typeof window !== 'undefined') {
     parseHash();
     window.addEventListener('hashchange', parseHash);
+
+    // Global Click Delegation to prevent raw markdown 404s and handle smooth SPA navigation
+    document.addEventListener('click', (e) => {
+        const targetAnchor = e.target.closest('a');
+        if (!targetAnchor) return;
+        const href = targetAnchor.getAttribute('href');
+        if (!href) return;
+
+        if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')) {
+            return; // Allow external links to open normally
+        }
+
+        const resolved = resolveDocLink(href);
+        if (resolved.isExternal || resolved.isDirect) return;
+
+        if (resolved.pageId === 'home') {
+            e.preventDefault();
+            navigateHome();
+            return;
+        }
+
+        if (resolved.pageId) {
+            e.preventDefault();
+            navigateTo(resolved.pageId);
+        }
+    });
 
     window.addEventListener('resize', () => {
         windowWidth.value = window.innerWidth;
@@ -211,6 +283,44 @@ const slugify = (text) => {
         .replace(/[^\w\s-]/g, ' ')
         .trim()
         .replace(/\s+/g, '-');
+};
+
+// Smooth Heading Scroll & URL Hash Sync Helper
+const scrollToHeading = (id) => {
+    if (!id) return;
+    const cleanId = String(id).replace(/^#/, '');
+    activeHeadingId.value = cleanId;
+    const mainEl = document.getElementById('main-content');
+    
+    let targetEl = document.getElementById(cleanId);
+    if (!targetEl && mainEl) {
+        targetEl = mainEl.querySelector(`[id="${cleanId}"]`);
+    }
+    if (!targetEl && mainEl) {
+        // Fallback: search h2, h3 matching slug
+        const headings = mainEl.querySelectorAll('h2, h3');
+        for (const h of headings) {
+            const hSlug = slugify(h.textContent);
+            if (hSlug === cleanId || h.id === cleanId) {
+                targetEl = h;
+                break;
+            }
+        }
+    }
+
+    if (targetEl) {
+        if (mainEl && mainEl.scrollHeight > mainEl.clientHeight) {
+            const mainRect = mainEl.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+            const targetScrollTop = mainEl.scrollTop + (targetRect.top - mainRect.top) - 24;
+            mainEl.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+        } else {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        try {
+            history.replaceState(null, '', '#' + cleanId);
+        } catch (e) { }
+    }
 };
 
 // Dynamic Scroll Spy for Ultra-Fast Active Section Highlighting
@@ -421,30 +531,44 @@ const loadPage = async (pageId) => {
 `;
         });
 
-        // 4. Preview Cards & Carousel (:::carousel / :::cards)
+        // 4. Interactive Glassmorphic Cards & Carousel (:::carousel / :::cards)
         processedMd = processedMd.replace(/:::(carousel|cards)([\s\S]*?):::/gi, () => {
+            const carouselId = 'cairn-carousel-' + Math.random().toString(36).substring(2, 8);
             return `
-<div class="cairn-md-widget">
-    <div class="cairn-md-widget-header">
-        <span><i class="fa-solid fa-layer-group"></i> Glassmorphic Cards & Carousel</span>
-        <span style="font-size: 0.7rem; color: #94a3b8;">Interactive Swipeable Stack</span>
+<div class="cairn-md-widget" style="border: 1px solid rgba(56, 189, 248, 0.2); background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.5)); backdrop-filter: blur(16px); border-radius: 1rem; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);">
+    <div class="cairn-md-widget-header" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(15, 23, 42, 0.6);">
+        <span style="font-weight: 600; color: #f8fafc; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-layer-group" style="color: #38bdf8;"></i> Glassmorphic Cards & Carousel</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button onclick="cairnCarouselPrev('${carouselId}')" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.borderColor='#38bdf8';this.style.color='#fff'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='#cbd5e1'"><i class="fa-solid fa-chevron-left" style="font-size: 0.75rem;"></i></button>
+            <button onclick="cairnCarouselNext('${carouselId}')" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.borderColor='#38bdf8';this.style.color='#fff'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='#cbd5e1'"><i class="fa-solid fa-chevron-right" style="font-size: 0.75rem;"></i></button>
+        </div>
     </div>
-    <div class="cairn-md-widget-body" style="padding: 1.5rem 1rem;">
-        <div style="display: flex; gap: 1rem; overflow-x: auto; width: 100%; padding-bottom: 0.5rem;">
-            <div style="min-width: 200px; padding: 1.25rem; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; text-align: center;">
-                <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">⚡</div>
-                <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 0.25rem;">Ultra Reactive</div>
-                <div style="font-size: 0.75rem; color: #94a3b8;">Zero Virtual DOM overhead</div>
+    <div class="cairn-md-widget-body" style="padding: 1.25rem 1rem;">
+        <div id="${carouselId}" style="display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 0.25rem; -ms-overflow-style: none; scrollbar-width: none;">
+            <div style="flex: 0 0 240px; scroll-snap-align: start; padding: 1.5rem; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 0.85rem; text-align: center; transition: transform 0.25s, border-color 0.25s; cursor: pointer;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='#38bdf8'" onmouseleave="this.style.transform='none';this.style.borderColor='rgba(56, 189, 248, 0.25)'">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 0 0 12px rgba(56,189,248,0.5);">⚡</div>
+                <div style="font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 0.35rem;">Fine-Grained Signals</div>
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4;">Zero Virtual DOM overhead with direct text node patching.</div>
             </div>
-            <div style="min-width: 200px; padding: 1.25rem; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; text-align: center;">
-                <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">🎨</div>
-                <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 0.25rem;">Universal CSS</div>
-                <div style="font-size: 0.75rem; color: #94a3b8;">Template literals & presets</div>
+            <div style="flex: 0 0 240px; scroll-snap-align: start; padding: 1.5rem; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(129, 140, 248, 0.25); border-radius: 0.85rem; text-align: center; transition: transform 0.25s, border-color 0.25s; cursor: pointer;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='#818cf8'" onmouseleave="this.style.transform='none';this.style.borderColor='rgba(129, 140, 248, 0.25)'">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 0 0 12px rgba(129,140,248,0.5);">🎨</div>
+                <div style="font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 0.35rem;">Universal Coat CSS</div>
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4;">Tagged template literals, design tokens & auto-scoping.</div>
             </div>
-            <div style="min-width: 200px; padding: 1.25rem; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; text-align: center;">
-                <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">🦀</div>
-                <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 0.25rem;">WASM Engine</div>
-                <div style="font-size: 0.75rem; color: #94a3b8;">Near-native performance</div>
+            <div style="flex: 0 0 240px; scroll-snap-align: start; padding: 1.5rem; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 0.85rem; text-align: center; transition: transform 0.25s, border-color 0.25s; cursor: pointer;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='#f43f5e'" onmouseleave="this.style.transform='none';this.style.borderColor='rgba(244, 63, 94, 0.25)'">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 0 0 12px rgba(244,63,94,0.5);">🦀</div>
+                <div style="font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 0.35rem;">Rust / WASM Engine</div>
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4;">Zero-traffic shared memory buffers & near-native physics.</div>
+            </div>
+            <div style="flex: 0 0 240px; scroll-snap-align: start; padding: 1.5rem; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 0.85rem; text-align: center; transition: transform 0.25s, border-color 0.25s; cursor: pointer;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='#10b981'" onmouseleave="this.style.transform='none';this.style.borderColor='rgba(16, 185, 129, 0.25)'">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 0 0 12px rgba(16,185,129,0.5);">🌱</div>
+                <div style="font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 0.35rem;">Green Code Engine</div>
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4;">Real-time computational carbon tracking & idle batching.</div>
+            </div>
+            <div style="flex: 0 0 240px; scroll-snap-align: start; padding: 1.5rem; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 0.85rem; text-align: center; transition: transform 0.25s, border-color 0.25s; cursor: pointer;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='#f59e0b'" onmouseleave="this.style.transform='none';this.style.borderColor='rgba(245, 158, 11, 0.25)'">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 0 0 12px rgba(245,158,11,0.5);">🪄</div>
+                <div style="font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 0.35rem;">Complete Motion Suite</div>
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4;">Spring dynamics, timeline orchestrators & gesture listeners.</div>
             </div>
         </div>
     </div>
@@ -455,13 +579,13 @@ const loadPage = async (pageId) => {
         // 5. Embedded 2D Graphics Canvas (:::canvas2d)
         processedMd = processedMd.replace(/:::canvas2d([\s\S]*?):::/gi, () => {
             return `
-<div class="cairn-md-widget">
-    <div class="cairn-md-widget-header">
-        <span><i class="fa-solid fa-paintbrush"></i> Interactive 2D Graphics Canvas</span>
-        <span style="font-size: 0.7rem; color: #94a3b8;">Zero-dependency Canvas2D</span>
+<div class="cairn-md-widget" style="border: 1px solid rgba(56, 189, 248, 0.2); background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.5)); backdrop-filter: blur(16px); border-radius: 1rem; overflow: hidden; margin: 1.5rem 0;">
+    <div class="cairn-md-widget-header" style="padding: 0.85rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(15, 23, 42, 0.6); display: flex; justify-content: space-between;">
+        <span style="font-weight: 600; color: #f8fafc; font-size: 0.9rem;"><i class="fa-solid fa-paintbrush" style="color: #38bdf8;"></i> Interactive 2D Graphics Canvas</span>
+        <span style="font-size: 0.75rem; color: #94a3b8;">Zero-dependency Canvas2D</span>
     </div>
-    <div class="cairn-md-widget-body">
-        <canvas id="cairn-doc-canvas2d" width="400" height="150" style="border-radius: 0.5rem; background: #020617; max-width: 100%; border: 1px solid var(--border);"></canvas>
+    <div class="cairn-md-widget-body" style="padding: 1.25rem; display: flex; justify-content: center;">
+        <canvas id="cairn-doc-canvas2d" width="450" height="160" style="border-radius: 0.75rem; background: #020617; max-width: 100%; border: 1px solid rgba(255,255,255,0.1);"></canvas>
         <script>
             (function() {
                 const cv = document.getElementById('cairn-doc-canvas2d');
@@ -472,9 +596,9 @@ const loadPage = async (pageId) => {
                     ctx.clearRect(0, 0, cv.width, cv.height);
                     t += 0.03;
                     for (let i = 0; i < 5; i++) {
-                        const x = 50 + i * 75 + Math.sin(t + i) * 15;
-                        const y = 75 + Math.cos(t + i * 0.8) * 30;
-                        ctx.fillStyle = ['#38bdf8', '#4f46e5', '#10b981', '#f59e0b', '#ec4899'][i];
+                        const x = 60 + i * 80 + Math.sin(t + i) * 15;
+                        const y = 80 + Math.cos(t + i * 0.8) * 30;
+                        ctx.fillStyle = ['#38bdf8', '#818cf8', '#10b981', '#f59e0b', '#f43f5e'][i];
                         ctx.beginPath();
                         ctx.arc(x, y, 16, 0, Math.PI * 2);
                         ctx.fill();
@@ -491,34 +615,21 @@ const loadPage = async (pageId) => {
 
         // 6. Interactive Live Component Gallery (:::gallery / :::components)
         processedMd = processedMd.replace(/:::(gallery|components)([\s\S]*?):::/gi, () => {
-            return `
-<div class="cairn-md-widget">
-    <div class="cairn-md-widget-header">
-        <span><i class="fa-solid fa-shapes"></i> Live Interactive Component Gallery</span>
-        <span style="font-size: 0.7rem; color: #94a3b8;">50+ Zero-Dependency Primitives</span>
-    </div>
-    <div class="cairn-md-widget-body" style="align-items: stretch; gap: 1rem;">
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <button class="cairn-btn cairn-btn-primary"><i class="fa-solid fa-bolt"></i> Primary Button</button>
-            <button class="cairn-btn cairn-btn-outline"><i class="fa-solid fa-cube"></i> Secondary</button>
-            <button class="cairn-btn" style="background: #ef4444; color: white;"><i class="fa-solid fa-trash"></i> Danger</button>
-            <span class="cairn-badge cairn-badge-featured" style="align-self: center;">Featured Badge</span>
-            <span class="cairn-badge cairn-badge-new" style="align-self: center;">v1.3.0 Live</span>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-            <input type="text" placeholder="Live input testing..." style="padding: 0.6rem 0.85rem; border-radius: 0.5rem; background: rgba(15,23,42,0.8); border: 1px solid var(--border); color: #fff; font-size: 0.85rem;" />
-            <select style="padding: 0.6rem 0.85rem; border-radius: 0.5rem; background: rgba(15,23,42,0.8); border: 1px solid var(--border); color: #fff; font-size: 0.85rem;">
-                <option>Select Option 1</option>
-                <option>Select Option 2</option>
-            </select>
-        </div>
-    </div>
-</div>
-`;
+            const galleryId = 'cairn-gallery-' + Math.random().toString(36).substring(2, 8);
+            return `<div class="cairn-md-widget" style="border: 1px solid rgba(56, 189, 248, 0.2); background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.6)); backdrop-filter: blur(16px); border-radius: 1rem; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);"><div class="cairn-md-widget-header" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(15, 23, 42, 0.6); flex-wrap: wrap; gap: 0.5rem;"><span style="font-weight: 600; color: #f8fafc; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-shapes" style="color: #38bdf8;"></i> Live Interactive Component Gallery</span><span style="font-size: 0.75rem; color: #38bdf8; background: rgba(56,189,248,0.1); padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid rgba(56,189,248,0.25);">50+ Accessible Primitives</span></div><div class="cairn-md-widget-body" id="${galleryId}" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;"><div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;"><button onclick="this.style.transform='scale(0.96)';setTimeout(()=>this.style.transform='none',150)" style="background: #0284c7; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(2,132,199,0.3); transition: all 0.15s;"><i class="fa-solid fa-bolt"></i> Primary Button</button><button onclick="this.style.transform='scale(0.96)';setTimeout(()=>this.style.transform='none',150)" style="background: rgba(30,41,59,0.8); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.15s;" onmouseenter="this.style.borderColor='#38bdf8'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.15)'"><i class="fa-solid fa-cube"></i> Secondary</button><button onclick="this.style.transform='scale(0.96)';setTimeout(()=>this.style.transform='none',150)" style="background: #ef4444; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.15s;"><i class="fa-solid fa-trash"></i> Danger</button><span style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 0.3rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><span style="width:6px;height:6px;border-radius:50%;background:#34d399"></span> Online</span><span style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3); padding: 0.3rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;">v1.3.0 Live</span></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;"><div><label style="display: block; font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Live Input Binding</label><input type="text" value="Type here to test reactivity..." oninput="document.getElementById('${galleryId}-preview').textContent = this.value || '(empty)'" style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.5rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 0.875rem; outline: none; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#38bdf8'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'" /></div><div><label style="display: block; font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Interactive Dropdown</label><select onchange="document.getElementById('${galleryId}-badge').textContent = this.value" style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.5rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 0.875rem; outline: none; box-sizing: border-box; cursor: pointer;"><option value="Reactive Mode">Option 1: Reactive Mode</option><option value="Turbo WASM Mode">Option 2: Turbo WASM Mode</option><option value="Green Energy Mode">Option 3: Green Energy Mode</option></select></div></div><div style="background: rgba(15,23,42,0.6); padding: 1rem 1.25rem; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; min-width: 0; overflow: hidden;"><div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; min-width: 0; max-width: 100%;"><span style="font-size: 0.85rem; color: #cbd5e1; word-break: break-all; overflow-wrap: anywhere; max-width: 100%;">Live Value: <strong id="${galleryId}-preview" style="color: #38bdf8; word-break: break-all; overflow-wrap: anywhere;">Type here to test reactivity...</strong></span><span id="${galleryId}-badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">Option 1: Reactive Mode</span></div><div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;"><span style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap;">Volume: <strong id="${galleryId}-vol-val" style="color: #fff;">75%</strong></span><input type="range" min="0" max="100" value="75" oninput="document.getElementById('${galleryId}-vol-val').textContent = this.value + '%'" style="accent-color: #38bdf8; cursor: pointer; max-width: 120px;" /></div></div></div></div>`;
         });
 
         // Parse markdown with Marked
         if (typeof marked !== 'undefined') {
+            const parseInlineMarkdown = (str) => {
+                if (!str) return '';
+                return String(str)
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+|[#\/][^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; text-underline-offset: 3px;">$1</a>')
+                    .replace(/`([^`]+)`/g, '<code style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-size: 0.88em;">$1</code>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            };
+
             const renderer = new marked.Renderer();
             renderer.code = function (arg1, arg2) {
                 let codeText = '';
@@ -555,9 +666,31 @@ const loadPage = async (pageId) => {
                     level = arg2 || 2;
                     raw = arg3 || text;
                 }
+                const parsedText = parseInlineMarkdown(text);
                 const rawText = String(raw || text).replace(/<[^>]+>/g, '').replace(/\[(.*?)\]\(.*?\)/g, '$1').replace(/`([^`]+)`/g, '$1').trim();
                 const id = slugify(rawText);
-                return `<h${level} id="${id}">${text}</h${level}>`;
+                return `<h${level} id="${id}">${parsedText}</h${level}>`;
+            };
+
+            renderer.link = function (arg1, arg2, arg3) {
+                let href = '';
+                let title = '';
+                let text = '';
+                if (typeof arg1 === 'object' && arg1 !== null) {
+                    href = arg1.href || '';
+                    title = arg1.title || '';
+                    text = arg1.text || '';
+                } else {
+                    href = String(arg1 || '');
+                    title = String(arg2 || '');
+                    text = String(arg3 || '');
+                }
+                const resolved = resolveDocLink(href);
+                const titleAttr = title ? ` title="${title}"` : '';
+                if (resolved.isExternal) {
+                    return `<a href="${resolved.href}" target="_blank" rel="noopener noreferrer"${titleAttr} style="color: #38bdf8; text-decoration: underline; text-underline-offset: 3px;">${text}</a>`;
+                }
+                return `<a href="${resolved.href}"${titleAttr} class="cairn-doc-link" data-cairn-doc="${resolved.href}" style="color: #38bdf8; text-decoration: underline; text-underline-offset: 3px;">${text}</a>`;
             };
 
             marked.setOptions({
@@ -568,6 +701,9 @@ const loadPage = async (pageId) => {
             });
             let html = marked.parse(processedMd);
 
+            // Ensure any remaining markdown links are converted into anchors
+            html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+|[#\/][^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; text-underline-offset: 3px;">$1</a>');
+
             // Wrap headers with anchor IDs fallback
             html = html.replace(/<h([23])(?:\s+id="([^"]*)")?>(.*?)<\/h\1>/g, (matchStr, level, existingId, content) => {
                 const textContent = content.replace(/<[^>]+>/g, '').trim();
@@ -575,11 +711,13 @@ const loadPage = async (pageId) => {
                 return `<h${level} id="${id}">${content}</h${level}>`;
             });
 
-            // Wrap code blocks into VitePress-style copy containers with syntax highlighting
-            html = html.replace(/<pre><code class="language-([\s\S]*?)">([\s\S]*?)<\/code><\/pre>/g, (matchStr, lang, codeContent) => {
+            // Wrap code blocks into clean containers with syntax highlighting
+            html = html.replace(/<pre[^>]*><code(?:\s+class="language-([^">]+)")?[^>]*>([\s\S]*?)<\/code><\/pre>/g, (matchStr, langAttr, codeContent) => {
                 let highlighted = codeContent;
-                const langTokens = (lang || 'text').toLowerCase().split(/[\s,:]+/);
-                const cleanLang = langTokens[0] || 'text';
+                const rawLang = (langAttr || 'javascript').trim();
+                const langTokens = rawLang.toLowerCase().replace(/[^a-z0-9_\s-]/g, ' ').split(/\s+/).filter(Boolean);
+                const cleanLang = langTokens[0] || 'javascript';
+                const displayLang = (/^[a-z0-9#+.-]+$/i.test(cleanLang) && !/^\d+$/.test(cleanLang) ? cleanLang : 'javascript').toUpperCase();
 
                 const unescapedCode = codeContent
                     .replace(/&lt;/g, '<')
@@ -590,26 +728,52 @@ const loadPage = async (pageId) => {
                     .replace(/&apos;/g, "'")
                     .replace(/&amp;/g, '&');
 
-                const isStaticFlagged = langTokens.includes('no-run') || langTokens.includes('norun') || langTokens.includes('static');
+                const isStaticFlagged = langTokens.includes('no-run') || langTokens.includes('norun') || langTokens.includes('static') || langTokens.includes('readonly');
                 const hasNoPlayground = langTokens.includes('no-playground') || langTokens.includes('noplayground') || isStaticFlagged;
                 const hasNoActions = langTokens.includes('no-actions') || langTokens.includes('noactions');
                 const hasNoCopy = langTokens.includes('no-copy') || langTokens.includes('nocopy') || hasNoActions;
 
-                // Non-executable languages: CDN, HTML, Shell, Data, Config, Framework templates
+                // Non-executable languages: CDN, HTML, Shell, Data, Config, Framework templates, Plaintext
                 const nonRunnableLanguages = [
-                    'bash', 'sh', 'shell', 'zsh', 'terminal', 'cmd', 'powershell', 'ps1',
-                    'html', 'xml', 'svg', 'rust', 'rs', 'json', 'yaml', 'yml', 'css',
-                    'text', 'txt', 'markdown', 'md', 'tree', 'jsx', 'tsx', 'vue', 'svelte', 'config'
+                    'bash', 'sh', 'shell', 'zsh', 'terminal', 'cmd', 'powershell', 'ps1', 'cli',
+                    'html', 'xml', 'svg', 'rust', 'rs', 'json', 'yaml', 'yml', 'css', 'scss', 'sass', 'less',
+                    'text', 'txt', 'plaintext', 'plain', 'none', 'markdown', 'md', 'tree', 'jsx', 'tsx', 'vue', 'svelte',
+                    'config', 'diff', 'env', 'ini', 'dockerfile', 'toml', 'sql', 'graphql', 'properties', 'log', 'output'
                 ];
 
                 const isNonRunnableLang = nonRunnableLanguages.includes(cleanLang);
 
                 // Auto-detect CDN script tags, HTML pages, or npm/install CLI commands
-                const isCdnOrScriptTag = /<script\s+src=|<link\s+rel=|cdn\.jsdelivr\.net|unpkg\.com|esm\.sh/i.test(unescapedCode) && cleanLang === 'html';
+                const isCdnOrScriptTag = /<script\s+src=|<link\s+rel=|cdn\.jsdelivr\.net|unpkg\.com|esm\.sh/i.test(unescapedCode) && (cleanLang === 'html' || cleanLang === 'xml');
                 const isFullHtmlDocument = /^<!doctype|^<html/i.test(unescapedCode.trim());
-                const isCliCommand = /^(npm|pnpm|yarn|bun|npx|git|curl)\s/i.test(unescapedCode.trim());
+                const isCliCommand = /^(npm|pnpm|yarn|bun|npx|git|curl|node|cargo|brew)\s/i.test(unescapedCode.trim());
 
-                const isCodeExecutable = !isStaticFlagged && !isNonRunnableLang && !isCdnOrScriptTag && !isFullHtmlDocument && !isCliCommand && (cleanLang === 'javascript' || cleanLang === 'js' || cleanLang === 'ts' || cleanLang === 'typescript');
+                // Auto-detect static syntax signatures, ellipses, pseudocode, types, pure comments, error diagnostics
+                const hasEllipsis = /\.\.\./.test(unescapedCode);
+                const isSingleLineSignature = /^[\w$.]+\s*\([^)]*\)\s*[:;]?\s*$/m.test(unescapedCode.trim()) && !unescapedCode.includes('{');
+                const isTypeDefinition = /^(type|interface|declare|export\s+type|export\s+interface)\s/m.test(unescapedCode.trim());
+                const isPureComments = unescapedCode.split('\n').every(line => !line.trim() || line.trim().startsWith('//') || line.trim().startsWith('/*') || line.trim().startsWith('*'));
+                const isDiagnosticOrError = /\/\/\s*(❌|💡|ℹ️|Cold runtime error|TypeError|ReferenceError|Structured Diagnostic|Where:|Fix:)/i.test(unescapedCode);
+                const hasOnlyImports = /^(\s*import\s+[^;]+;\s*)+$/m.test(unescapedCode.trim());
+                const nonCommentLines = unescapedCode.split('\n').filter(l => l.trim() && !l.trim().startsWith('//') && !l.trim().startsWith('/*') && !l.trim().startsWith('*'));
+                const isSingleVarDecl = nonCommentLines.length === 1 && /^(let|const|var)\s+\w+\s*=\s*(state|computed)\s*\([^)]*\)\s*;?$/.test(nonCommentLines[0].trim());
+                const hasRunnableStatements = /mount\s*\(|div\s*\(|button\s*\(|state\s*\(|effect\s*\(|cairn\.|console\.(log|info|warn|error)\s*\(|document\.|window\.|render\s*\(|alert\s*\(|h\s*\(/m.test(unescapedCode);
+                const hasExplicitLive = /\b(live|runnable|preview|interactive|editable)\b/i.test(langAttr || '');
+
+                const isCodeExecutable = !isStaticFlagged &&
+                    !isNonRunnableLang &&
+                    !isCdnOrScriptTag &&
+                    !isFullHtmlDocument &&
+                    !isCliCommand &&
+                    !hasEllipsis &&
+                    !isSingleLineSignature &&
+                    !isTypeDefinition &&
+                    !isPureComments &&
+                    !isDiagnosticOrError &&
+                    !isSingleVarDecl &&
+                    !hasOnlyImports &&
+                    (hasExplicitLive || (hasRunnableStatements && nonCommentLines.length > 0)) &&
+                    (cleanLang === 'javascript' || cleanLang === 'js' || cleanLang === 'ts' || cleanLang === 'typescript');
 
                 const showRun = !hasNoActions && isCodeExecutable;
                 const showPlayground = !hasNoActions && !hasNoPlayground && isCodeExecutable;
@@ -622,27 +786,57 @@ const loadPage = async (pageId) => {
                 let actionsHtml = '';
                 if (!hasNoActions) {
                     actionsHtml = `<div class="code-block-actions">` +
-                        (showRun ? `<button class="run-code-btn" onclick="cairnToggleRunCode(this)" title="Run interactive code"><i class="fa-solid fa-play"></i> Run</button>` : '') +
-                        (showCopy ? `<button class="copy-code-btn" onclick="cairnCopyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>` : '') +
+                        (showRun ? `<button class="run-code-btn" onclick="cairnToggleRunCode(this)" title="Run code preview"><i class="fa-solid fa-play"></i> Run</button>` : '') +
                         (showPlayground ? `<button class="open-playground-btn" onclick="cairnOpenInPlayground(this)" title="Open in Playground"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>` : '') +
+                        (showCopy ? `<button class="copy-code-btn" onclick="cairnCopyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>` : '') +
                         `</div>`;
                 }
 
-                return `<div class="code-block-wrapper"><div class="code-block-header"><span>${cleanLang.toUpperCase()}</span>${actionsHtml}</div><pre><code class="language-${cleanLang}">${highlighted}</code></pre></div>`;
+                return `<div class="code-block-wrapper"><div class="code-block-header"><span>${displayLang}</span>${actionsHtml}</div><pre><code class="language-${cleanLang}">${highlighted}</code></pre></div>`;
             });
 
             markdownContent.value = html;
+
+            // Extract TOC Headings from rendered HTML
+            const extractedHeadings = [];
+            const headingRegex = /<h([23])(?:\s+id="([^"]*)")?>(.*?)<\/h\1>/gi;
+            let hMatch;
+            while ((hMatch = headingRegex.exec(html)) !== null) {
+                const level = parseInt(hMatch[1], 10);
+                const rawContent = hMatch[3] || '';
+                const cleanText = rawContent.replace(/<[^>]+>/g, '').trim();
+                const id = hMatch[2] || slugify(cleanText);
+                if (cleanText && id) {
+                    extractedHeadings.push({ id, text: cleanText, level });
+                }
+            }
+            tocHeadings.value = extractedHeadings;
+            if (extractedHeadings.length > 0) {
+                activeHeadingId.value = extractedHeadings[0].id;
+            }
         } else {
             markdownContent.value = `<pre>${processedMd}</pre>`;
+            tocHeadings.value = [];
         }
 
         setTimeout(() => {
+            const domHeadings = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
+            if (domHeadings.length > 0) {
+                const list = [];
+                domHeadings.forEach(h => {
+                    const cleanText = h.textContent.trim();
+                    const id = h.id || slugify(cleanText);
+                    h.id = id;
+                    list.push({ id, text: cleanText, level: parseInt(h.tagName.substring(1), 10) });
+                });
+                tocHeadings.value = list;
+            }
             setupScrollSpy();
             if (window.location.hash) {
                 const hashId = window.location.hash.replace('#', '');
                 scrollToHeading(hashId);
             }
-        }, 80);
+        }, 60);
     } catch (err) {
         console.error('[Cairn Docs Load Error]:', err);
         markdownContent.value = `
@@ -819,37 +1013,6 @@ const NavDivider = () => div({
         margin: '0 0.25rem'
     }
 });
-
-// Smooth Heading Scroll & URL Hash Sync Helper
-const scrollToHeading = (id) => {
-    if (!id) return;
-    activeHeadingId.value = id;
-    const mainEl = document.getElementById('main-content');
-    if (!mainEl) return;
-
-    let targetEl = document.getElementById(id) || mainEl.querySelector(`[id="${id}"]`);
-    if (!targetEl) {
-        // Fallback: search h2, h3 matching slug
-        const headings = mainEl.querySelectorAll('h2, h3');
-        for (const h of headings) {
-            const hSlug = slugify(h.textContent);
-            if (hSlug === id || h.id === id) {
-                targetEl = h;
-                break;
-            }
-        }
-    }
-
-    if (targetEl) {
-        const mainRect = mainEl.getBoundingClientRect();
-        const targetRect = targetEl.getBoundingClientRect();
-        const targetScrollTop = mainEl.scrollTop + (targetRect.top - mainRect.top) - 16;
-        mainEl.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
-        try {
-            history.replaceState(null, '', '#' + id);
-        } catch (e) { }
-    }
-};
 
 // Global App Header Component (Clean, Product-Like Minimalist Layout)
 const AppHeader = component(() => {
@@ -1037,10 +1200,10 @@ const AppHeader = component(() => {
                 }
             }, fa('fa-brands fa-github')),
 
-            // Mobile Menu Toggle Button (Hamburger)
+            // Mobile Menu Toggle Button (Hamburger) - only on Landing Home Page when no subheader exists
             button({
                 style: () => ({
-                    display: windowWidth.value <= 840 ? 'flex' : 'none',
+                    display: windowWidth.value <= 840 && activeView.value === 'home' ? 'flex' : 'none',
                     background: 'transparent',
                     border: 'none',
                     color: 'var(--text)',
@@ -1057,49 +1220,141 @@ const AppHeader = component(() => {
     );
 });
 
-// Mobile/Tablet Sub-Header for Section Title and Table of Contents Drawer
+// Mobile/Tablet Sub-Header with In-Place Expanding Table of Contents Dropdown
 const MobileSubHeader = component(() => {
     const currentPage = computed(() => flatPages.find(p => p.id === activePageId.value) || flatPages[0]);
 
     return div({
         style: () => ({
             display: windowWidth.value <= 1150 && activeView.value === 'docs' ? 'flex' : 'none',
+            flexDirection: 'column',
             position: 'sticky',
             top: '58px',
-            zIndex: '40',
+            zIndex: '50',
             backgroundColor: 'var(--header-bg)',
-            backdropFilter: 'blur(12px)',
+            backdropFilter: 'blur(16px)',
             borderBottom: '1px solid var(--border)',
-            padding: '0.6rem 1rem',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             transition: 'background-color 0.25s ease, border-color 0.25s ease'
         })
     },
-        div({ style: { display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' } },
-            fa('fa-solid fa-book', { color: 'var(--accent)' }),
-            span({ style: { fontSize: '0.875rem', fontWeight: '600', color: 'var(--text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' } }, () => currentPage.value.title)
-        ),
-        button({
+        // Bar Row
+        div({
             style: () => ({
-                background: 'var(--btn-sec-bg)',
-                border: '1px solid var(--border)',
-                borderRadius: '0.375rem',
-                color: 'var(--accent)',
-                padding: '0.3rem 0.6rem',
-                fontSize: '0.75rem',
-                fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                cursor: 'pointer'
-            }),
-            onclick: () => { isTocOpen.value = true; }
-        }, fa('fa-solid fa-list-ul'), 'On this page')
+                justifyContent: 'space-between',
+                padding: '0.5rem 1rem',
+                gap: '0.75rem',
+                width: '100%',
+                boxSizing: 'border-box'
+            })
+        },
+            // Left Menu / Navigation Drawer Opener (Familiar HCI)
+            div({ style: { display: 'flex', alignItems: 'center', gap: '0.6rem', overflow: 'hidden' } },
+                button({
+                    style: () => ({
+                        background: 'var(--btn-sec-bg)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '0.375rem',
+                        color: 'var(--text)',
+                        padding: '0.35rem 0.65rem',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                    }),
+                    'aria-label': 'Open Documentation Navigation Menu',
+                    onclick: () => { isMobileMenuOpen.value = true; isTocOpen.value = false; }
+                }, fa('fa-solid fa-bars', { color: 'var(--accent)' }), 'Menu'),
+
+                span({
+                    style: {
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: 'var(--text)',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden'
+                    }
+                }, () => currentPage.value.title)
+            ),
+
+            // Right "On this page" TOC Dropdown Trigger
+            () => tocHeadings.value.length > 0 ? button({
+                style: () => ({
+                    background: isTocOpen.value ? 'rgba(56, 189, 248, 0.15)' : 'var(--btn-sec-bg)',
+                    border: isTocOpen.value ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    borderRadius: '0.375rem',
+                    color: isTocOpen.value ? 'var(--accent)' : 'var(--text)',
+                    padding: '0.35rem 0.65rem',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease'
+                }),
+                'aria-expanded': () => isTocOpen.value ? 'true' : 'false',
+                'aria-label': 'Toggle On This Page Outline',
+                onclick: () => { isTocOpen.value = !isTocOpen.value; }
+            },
+                fa('fa-solid fa-list-ul', { color: 'var(--accent)' }),
+                'On this page',
+                fa(() => isTocOpen.value ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down', { fontSize: '0.7rem' })
+            ) : null
+        ),
+
+        // Expanding In-Place Dropdown Panel (Below the subheader bar)
+        () => isTocOpen.value && tocHeadings.value.length > 0
+            ? div({
+                class: 'cairn-mobile-toc-dropdown',
+                style: () => ({
+                    maxHeight: '50vh',
+                    overflowY: 'auto',
+                    padding: '0.75rem 1rem 1rem 1rem',
+                    borderTop: '1px solid var(--border)',
+                    backgroundColor: 'var(--surface-card)',
+                    boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.35)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem'
+                })
+            },
+                tocHeadings.value.map(hItem =>
+                    a({
+                        href: `#${hItem.id}`,
+                        style: () => ({
+                            color: activeHeadingId.value === hItem.id ? 'var(--accent)' : 'var(--text-muted)',
+                            fontSize: hItem.level === 3 ? '0.825rem' : '0.875rem',
+                            paddingLeft: hItem.level === 3 ? '1.25rem' : '0.5rem',
+                            borderLeft: activeHeadingId.value === hItem.id ? '2px solid var(--accent)' : '2px solid transparent',
+                            padding: '0.35rem 0.6rem',
+                            borderRadius: '0 0.35rem 0.35rem 0',
+                            background: activeHeadingId.value === hItem.id ? 'rgba(56, 189, 248, 0.08)' : 'transparent',
+                            lineHeight: '1.4',
+                            textDecoration: 'none',
+                            display: 'block',
+                            fontWeight: activeHeadingId.value === hItem.id ? '600' : '400',
+                            transition: 'all 0.15s ease'
+                        }),
+                        onclick: (e) => {
+                            e.preventDefault();
+                            isTocOpen.value = false;
+                            scrollToHeading(hItem.id);
+                        }
+                    }, hItem.text)
+                )
+            )
+            : null
     );
 });
 
-// VitePress Mobile Navigation Drawer Component
+// Mobile Navigation Drawer Component
 const MobileNavDrawer = component(() => {
     return div({
         style: () => ({
@@ -1145,50 +1400,102 @@ const MobileNavDrawer = component(() => {
                 )
             ),
 
-            // Top Menu Items
-            div({ style: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' } },
+            // Top Navigation Menu (Clean Tinted Bordered Container, Minimal Aesthetic)
+            div({
+                style: () => ({
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.25rem',
+                    backgroundColor: 'var(--surface-card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.625rem',
+                    padding: '0.35rem',
+                    marginBottom: '1.5rem'
+                })
+            },
                 button({
-                    style: () => ({ textAlign: 'left', padding: '0.6rem 0.75rem', background: 'transparent', border: 'none', color: activeView.value === 'home' ? 'var(--accent)' : 'var(--text)', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }),
+                    style: () => ({
+                        textAlign: 'left',
+                        padding: '0.55rem 0.85rem',
+                        background: activeView.value === 'home' ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        color: activeView.value === 'home' ? 'var(--accent)' : 'var(--text)',
+                        fontWeight: activeView.value === 'home' ? '600' : '400',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                    }),
                     onclick: navigateHome
                 }, 'Home'),
+
                 button({
-                    style: () => ({ textAlign: 'left', padding: '0.6rem 0.75rem', background: 'transparent', border: 'none', color: activeView.value === 'docs' ? 'var(--accent)' : 'var(--text)', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }),
+                    style: () => ({
+                        textAlign: 'left',
+                        padding: '0.55rem 0.85rem',
+                        background: activeView.value === 'docs' ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        color: activeView.value === 'docs' ? 'var(--accent)' : 'var(--text)',
+                        fontWeight: activeView.value === 'docs' ? '600' : '400',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                    }),
                     onclick: () => navigateTo('getting-started')
                 }, 'Docs & Guide'),
+
                 button({
-                    style: () => ({ textAlign: 'left', padding: '0.6rem 0.75rem', background: 'transparent', border: 'none', color: 'var(--text)', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }),
-                    onclick: () => window.location.href = '../examples/index.html'
+                    style: () => ({
+                        textAlign: 'left',
+                        padding: '0.55rem 0.85rem',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        color: 'var(--text-muted)',
+                        fontWeight: '400',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                    }),
+                    onclick: () => { window.location.href = '../examples/index.html'; }
                 }, 'Examples Gallery'),
+
                 a({
                     href: './playground.html',
                     style: {
                         textAlign: 'left',
-                        padding: '0.6rem 0.75rem',
-                        color: 'var(--accent)',
-                        fontWeight: '700',
-                        fontSize: '1rem',
+                        padding: '0.55rem 0.85rem',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        color: 'var(--text-muted)',
+                        fontWeight: '400',
+                        fontSize: '0.9rem',
                         textDecoration: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
+                        display: 'block',
+                        transition: 'all 0.15s ease'
                     }
-                }, fa('fa-solid fa-code'), 'Playground'),
+                }, 'Playground'),
+
                 a({
                     href: 'https://www.paypal.com/paypalme/eldrexbula',
                     target: '_blank',
                     rel: 'noreferrer',
                     style: {
                         textAlign: 'left',
-                        padding: '0.6rem 0.75rem',
-                        color: '#ec4899',
-                        fontWeight: '600',
-                        fontSize: '1rem',
+                        padding: '0.55rem 0.85rem',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        color: 'var(--text-muted)',
+                        fontWeight: '400',
+                        fontSize: '0.9rem',
                         textDecoration: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
+                        display: 'block',
+                        transition: 'all 0.15s ease'
                     }
-                }, fa('fa-solid fa-heart'), 'Support CairnJS')
+                }, 'Support CairnJS')
             ),
 
             // Categories List
@@ -1238,73 +1545,7 @@ const MobileNavDrawer = component(() => {
     );
 });
 
-// Mobile TOC Overlay Component
-const MobileTocDrawer = component(() => {
-    return div({
-        style: () => ({
-            display: isTocOpen.value ? 'flex' : 'none',
-            position: 'fixed',
-            inset: '0',
-            backgroundColor: 'rgba(2, 6, 23, 0.85)',
-            backdropFilter: 'blur(10px)',
-            zIndex: '99999',
-            justifyContent: 'flex-end'
-        }),
-        onclick: (e) => {
-            if (e.target === e.currentTarget) isTocOpen.value = false;
-        }
-    },
-        div({
-            style: () => ({
-                backgroundColor: 'var(--drawer-bg)',
-                width: '300px',
-                maxWidth: '80vw',
-                height: '100vh',
-                borderLeft: '1px solid var(--border)',
-                display: 'flex',
-                flexDirection: 'column',
-                boxShadow: '-10px 0 25px rgba(0,0,0,0.5)',
-                padding: '1.5rem',
-                overflowY: 'auto'
-            })
-        },
-            div({ style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' } },
-                span({ style: { fontWeight: '700', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' } }, 'On This Page'),
-                button({
-                    style: { background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.2rem', cursor: 'pointer' },
-                    'aria-label': 'Close Table of Contents',
-                    onclick: () => { isTocOpen.value = false; }
-                }, fa('fa-solid fa-xmark'))
-            ),
-            div({ style: { display: 'flex', flexDirection: 'column', gap: '0.35rem' } },
-                () => tocHeadings.value.map(hItem =>
-                    a({
-                        href: `#${hItem.id}`,
-                        style: () => ({
-                            color: activeHeadingId.value === hItem.id ? '#38bdf8' : 'var(--text-muted)',
-                            fontSize: '0.875rem',
-                            lineHeight: '1.5',
-                            textDecoration: 'none',
-                            display: 'block',
-                            padding: '0.2rem 0',
-                            background: 'transparent',
-                            border: 'none',
-                            fontWeight: activeHeadingId.value === hItem.id ? '600' : '400',
-                            transition: 'color 0.15s ease'
-                        }),
-                        onclick: (e) => {
-                            e.preventDefault();
-                            isTocOpen.value = false;
-                            scrollToHeading(hItem.id);
-                        }
-                    }, hItem.text)
-                )
-            )
-        )
-    );
-});
-
-// VitePress Hero Landing Page Component
+// Hero Landing Page Component
 const LandingHero = component(() => {
     const copiedInstall = state(false);
 
@@ -1338,7 +1579,7 @@ const LandingHero = component(() => {
             }
         },
             span({ class: 'cairn-badge-dot' }),
-            span('v1.3.0 Live'),
+            span('v1.4.0 Live'),
             span('•'),
             span({ style: { color: 'var(--accent)', fontWeight: '700' } }, 'What\'s New →')
         ),
@@ -1486,28 +1727,65 @@ const PlaygroundBanner = component(() => {
     );
 });
 
-// Global App Footer Component
+// Global App Landing Footer Component
 const AppFooter = component(() => {
     return footer({ class: 'cairn-footer' },
+        // Background Grass GIF Animation
+        div({ class: 'cairn-footer-bg-wrap' },
+            img({
+                src: './assets/grass-footer.gif',
+                alt: 'Cairn Grass Footer Animation',
+                onerror: (e) => {
+                    if (!e.target.dataset.triedRelative) {
+                        e.target.dataset.triedRelative = 'true';
+                        e.target.src = '../assets/grass-footer.gif';
+                    }
+                }
+            })
+        ),
         div({ class: 'cairn-footer-inner' },
-            div({ class: 'cairn-footer-left' },
-                div({ style: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' } },
-                    LogoImage(22),
-                    span({ style: { fontWeight: '700', color: 'var(--text)', fontSize: '1rem' } }, 'CairnJS')
+            div({ class: 'cairn-footer-brand' },
+                div({ style: { display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.65rem' } },
+                    LogoImage(28),
+                    span({ style: { fontFamily: 'var(--font-heading)', fontWeight: '800', fontSize: '1.2rem', color: 'var(--text)' } }, 'CairnJS')
                 ),
-                p({ style: { color: 'var(--text-muted)', fontSize: '0.85rem' } }, 'Released under the MIT License. Built with pure precision & zero dependencies.')
+                p({ style: { color: 'var(--text-muted)', fontSize: '0.875rem', maxWidth: '360px', lineHeight: '1.6' } },
+                    'A simple, standalone UI library featuring fine-grained signals, spring physics, and canvas tools — built with zero dependencies.'
+                )
             ),
-            div({ class: 'cairn-footer-right' },
-                a({ href: 'https://github.com/EldrexDelosReyesBula/CairnJS', target: '_blank', rel: 'noreferrer' }, 'GitHub'),
-                a({ href: '#', onclick: (e) => { e.preventDefault(); navigateTo('getting-started'); } }, 'Guide'),
-                a({ href: './playground.html' }, 'Playground'),
-                a({ href: '../examples/index.html' }, 'Examples')
+            div({ class: 'cairn-footer-links-group' },
+                div({ class: 'cairn-footer-col' },
+                    h4({ style: { fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text)', marginBottom: '0.75rem', fontWeight: '700' } }, 'Documentation'),
+                    a({ href: '#/docs/getting-started', onclick: (e) => { e.preventDefault(); navigateTo('getting-started'); } }, 'Getting Started'),
+                    a({ href: '#/docs/fundamentals', onclick: (e) => { e.preventDefault(); navigateTo('fundamentals'); } }, 'Fundamentals'),
+                    a({ href: '#/docs/reactivity', onclick: (e) => { e.preventDefault(); navigateTo('reactivity'); } }, 'Reactivity Signals'),
+                    a({ href: '#/docs/api', onclick: (e) => { e.preventDefault(); navigateTo('api'); } }, 'API Reference')
+                ),
+                div({ class: 'cairn-footer-col' },
+                    h4({ style: { fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text)', marginBottom: '0.75rem', fontWeight: '700' } }, 'Ecosystem'),
+                    a({ href: '../examples/index.html' }, 'Examples Gallery (36)'),
+                    a({ href: './playground.html' }, 'Playground Sandbox'),
+                    a({ href: 'https://github.com/EldrexDelosReyesBula/CairnJS', target: '_blank', rel: 'noreferrer' }, 'GitHub Repository'),
+                    a({ href: 'https://www.paypal.com/paypalme/eldrexbula', target: '_blank', rel: 'noreferrer', style: { color: '#ec4899', fontWeight: '600' } }, 'Support Author ❤️')
+                )
+            )
+        ),
+        div({ class: 'cairn-footer-bottom' },
+            div({ style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' } },
+                span('Released under the MIT License.'),
+                span('•'),
+                span('Copyright © 2026 Eldrex Bula & CairnJS Contributors.')
+            ),
+            div({ style: { fontSize: '0.8rem', color: 'var(--text-muted)' } },
+                'Built with ',
+                span('CairnJS', { style: { color: 'var(--accent)', fontWeight: '700' } }),
+                ' — A Lightweight, Zero-Dependency Reactive Framework'
             )
         )
     );
 });
 
-// VitePress Docs Pagination Component (Previous / Next Buttons)
+// Documentation Pagination Component (Previous / Next Buttons)
 const DocsPagination = component(() => {
     const currentIndex = computed(() => flatPages.findIndex(p => p.id === activePageId.value));
     const prevPage = computed(() => currentIndex.value > 0 ? flatPages[currentIndex.value - 1] : null);
@@ -1604,7 +1882,7 @@ const handleMainScroll = (e) => {
     }, 40);
 };
 
-// 3-Column Documentation Guide View Component (VitePress Architecture)
+// 3-Column Documentation Guide View Component
 const GuideDocsView = component(() => {
     const currentPage = computed(() => flatPages.find(p => p.id === activePageId.value) || flatPages[0]);
 
@@ -1850,43 +2128,39 @@ const SearchModal = component(() => {
     );
 });
 
-// VitePress Footer Component
+// Documentation Guide Footer Component
 const Footer = component(() => {
-    return footer({
-        style: () => ({
-            borderTop: '1px solid var(--border)',
-            padding: '2.5rem 1.5rem',
-            backgroundColor: 'var(--bg)',
-            color: 'var(--text-muted)',
-            fontSize: '0.875rem',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            marginTop: 'auto',
-            textAlign: 'center',
-            position: 'relative',
-            zIndex: '1',
-            transition: 'background-color 0.25s ease, border-color 0.25s ease'
-        })
-    },
-        div({ style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' } },
-            span('Released under the MIT License.'),
-            span('•'),
-            span('Copyright © 2026 Eldrex Bula & CairnJS Contributors.'),
-            span('•'),
-            a({
-                href: 'https://www.paypal.com/paypalme/eldrexbula',
-                target: '_blank',
-                rel: 'noreferrer',
-                style: { color: '#ec4899', textDecoration: 'none', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }
-            }, fa('fa-solid fa-heart', { color: '#ec4899', fontSize: '0.75rem' }), 'Support CairnJS')
+    return footer({ class: 'cairn-footer' },
+        div({ class: 'cairn-footer-bg-wrap' },
+            img({
+                src: './assets/grass-footer.gif',
+                alt: 'Cairn Grass Footer Animation',
+                onerror: (e) => {
+                    if (!e.target.dataset.triedRelative) {
+                        e.target.dataset.triedRelative = 'true';
+                        e.target.src = '../assets/grass-footer.gif';
+                    }
+                }
+            })
         ),
-        div({ style: { fontSize: '0.8rem', color: 'var(--text-muted)' } },
-            'Built with ',
-            span('CairnJS', { style: { color: 'var(--accent)', fontWeight: '700' } }),
-            ' — A Lightweight, Zero-Dependency Reactive Framework'
+        div({ class: 'cairn-footer-bottom', style: { borderTop: 'none', paddingTop: '0' } },
+            div({ style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' } },
+                span('Released under the MIT License.'),
+                span('•'),
+                span('Copyright © 2026 Eldrex Bula & CairnJS Contributors.'),
+                span('•'),
+                a({
+                    href: 'https://www.paypal.com/paypalme/eldrexbula',
+                    target: '_blank',
+                    rel: 'noreferrer',
+                    style: { color: '#ec4899', textDecoration: 'none', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }
+                }, fa('fa-solid fa-heart', { color: '#ec4899', fontSize: '0.75rem' }), 'Support CairnJS')
+            ),
+            div({ style: { fontSize: '0.8rem', color: 'var(--text-muted)' } },
+                'Built with ',
+                span('CairnJS', { style: { color: 'var(--accent)', fontWeight: '700' } }),
+                ' — A Lightweight, Zero-Dependency Reactive Framework'
+            )
         )
     );
 });
@@ -1904,12 +2178,14 @@ const App = component(() => {
             ? div({ style: { display: 'flex', flexDirection: 'column', width: '100%' } },
                 LandingHero(),
                 FeaturesGrid(),
-                PlaygroundBanner()
+                PlaygroundBanner(),
+                AppFooter()
             )
-            : GuideDocsView(),
-        Footer(),
+            : div({ style: { display: 'flex', flexDirection: 'column', width: '100%', flex: '1' } },
+                GuideDocsView(),
+                Footer()
+            ),
         MobileNavDrawer(),
-        MobileTocDrawer(),
         SearchModal()
     );
 });
@@ -1936,6 +2212,20 @@ window.cairnOpenInPlayground = function (btn) {
         const code = preEl.innerText.replace(/\u00a0/g, ' ').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
         sessionStorage.setItem('cairn_custom_code', code);
         window.location.href = 'playground.html?template=custom';
+    }
+};
+
+window.cairnCarouselPrev = function (id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.scrollBy({ left: -260, behavior: 'smooth' });
+    }
+};
+
+window.cairnCarouselNext = function (id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.scrollBy({ left: 260, behavior: 'smooth' });
     }
 };
 
@@ -1968,6 +2258,8 @@ window.cairnToggleRunCode = function (btn) {
     runnerCounter++;
     const runnerId = `runner-${runnerCounter}`;
     const rawCode = preEl.innerText.trim();
+    const codeEl = preEl.querySelector('code');
+    const classAttr = (codeEl ? codeEl.className : '') || '';
     runnerStateMap.set(runnerId, { originalCode: rawCode, currentCode: rawCode, wrapper });
 
     preEl.style.display = 'none';
@@ -1979,60 +2271,67 @@ window.cairnToggleRunCode = function (btn) {
     runnerPane.className = 'cairn-live-runner-pane';
     runnerPane.id = `${runnerId}-pane`;
 
-    // Developer Toolbar
+    const isExplicitConsole = /\b(console|logs)\b/i.test(classAttr);
+    const isExplicitPreview = /\b(preview|ui)\b/i.test(classAttr);
+    const isExplicitBoth = /\b(both)\b/i.test(classAttr);
+    const hasDomMounting = /mount\s*\(|#app|document\.body|appendChild/i.test(rawCode);
+    const hasConsoleLogs = /console\.(log|info|warn|error)/i.test(rawCode);
+
+    let initialMode = 'preview';
+    if (isExplicitConsole || (!hasDomMounting && hasConsoleLogs && !isExplicitPreview)) {
+        initialMode = 'console';
+    } else if (isExplicitBoth || (hasDomMounting && hasConsoleLogs)) {
+        initialMode = 'both';
+    }
+
+    const showEdit = /\b(editable|edit)\b/i.test(classAttr);
+    const showExpand = /\b(expand|fullscreen)\b/i.test(classAttr);
+    const showPlayground = !/\b(no-playground)\b/i.test(classAttr);
+    const showConsole = !/\b(no-console)\b/i.test(classAttr);
+    const showViewCode = !/\b(no-viewcode|no-close)\b/i.test(classAttr);
+
+    // Minimalist Clean Toolbar
     const toolbar = document.createElement('div');
     toolbar.className = 'cairn-live-runner-toolbar';
+    const headerTitle = initialMode === 'console' 
+        ? `<i class="fa-solid fa-terminal" style="color: #38bdf8;"></i> Console Output`
+        : initialMode === 'both'
+        ? `<i class="fa-solid fa-layer-group" style="color: #818cf8;"></i> Live Preview & Console`
+        : `<i class="fa-solid fa-circle-play" style="color: #10b981;"></i> Live Preview`;
+
     toolbar.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="color: #38bdf8; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
-                <i class="fa-solid fa-circle-play" style="color: #10b981;"></i> Zero-Build Live Sandbox
+            <span id="${runnerId}-title" style="color: #38bdf8; font-weight: 600; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                ${headerTitle}
             </span>
         </div>
-        <div class="cairn-runner-btn-group">
-            <button class="cairn-runner-toolbar-btn" onclick="cairnToggleEditCode('${runnerId}', this)" title="Edit code in live REPL editor">
+        <div class="cairn-runner-btn-group" style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+            ${showEdit ? `
+            <button class="cairn-runner-toolbar-btn" onclick="cairnToggleEditCode('${runnerId}', this)" title="Edit code in-place">
                 <i class="fa-solid fa-pen-to-square"></i> Edit
             </button>
-            <button class="cairn-runner-toolbar-btn" onclick="cairnReExecuteRunner('${runnerId}')" title="Re-run and apply code changes">
-                <i class="fa-solid fa-rotate-right"></i> Apply
-            </button>
-            <button class="cairn-runner-toolbar-btn" onclick="cairnToggleConsole('${runnerId}', this)" title="Toggle sandbox console logs">
-                <i class="fa-solid fa-terminal"></i> Console <span id="${runnerId}-log-badge" style="display:none; background:#38bdf8; color:#0f172a; padding:0.05rem 0.3rem; border-radius:9999px; font-size:0.65rem; font-weight:700;">0</span>
-            </button>
-            <button class="cairn-runner-toolbar-btn" onclick="cairnToggleFullscreen('${runnerId}', this)" title="Expand / Fullscreen preview">
-                <i class="fa-solid fa-expand"></i> Expand
-            </button>
-            <button class="cairn-runner-toolbar-btn" onclick="cairnDownloadHtml('${runnerId}')" title="Download standalone zero-build HTML file">
-                <i class="fa-solid fa-download"></i> Export
-            </button>
+            <button class="cairn-runner-toolbar-btn" id="${runnerId}-apply-btn" style="display:none; color: #34d399;" onclick="cairnReExecuteRunner('${runnerId}')" title="Apply changes and re-run">
+                <i class="fa-solid fa-rotate"></i> Apply
+            </button>` : ''}
+            ${showPlayground ? `
             <button class="cairn-runner-toolbar-btn" onclick="cairnOpenInPlayground(this)" title="Open in Cairn Playground">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Playground
-            </button>
-            <button class="cairn-runner-toolbar-btn" style="color: #ef4444;" onclick="cairnToggleRunCode(this.closest('.code-block-wrapper').querySelector('.run-code-btn'))" title="Close runner">
+            </button>` : ''}
+            ${showConsole ? `
+            <button class="cairn-runner-toolbar-btn ${initialMode === 'console' || initialMode === 'both' ? 'active' : ''}" onclick="cairnToggleConsole('${runnerId}', this)" title="Toggle console logs">
+                <i class="fa-solid fa-terminal"></i> Console <span id="${runnerId}-log-badge" style="display:none; background:#38bdf8; color:#0f172a; padding:0.05rem 0.35rem; border-radius:9999px; font-size:0.65rem; font-weight:700;">0</span>
+            </button>` : ''}
+            ${showExpand ? `
+            <button class="cairn-runner-toolbar-btn" onclick="cairnToggleFullscreen('${runnerId}', this)" title="Expand full width">
+                <i class="fa-solid fa-expand"></i> Expand
+            </button>` : ''}
+            ${showViewCode ? `
+            <button class="cairn-runner-toolbar-btn" style="color: #94a3b8;" onclick="cairnToggleRunCode(this.closest('.code-block-wrapper').querySelector('.run-code-btn'))" title="Close preview">
                 <i class="fa-solid fa-xmark"></i>
-            </button>
+            </button>` : ''}
         </div>
     `;
     runnerPane.appendChild(toolbar);
-
-    // Live Editable Code Editor Area
-    const editorArea = document.createElement('textarea');
-    editorArea.className = 'cairn-live-runner-editor';
-    editorArea.id = `${runnerId}-editor`;
-    editorArea.value = rawCode;
-    editorArea.spellcheck = false;
-    editorArea.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const start = editorArea.selectionStart;
-            const end = editorArea.selectionEnd;
-            editorArea.value = editorArea.value.substring(0, start) + '  ' + editorArea.value.substring(end);
-            editorArea.selectionStart = editorArea.selectionEnd = start + 2;
-        } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-            e.preventDefault();
-            cairnReExecuteRunner(runnerId);
-        }
-    });
-    runnerPane.appendChild(editorArea);
 
     // Shell / CLI Command Fast-Path
     const isShell = /^(npm|pnpm|yarn|bun|npx|git|curl|node)\s/i.test(rawCode);
@@ -2063,13 +2362,28 @@ window.cairnToggleRunCode = function (btn) {
         } catch (_) {}
     }
 
+    // In-place editable code editor
+    const editor = document.createElement('textarea');
+    editor.className = 'cairn-live-runner-editor';
+    editor.id = `${runnerId}-editor`;
+    editor.style.cssText = 'display:none; width: 100%; height: 130px; padding: 0.85rem 1rem; background: #020617; color: #f8fafc; font-family: var(--font-mono); font-size: 0.82rem; border: none; border-bottom: 1px solid rgba(255,255,255,0.1); outline: none; resize: vertical; box-sizing: border-box;';
+    editor.spellcheck = false;
+    editor.value = rawCode;
+    runnerPane.appendChild(editor);
+
     const iframe = document.createElement('iframe');
     iframe.className = 'cairn-live-runner-frame';
     iframe.id = `${runnerId}-frame`;
+    if (initialMode === 'console') {
+        iframe.style.display = 'none';
+    }
 
     const consoleBox = document.createElement('div');
     consoleBox.className = 'cairn-live-runner-console';
     consoleBox.id = `${runnerId}-console`;
+    if (initialMode === 'console' || initialMode === 'both') {
+        consoleBox.style.display = 'block';
+    }
 
     runnerPane.appendChild(iframe);
     runnerPane.appendChild(consoleBox);
@@ -2151,6 +2465,15 @@ function renderRunnerFrame(runnerId, codeToRun) {
                 parent.postMessage({ type: 'cairn-inline-log', runnerId: '${runnerId}', level, msg: String(msg) }, '*');
             } catch(e) {}
         };
+        const _postHeight = () => {
+            try {
+                const app = document.getElementById('app');
+                const h = app ? app.scrollHeight : (document.body ? document.body.scrollHeight : 0);
+                if (h > 40) {
+                    parent.postMessage({ type: 'cairn-runner-resize', runnerId: '${runnerId}', height: h }, '*');
+                }
+            } catch(e) {}
+        };
         console.log = (...args) => { _rawLog(...args); _postLog('log', args.map(_formatArg).join(' ')); };
         console.info = (...args) => { _rawLog(...args); _postLog('info', args.map(_formatArg).join(' ')); };
         console.warn = (...args) => { _rawLog(...args); _postLog('warn', args.map(_formatArg).join(' ')); };
@@ -2161,24 +2484,61 @@ function renderRunnerFrame(runnerId, codeToRun) {
         window.addEventListener('unhandledrejection', (e) => {
             _postLog('error', e.reason?.message || String(e.reason));
         });
+        window.addEventListener('load', () => { _postHeight(); setTimeout(_postHeight, 80); setTimeout(_postHeight, 300); });
+        if (typeof MutationObserver !== 'undefined') {
+            new MutationObserver(() => { _postHeight(); }).observe(document.documentElement, { subtree: true, childList: true, attributes: true });
+        }
+    `;
+
+    const currentTheme = (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme')) || 'dark';
+    const iframeCommonCss = `
+        :root, [data-theme="dark"] {
+            --bg: #090d16;
+            --surface: #0e131f;
+            --surface-card: #121826;
+            --surface-hover: #1a2234;
+            --border: #1e2638;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+        }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-card: #ffffff;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #0284c7;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 1.25rem;
+            min-height: 100px;
+            line-height: 1.5;
+        }
+        #app { width: 100%; }
     `;
 
     if (isPureCss) {
         iframe.srcdoc = `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="${currentTheme}">
 <head>
     <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: #090d16; color: #f8fafc; padding: 1.5rem; }
+        ${iframeCommonCss}
         ${codeToRun}
     </style>
 </head>
 <body>
-    <div class="preview-card card" style="padding: 1.5rem; background: #1e293b; border-radius: 0.75rem; border: 1px solid #334155; max-width: 420px;">
-        <h3 style="margin-bottom: 0.5rem; color: #38bdf8;">CSS Live Preview</h3>
-        <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 1rem;">Active custom CSS styles applied to preview elements.</p>
+    <div class="preview-card card" style="padding: 1.5rem; background: var(--surface-card); border-radius: 0.75rem; border: 1px solid var(--border); max-width: 420px;">
+        <h3 style="margin-bottom: 0.5rem; color: var(--accent);">CSS Live Preview</h3>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Active custom CSS styles applied to preview elements.</p>
         <button class="btn btn-primary" style="padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; border: none; background: #0284c7; color: #fff; font-weight: 600;">Styled Action Button</button>
     </div>
 </body>
@@ -2203,13 +2563,12 @@ function renderRunnerFrame(runnerId, codeToRun) {
 
     if (isPureHtmlMarkup) {
         iframe.srcdoc = `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="${currentTheme}">
 <head>
     <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: #090d16; color: #f8fafc; padding: 1.25rem; }
+        ${iframeCommonCss}
     </style>
 </head>
 <body>
@@ -2221,7 +2580,7 @@ function renderRunnerFrame(runnerId, codeToRun) {
 
     if (hasScriptTag) {
         iframe.srcdoc = `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="${currentTheme}">
 <head>
     <meta charset="UTF-8">
     <script type="importmap">
@@ -2229,8 +2588,7 @@ function renderRunnerFrame(runnerId, codeToRun) {
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: #090d16; color: #f8fafc; padding: 1.25rem; }
+        ${iframeCommonCss}
     </style>
     <script>
         ${consoleBridgeScript}
@@ -2245,7 +2603,7 @@ function renderRunnerFrame(runnerId, codeToRun) {
     }
 
     iframe.srcdoc = `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="${currentTheme}">
 <head>
     <meta charset="UTF-8">
     <script type="importmap">
@@ -2253,15 +2611,7 @@ function renderRunnerFrame(runnerId, codeToRun) {
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: #090d16;
-            color: #f8fafc;
-            padding: 1.25rem;
-            min-height: 100px;
-        }
-        #app { width: 100%; }
+        ${iframeCommonCss}
     </style>
     <script>
         ${consoleBridgeScript}
@@ -2306,6 +2656,10 @@ window.cairnToggleEditCode = function (runnerId, btn) {
     if (!editor) return;
     const isHidden = editor.style.display === 'none' || !editor.style.display;
     editor.style.display = isHidden ? 'block' : 'none';
+    const applyBtn = document.getElementById(`${runnerId}-apply-btn`);
+    if (applyBtn) {
+        applyBtn.style.display = isHidden ? 'inline-flex' : 'none';
+    }
     if (btn) btn.classList.toggle('active', isHidden);
     if (isHidden) editor.focus();
 };
@@ -2366,7 +2720,9 @@ window.cairnDownloadHtml = function (runnerId) {
 };
 
 window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'cairn-inline-log') {
+    if (!e.data) return;
+
+    if (e.data.type === 'cairn-inline-log') {
         const consoleBox = document.getElementById(`${e.data.runnerId}-console`);
         if (consoleBox) {
             const logLine = document.createElement('div');
@@ -2380,6 +2736,12 @@ window.addEventListener('message', (e) => {
                 logBadge.textContent = String(count);
                 logBadge.style.display = 'inline';
             }
+        }
+    } else if (e.data.type === 'cairn-runner-resize') {
+        const frame = document.getElementById(`${e.data.runnerId}-frame`);
+        if (frame && e.data.height) {
+            const targetHeight = Math.min(560, Math.max(120, e.data.height + 24));
+            frame.style.height = `${targetHeight}px`;
         }
     }
 });

@@ -1,151 +1,178 @@
-# The Complete Cairn Migration Handbook
+# The Complete CairnJS Migration Handbook
 
-Welcome to the definitive guide for migrating existing web applications and components to **Cairn** (`@eldrex/cairnjs`). Whether you are coming from **Vanilla JavaScript and raw HTML/CSS**, **React**, **Vue**, **Svelte**, **Angular**, or legacy libraries like **jQuery, Alpine.js, or HTMX**, this handbook provides detailed, side-by-side architectural mappings, code conversions, and real-world refactorings.
+Welcome to the definitive migration handbook for **CairnJS** (`@eldrex/cairnjs`). Whether your existing codebase is built with **Vanilla HTML/CSS/JavaScript**, **React / Next.js**, **Vue 2 / Vue 3**, **Svelte 4 / 5**, **Angular**, **jQuery**, **Alpine.js**, or **HTMX**, this guide provides side-by-side architectural mappings, syntax comparisons, code refactoring recipes, and production-tested incremental migration strategies.
 
 ---
 
-## Table of Contents
+## 📑 Table of Contents
 
-1. [The Paradigm Shift: Why Migrate to Cairn?](#1-the-paradigm-shift-why-migrate-to-cairn)
+1. [Architectural Overview: The Paradigm Shift](#1-architectural-overview-the-paradigm-shift)
 2. [Migrating from Vanilla HTML, CSS & JavaScript](#2-migrating-from-vanilla-html-css--javascript)
-   - [Exhaustive DOM API Translation Matrix](#exhaustive-dom-api-translation-matrix)
-   - [Real-World Refactor 1: Interactive Shopping Cart](#real-world-refactor-1-interactive-shopping-cart)
-   - [Real-World Refactor 2: Tabbed Navigation with URL Hash](#real-world-refactor-2-tabbed-navigation-with-url-hash)
-   - [Real-World Refactor 3: Dynamic Filterable Data Table](#real-world-refactor-3-dynamic-filterable-data-table)
+   - [DOM API to Cairn Translation Matrix](#dom-api-to-cairn-translation-matrix)
+   - [Refactoring 1: Dynamic Shopping Cart](#refactoring-1-dynamic-shopping-cart)
+   - [Refactoring 2: Filterable Data Table](#refactoring-2-filterable-data-table)
 3. [Migrating from React & Next.js](#3-migrating-from-react--nextjs)
-   - [React Hooks to Cairn Reactivity Mapping](#react-hooks-to-cairn-reactivity-mapping)
-   - [JSX Patterns vs Cairn Builders](#jsx-patterns-vs-cairn-builders)
-   - [Incremental Hybrid Integration (`cairnToReact` & `useCairn`)](#incremental-hybrid-integration-cairntoreact--usecairn)
+   - [Hooks to Signals Mapping Cheat Sheet](#hooks-to-signals-mapping-cheat-sheet)
+   - [JSX vs Cairn Functional Element Builders](#jsx-vs-cairn-functional-element-builders)
+   - [Incremental Co-existence with `cairnToReact`](#incremental-co-existence-with-cairntoreact)
 4. [Migrating from Vue 2 & Vue 3](#4-migrating-from-vue-2--vue-3)
-   - [Template Directives Mapping](#template-directives-mapping)
-   - [Composition API vs Options API Conversion](#composition-api-vs-options-api-conversion)
-   - [Vue 3 SFC Wrapper (`cairnToVue`)](#vue-3-sfc-wrapper-cairntovue)
-5. [Migrating from Svelte 4 / 5 & Angular 17+](#5-migrating-from-svelte-4--5--angular-17)
+   - [Directives Mapping (`v-if`, `v-for`, `v-model`, `v-bind`)](#directives-mapping)
+   - [Composition API (`ref`, `computed`, `watchEffect`) to Cairn](#composition-api-to-cairn)
+   - [Using Cairn inside Vue SFCs with `cairnToVue`](#using-cairn-inside-vue-sfcs-with-cairntovue)
+5. [Migrating from Svelte & Angular](#5-migrating-from-svelte--angular)
    - [Svelte 5 Runes vs Cairn Signals](#svelte-5-runes-vs-cairn-signals)
-   - [Angular 17+ Standalone Signals & Directives](#angular-17-standalone-signals--directives)
+   - [Angular Signals & Directives to Cairn](#angular-signals--directives-to-cairn)
 6. [Migrating from jQuery, Alpine.js & HTMX](#6-migrating-from-jquery-alpinejs--htmx)
-7. [5-Stage Enterprise Migration Checklist](#7-5-stage-enterprise-migration-checklist)
+7. [Zero-Downtime Incremental Migration Strategy](#7-zero-downtime-incremental-migration-strategy)
 
 ---
 
-## 1. The Paradigm Shift: Why Migrate to Cairn?
+## 1. Architectural Overview: The Paradigm Shift
 
-Traditional web development frameworks force a choice between two extremes:
+Traditional web frameworks fall into two distinct buckets:
 
-1. **Vanilla JavaScript**: Maximum control and zero dependencies, but requires tedious manual DOM queries (`document.querySelector`), manual event management, and spaghetti state synchronization.
-2. **Heavy Frameworks (React, Vue, Angular)**: Declarative UI, but introduces massive node_modules dependencies, complex compilers (Babel, JSX, Vite plugins), Virtual DOM diffing overhead, and hook lifecycle rules.
+1. **Vanilla JavaScript & Imperative DOM**: Direct control and zero bundle overhead, but burdened by manual `document.querySelector` lookups, manual event cleanup, and boilerplate state synchronization.
+2. **Heavy Frameworks (React, Angular, Vue)**: Declarative UI, but reliant on virtual DOM diffing, complex compiler toolchains (Babel, JSX, Vite plugins), heavy `node_modules` dependencies, and restrictive component lifecycles.
 
-### How Cairn Solves Both:
-Cairn combines the **declarative power of signals** with the **direct simplicity of standard JavaScript functions**:
-- **Zero Build Tools Required**: Runs directly in any modern browser via `<script type="module">`.
-- **Zero Virtual DOM**: Updates are fine-grained and surgical. Mutating `count.value++` updates *only* the exact text node bound to `count`, leaving the rest of the DOM completely untouched.
-- **Universal Cross-Compilation**: A Cairn component can be exported into React, Vue, Svelte, Angular, or standard W3C Web Components with zero code changes.
+### The CairnJS Advantage
+
+CairnJS delivers the best of both worlds:
+
+- **Zero Virtual DOM**: Modifying `count.value++` surgically updates **only** the single bound DOM text node or attribute. No tree diffing, no reconcile overhead.
+- **Zero Build Step Required**: Runs directly in any modern browser via standard `<script type="module">` or UMD script tags.
+- **Direct Procedural Builders + HTML Templates**: Choose between JavaScript builder functions (`div()`, `button()`, `input()`) or standard tagged template literals (`html\`<button>\${count}</button>\``).
+- **Zero-Dependency Interoperability**: Export Cairn components to React, Vue, Svelte, or W3C standard Web Components seamlessly.
 
 ---
 
 ## 2. Migrating from Vanilla HTML, CSS & JavaScript
 
-### Exhaustive DOM API Translation Matrix
+### DOM API to Cairn Translation Matrix
 
-| Traditional DOM API | Cairn Equivalent | Advantage in Cairn |
+| Traditional DOM API | CairnJS Equivalent | Benefit in CairnJS |
 | :--- | :--- | :--- |
-| `document.createElement('div')` | `div(...)` | Declarative, procedural construction in standard JS |
-| `parent.appendChild(child)` | `div(child1, child2)` | Natural hierarchy nesting without multi-step manual appending |
-| `parent.replaceChildren(...)` | `div(() => items.map(...))` | Automatically handled by reactive getters |
-| `document.getElementById('msg').textContent = val` | `p(() => msg.value)` | Eliminates manual ID querying; state changes update the DOM node directly |
-| `el.innerHTML = '<b>Bold</b>'` | `raw('<b>Bold</b>')` or `strong('Bold')` | Safe, sanitized procedural markup |
-| `el.addEventListener('click', handler)` | `button('Click', { onclick: handler })` | Bound directly in the component definition |
-| `el.removeEventListener(...)` | Handled automatically on unmount | No memory leaks from dangling event listeners |
-| `el.classList.add('active')` / `remove()` | `class: () => isActive.value ? 'active' : ''` | Dynamic classes stay in sync with state |
-| `el.classList.toggle('open', bool)` | `class: () => isOpen.value ? 'open' : ''` | Declarative boolean class binding |
-| `el.style.setProperty('color', '#38bdf8')` | `style: () => ({ color: colorSignal.value })` | Reactive style objects with camelCase property support |
-| `el.style.display = isVisible ? 'block' : 'none'` | `div(() => isVisible.value ? Content() : null)` | Real conditional mounting without layout reflows |
-| `input.value = text` + `input.addEventListener('input')` | `input({ value: text, oninput: e => text.value = e.target.value })` | Two-way reactive data binding |
-| `document.querySelectorAll('.item')` | `collection(['A', 'B']).map(...)` | Manage state as data structures, not DOM queries |
+| `document.createElement('div')` | `div(...)` | Declarative, pure functional element construction |
+| `parent.appendChild(child)` | `div(child1, child2)` | Hierarchy is expressed naturally via nested arguments |
+| `parent.replaceChildren(...)` | `div(() => list.map(...))` | Automatically handled by reactive getter functions |
+| `el.textContent = val` | `p(() => signal.value)` | Eliminates manual DOM querying; updates reactively |
+| `el.innerHTML = '<b>Hello</b>'` | `div({}, '<b>Hello</b>')` or `{ html: '...' }` | Native sanitized rich text and HTML string support |
+| `el.addEventListener('click', fn)` | `button('Click', { onclick: fn })` | Bound directly in component declaration |
+| `el.classList.add('active')` | `class: () => isActive.value ? 'active' : ''` | Dynamic classes stay in sync with state signals |
+| `el.style.color = '#38bdf8'` | `style: () => ({ color: color.value })` | Reactive style objects (or full CSS with `coat: { ... }`) |
+| `input.value = text; input.oninput = ...` | `input({ value: text, oninput: e => text.value = e.target.value })` | Effortless two-way data synchronization |
+| `document.querySelectorAll('.item')` | `collection(['A', 'B']).map(...)` | State is managed as observable arrays, not DOM queries |
 
 ---
 
-### Real-World Refactor 1: Interactive Shopping Cart
+### Refactoring 1: Dynamic Shopping Cart
 
-#### ❌ Before: Vanilla JavaScript (DOM Queries, InnerHTML & Manual Calculation)
-```html
-<div id="cart-app">
-    <h2>Shopping Cart</h2>
-    <div id="items-list"></div>
-    <p id="total-price">Total: $0.00</p>
+#### ❌ Before: Vanilla JavaScript (Manual DOM Mutation & Querying)
+```html static
+<div id="cart">
+    <h2>Your Cart</h2>
+    <div id="cart-list"></div>
+    <p id="total">Total: $0.00</p>
     <button id="add-btn">+ Add Item ($25)</button>
 </div>
 
 <script>
-    let cart = [
-        { id: 1, name: 'Cairn Framework Pro License', price: 99 }
-    ];
+    let cartItems = [{ id: 1, name: 'Pro License', price: 99 }];
+    const listEl = document.getElementById('cart-list');
+    const totalEl = document.getElementById('total');
 
-    const listEl = document.getElementById('items-list');
-    const totalEl = document.getElementById('total-price');
-    const addBtn = document.getElementById('add-btn');
-
-    function renderCart() {
+    function render() {
         listEl.innerHTML = '';
-        let total = 0;
-        cart.forEach(item => {
-            total += item.price;
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'cart-row';
-            itemDiv.innerHTML = `
-                <span>${item.name} - $${item.price}</span>
-                <button onclick="removeItem(${item.id})">Remove</button>
-            `;
-            listEl.appendChild(itemDiv);
+        let sum = 0;
+        cartItems.forEach(item => {
+            sum += item.price;
+            const row = document.createElement('div');
+            row.className = 'cart-item';
+            row.innerHTML = `<span>${item.name} ($${item.price})</span> <button onclick="remove(${item.id})">Remove</button>`;
+            listEl.appendChild(row);
         });
-        totalEl.textContent = `Total: $${total.toFixed(2)}`;
+        totalEl.textContent = `Total: $${sum.toFixed(2)}`;
     }
 
-    window.removeItem = function(id) {
-        cart = cart.filter(item => item.id !== id);
-        renderCart();
+    window.remove = function(id) {
+        cartItems = cartItems.filter(i => i.id !== id);
+        render();
     };
 
-    addBtn.addEventListener('click', () => {
-        cart.push({ id: Date.now(), name: 'Add-on Module', price: 25 });
-        renderCart();
-    });
+    document.getElementById('add-btn').onclick = () => {
+        cartItems.push({ id: Date.now(), name: 'Add-on Pack', price: 25 });
+        render();
+    };
 
-    renderCart();
+    render();
 </script>
 ```
 
-#### ✅ After: Clean Cairn Refactor (Zero DOM Queries, Fine-Grained Signals)
+#### ✅ After: Clean CairnJS Implementation
 ```javascript
 import { collection, computed, div, h2, p, button, span, mount } from '@eldrex/cairnjs';
 
 export const ShoppingCart = () => {
     const items = collection([
-        { id: 1, name: 'Cairn Framework Pro License', price: 99 }
+        { id: 1, name: 'Pro License', price: 99 }
     ]);
 
-    const total = computed(() => 
-        items.reduce((sum, item) => sum + item.price, 0)
-    );
+    const total = computed(() => items.reduce((sum, item) => sum + item.price, 0));
 
-    return div({ style: { padding: '2rem', background: '#0f172a', color: '#f8fafc', borderRadius: '14px', maxWidth: '460px' } },
-        h2('Shopping Cart', { style: { marginBottom: '1rem' } }),
-        
+    return div({
+        coat: {
+            padding: '24px',
+            background: '#0f172a',
+            color: '#f8fafc',
+            borderRadius: '12px',
+            maxWidth: '420px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
+        }
+    },
+        h2('Your Cart', { coat: { margin: '0 0 16px 0', fontSize: '1.4rem' } }),
+
+        // Dynamic Reactive List (Zero manual innerHTML)
         div(() => items.map(item =>
-            div({ style: { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #1e293b' } },
-                span(`${item.name} - $${item.price}`),
+            div({
+                coat: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 0',
+                    borderBottom: '1px solid rgba(255,255,255,0.1)'
+                }
+            },
+                span(`${item.name} ($${item.price})`),
                 button('Remove', {
-                    style: { background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 700 },
+                    coat: {
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#f87171',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        '&:hover': { textDecoration: 'underline' }
+                    },
                     onclick: () => items.remove(item)
                 })
             )
         )),
 
-        p(() => `Total: $${total.value.toFixed(2)}`, { style: { fontSize: '1.2rem', fontWeight: 800, margin: '1.5rem 0' } }),
+        p(() => `Total: $${total.value.toFixed(2)}`, {
+            coat: { fontSize: '1.2rem', fontWeight: '700', margin: '16px 0', color: '#38bdf8' }
+        }),
 
         button('+ Add Item ($25)', {
-            style: { width: '100%', padding: '10px', background: '#38bdf8', color: '#0f172a', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer' },
-            onclick: () => items.push({ id: Date.now(), name: 'Add-on Module', price: 25 })
+            coat: {
+                width: '100%',
+                padding: '10px 16px',
+                background: '#0284c7',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                '&:hover': { background: '#0369a1' }
+            },
+            onclick: () => items.push({ id: Date.now(), name: 'Add-on Pack', price: 25 })
         })
     );
 };
@@ -155,189 +182,112 @@ mount('#app', ShoppingCart());
 
 ---
 
-### Real-World Refactor 2: Tabbed Navigation with URL Hash
+### Refactoring 2: Filterable Data Table
 
-#### ❌ Before: Vanilla JS
+#### ✅ CairnJS Reactive Filter & Search
 ```javascript
-const tabs = document.querySelectorAll('.tab-btn');
-const panels = document.querySelectorAll('.tab-panel');
+import { state, computed, div, input, table, thead, tbody, tr, th, td } from '@eldrex/cairnjs';
 
-tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        panels.forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.target).classList.add('active');
-    });
-});
-```
-
-#### ✅ After: Cairn
-```javascript
-import { state, div, button, p } from '@eldrex/cairnjs';
-
-export const TabbedNav = () => {
-    const activeTab = state('overview');
-
-    const tabList = [
-        { id: 'overview', label: 'Overview', text: 'Telemetry and server status.' },
-        { id: 'security', label: 'Security', text: 'TLS 1.3 encryption enabled.' },
-        { id: 'logs', label: 'Audit Logs', text: 'Zero anomalies reported.' }
-    ];
-
-    return div(
-        div({ style: { display: 'flex', gap: '8px', marginBottom: '1rem' } },
-            ...tabList.map(tab =>
-                button(tab.label, {
-                    style: () => ({
-                        background: activeTab.value === tab.id ? '#38bdf8' : '#1e293b',
-                        color: activeTab.value === tab.id ? '#0f172a' : '#94a3b8',
-                        padding: '8px 16px', borderRadius: '6px', border: 'none', fontWeight: 700, cursor: 'pointer'
-                    }),
-                    onclick: () => activeTab.value = tab.id
-                })
-            )
-        ),
-        div(() => p(tabList.find(t => t.id === activeTab.value).text))
-    );
-};
-```
-
----
-
-### Real-World Refactor 3: Dynamic Filterable Data Table
-
-```javascript
-import { state, computed, collection, div, input, table, thead, tbody, tr, th, td, mount } from '@eldrex/cairnjs';
-
-export const FilterableTable = () => {
-    const search = state('');
-    const users = collection([
-        { id: 1, name: 'Alice Cooper', role: 'Architect', status: 'Active' },
-        { id: 2, name: 'Bob Marley', role: 'Developer', status: 'Pending' },
-        { id: 3, name: 'Charlie Brown', role: 'DevOps', status: 'Active' }
-    ]);
+export const FilterableTable = ({ data = [] }) => {
+    const query = state('');
 
     const filtered = computed(() => {
-        const q = search.value.toLowerCase();
-        return users.filter(u => u.name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q));
+        const q = query.value.toLowerCase().trim();
+        if (!q) return data;
+        return data.filter(row => 
+            Object.values(row).some(val => String(val).toLowerCase().includes(q))
+        );
     });
 
-    return div({ style: { padding: '1.5rem', background: '#0f172a', color: '#fff', borderRadius: '12px' } },
+    return div({ style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
         input({
-            placeholder: 'Search name or role...',
-            value: search,
-            oninput: e => search.value = e.target.value,
-            style: { width: '100%', padding: '10px 14px', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff', marginBottom: '1rem' }
+            type: 'text',
+            placeholder: 'Filter records...',
+            value: query,
+            oninput: (e) => { query.value = e.target.value; },
+            style: { padding: '8px 12px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: '#fff' }
         }),
-        table({ style: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' } },
-            thead(tr(th('ID'), th('Name'), th('Role'), th('Status'))),
-            tbody(() => filtered.value.map(user =>
-                tr({ style: { borderBottom: '1px solid #1e293b', padding: '8px 0' } },
-                    td(String(user.id)),
-                    td(user.name),
-                    td(user.role),
-                    td(user.status)
+
+        table({ style: { width: '100%', borderCollapse: 'collapse', color: '#f8fafc' } },
+            thead(
+                tr(th('ID'), th('Name'), th('Role'), th('Status'))
+            ),
+            tbody(() => filtered.value.map(row =>
+                tr(
+                    td(String(row.id)),
+                    td(row.name),
+                    td(row.role),
+                    td(row.status)
                 )
             ))
         )
     );
 };
-
-mount('#app', FilterableTable());
 ```
 
 ---
 
 ## 3. Migrating from React & Next.js
 
-React applications frequently suffer from **unnecessary re-renders**, hook dependency array maintenance (`[deps]`), and prop drilling. Cairn signals resolve this by providing **fine-grained reactivity with zero hook execution rules**.
+### Hooks to Signals Mapping Cheat Sheet
 
-### React Hooks to Cairn Reactivity Mapping
-
-```
-React (Hook Model)                      Cairn (Signal Model)
--------------------                     --------------------
-useState(0)                             ➔ state(0)
-useMemo(() => a * 2, [a])               ➔ computed(() => a.value * 2)
-useEffect(() => { ... }, [a])           ➔ effect(() => { ... })
-useRef(null)                            ➔ div(...) / raw DOM element
-useCallback(fn, [deps])                 ➔ const fn = () => ... (Plain JS function)
-useContext(MyContext)                   ➔ useContext(MyContext)
-useReducer(reducer, init)               ➔ createStore('name', { ... })
-```
+| React Hook | CairnJS Primitive | Key Difference & Advantage |
+| :--- | :--- | :--- |
+| `const [val, setVal] = useState(0)` | `const val = state(0)` | Update directly via `val.value = 1` or `val.update(n => n + 1)` without re-rendering entire component function. |
+| `const doubled = useMemo(() => val * 2, [val])` | `const doubled = computed(() => val.value * 2)` | Zero dependency array. Cairn automatically tracks signals accessed inside the computation. |
+| `useEffect(() => { ... }, [dep])` | `effect(() => { ... })` | Dependencies auto-tracked. Optional return function handles teardown/cleanup automatically. |
+| `useRef(null)` | `const ref = h('div')` or `let el` | Standard DOM nodes returned directly from element builders. |
+| `useCallback(fn, [deps])` | Plain JavaScript function `const fn = () => ...` | Functions do not need memoization wrappers because component functions do not re-run on every state change. |
+| `useContext(MyContext)` | `inject(key)` / `provide(key, val)` | Hierarchical dependency injection without wrapper provider hell. |
 
 ---
 
-### JSX Patterns vs Cairn Builders
+### JSX vs Cairn Functional Element Builders
 
-#### Conditional Rendering
-- **React**: `{isVisible && <Component />}`
-- **Cairn**: `div(() => isVisible.value ? Component() : null)`
-
-#### List Mapping
-- **React**: `{items.map(item => <Item key={item.id} data={item} />)}`
-- **Cairn**: `div(() => items.map(item => Item({ data: item })))`
-
-#### Fragments
-- **React**: `<> <Header /> <Main /> </>`
-- **Cairn**: `[Header(), Main()]` (Standard JavaScript arrays)
-
----
-
-### Incremental Hybrid Integration (`cairnToReact` & `useCairn`)
-
-You do not need to perform a risky big-bang rewrite. You can migrate your React application component-by-component.
-
-#### Method 1: Convert a Cairn Component to a React Component (`cairnToReact`)
-```jsx
-// MyCairnCard.js
-import { component, state, div, h3, button } from '@eldrex/cairnjs';
-
-export const MyCairnCard = component(({ title = 'Default' }) => {
-    const clicks = state(0);
-    return div({ style: { padding: '1.5rem', background: '#1e293b', borderRadius: '12px', color: '#fff' } },
-        h3(title),
-        button(() => `Clicks: ${clicks.value}`, { onclick: () => clicks.value++ })
-    );
-});
-```
-
-```jsx
-// In your React App (App.jsx)
-import React from 'react';
-import { cairnToReact } from '@eldrex/cairnjs';
-import { MyCairnCard } from './MyCairnCard.js';
-
-// Wraps Cairn into a native React Functional Component with prop syncing
-const ReactCard = cairnToReact(MyCairnCard);
-
-export default function App() {
+```javascript
+// ⚛️ React (JSX)
+function Counter({ initial = 0 }) {
+    const [count, setCount] = useState(initial);
     return (
-        <div className="react-dashboard">
-            <h1>React Host App</h1>
-            <ReactCard title="High-Performance Cairn Widget" />
+        <div className="card">
+            <h3>Count: {count}</h3>
+            <button onClick={() => setCount(c => c + 1)}>Increment</button>
         </div>
+    );
+}
+
+// 🪨 CairnJS (Functional Builders)
+import { state, div, h3, button } from '@eldrex/cairnjs';
+
+function Counter({ initial = 0 } = {}) {
+    const count = state(initial);
+    return div({ class: 'card' },
+        h3(() => `Count: ${count.value}`),
+        button('Increment', { onclick: () => count.value++ })
     );
 }
 ```
 
-#### Method 2: Mount into a React Ref with `useCairn` Hook
-```jsx
-import React, { useState } from 'react';
-import { useCairn } from '@eldrex/cairnjs';
-import { MyCairnCard } from './MyCairnCard.js';
+---
 
-export function Dashboard() {
-    const [userId, setUserId] = useState(1);
-    
-    // Automatically mounts and unmounts with React component lifecycle
-    const cairnRef = useCairn(() => MyCairnCard({ title: `User ${userId}` }), [userId]);
+### Incremental Co-existence with `cairnToReact`
 
+You do not need to rewrite your entire React app in one weekend. Use `cairnToReact` to render Cairn components inside standard React JSX trees:
+
+```javascript static
+import React from 'react';
+import { cairnToReact } from '@eldrex/cairnjs';
+import { CairnDashboardWidget } from './CairnDashboardWidget.js';
+
+// Wrap Cairn component into a 100% compliant React component
+export const ReactWidgetWrapper = cairnToReact(CairnDashboardWidget);
+
+// Use inside existing React component
+export function App() {
     return (
-        <div>
-            <button onClick={() => setUserId(u => u + 1)}>Next User</button>
-            <div ref={cairnRef} />
+        <div className="react-root">
+            <h1>Existing Next.js / React Dashboard</h1>
+            <ReactWidgetWrapper title="Live Telemetry" refreshInterval={1000} />
         </div>
     );
 }
@@ -347,178 +297,124 @@ export function Dashboard() {
 
 ## 4. Migrating from Vue 2 & Vue 3
 
-Vue developers will feel immediately at home with Cairn signals because they behave identically to Vue 3's `ref()` and `computed()`.
+### Directives Mapping
 
-### Template Directives Mapping
-
-| Vue Template | Cairn Equivalent |
-| :--- | :--- |
-| `<div v-if="ok">` | `div(() => ok.value ? Content() : null)` |
-| `<div v-if="type === 'A'"><div v-else>` | `div(() => type.value === 'A' ? ViewA() : ViewB())` |
-| `<li v-for="item in items" :key="item.id">` | `ul(() => items.map(item => li(item.name)))` |
-| `<input v-model="name" />` | `input({ value: name, oninput: e => name.value = e.target.value })` |
-| `<button @click="save">` | `button('Save', { onclick: save })` |
-| `<button :disabled="isPending">` | `button('Save', { disabled: () => isPending.value })` |
-| `<div :class="{ active: isActive }">` | `div({ class: () => isActive.value ? 'active' : '' })` |
-| `<div :style="{ color: themeColor }">` | `div({ style: () => ({ color: themeColor.value }) })` |
-| `<div v-html="rawHtml">` | `div(raw(rawHtml))` |
+| Vue Directive | CairnJS Functional Builder | CairnJS `html` Template Literal |
+| :--- | :--- | :--- |
+| `v-if="show"` | `div(() => show.value ? Content() : null)` | `${() => show.value ? html\`<div>Content</div>\` : ''}` |
+| `v-for="item in list"` | `div(() => list.map(item => ItemRow(item)))` | `${() => list.map(item => html\`<div>\${item.name}</div>\`)}` |
+| `v-model="text"` | `input({ value: text, oninput: e => text.value = e.target.value })` | `<input :bind=${text} />` |
+| `:class="{ active: isActive }"` | `class: () => isActive.value ? 'active' : ''` | `<div class="${() => isActive.value ? 'active' : ''}">` |
+| `@click="handleClick"` | `button('Save', { onclick: handleClick })` | `<button onclick=${handleClick}>Save</button>` |
+| `v-show="isVisible"` | `style: () => ({ display: isVisible.value ? '' : 'none' })` | `<div style="display: ${() => isVisible.value ? '' : 'none'}">` |
 
 ---
 
-### Vue 3 SFC Wrapper (`cairnToVue`)
+### Composition API to Cairn
 
-```html
-<!-- VueHost.vue -->
+```javascript
+// 🟢 Vue 3 (Composition API)
+import { ref, computed, watchEffect } from 'vue';
+
+const count = ref(0);
+const doubled = computed(() => count.value * 2);
+watchEffect(() => console.log('Count is:', count.value));
+
+// 🪨 CairnJS
+import { state, computed, effect } from '@eldrex/cairnjs';
+
+const count = state(0);
+const doubled = computed(() => count.value * 2);
+effect(() => console.log('Count is:', count.value));
+```
+
+---
+
+### Using Cairn inside Vue SFCs with `cairnToVue`
+
+```vue static
+<!-- Existing Vue 3 Single File Component -->
 <template>
-  <div class="vue-container">
-    <h2>Vue 3 Host Shell</h2>
-    <CairnMetrics :initial-pings="100" />
-  </div>
+    <div class="vue-container">
+        <h2>Vue 3 Application</h2>
+        <CairnChartComponent :data="metrics" />
+    </div>
 </template>
 
 <script setup>
-import { cairnToVue, component, state, div, button } from '@eldrex/cairnjs';
+import { cairnToVue } from '@eldrex/cairnjs';
+import { CairnChart } from './CairnChart.js';
 
-const CairnMetrics = cairnToVue(component(({ initialPings = 0 }) => {
-    const pings = state(initialPings);
-    return div(
-        button(() => `⚡ Pings: ${pings.value}`, {
-            onclick: () => pings.value++
-        })
-    );
-}));
+const CairnChartComponent = cairnToVue(CairnChart);
+const metrics = [10, 25, 45, 80, 120];
 </script>
 ```
 
 ---
 
-## 5. Migrating from Svelte 4 / 5 & Angular 17+
+## 5. Migrating from Svelte & Angular
 
 ### Svelte 5 Runes vs Cairn Signals
 
-```
-Svelte 5 Runes                     Cairn Signals
------------------                  -------------
-let count = $state(0);             const count = state(0);
-let double = $derived(count * 2);  const double = computed(() => count.value * 2);
-$effect(() => { ... });            const stop = effect(() => { ... });
-```
-
-#### Svelte Action Directive (`cairnToSvelte`)
-```html
-<script>
-  import { cairnToSvelte, component, state, div, button } from '@eldrex/cairnjs';
-
-  const MyWidget = component(({ start = 0 }) => {
-      const val = state(start);
-      return div(button(() => `Count: ${val.value}`, { onclick: () => val.value++ }));
-  });
-</script>
-
-<div use:cairnToSvelte={{ component: MyWidget, props: { start: 10 } }}></div>
-```
+| Concept | Svelte 5 Rune | CairnJS Signal |
+| :--- | :--- | :--- |
+| Mutable State | `let count = $state(0)` | `const count = state(0)` (access via `count.value`) |
+| Derived State | `let double = $derived(count * 2)` | `const double = computed(() => count.value * 2)` |
+| Side Effect | `$effect(() => { console.log(count); })` | `effect(() => { console.log(count.value); })` |
+| Two-way Binding | `<input bind:value={name} />` | `<input :bind=${name} />` or `{ value: name, oninput: ... }` |
 
 ---
 
-### Angular 17+ Standalone Signals & Directives
+### Angular 17+ Standalone Signals & Directives to Cairn
 
-```typescript
-import { Component } from '@angular/core';
-import { cairnToAngular, component, state, div, button } from '@eldrex/cairnjs';
-
-const MyCairnComp = component(({ title = 'Angular' }) => {
-    const count = state(0);
-    return div(button(() => `${title}: ${count.value}`, { onclick: () => count.value++ }));
-});
-
-const CairnDirective = cairnToAngular(MyCairnComp);
-
-@Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [CairnDirective],
-  template: `<div [cairnWidget]="{ title: 'Angular Host' }"></div>`
-})
-export class AppComponent {}
-```
+| Angular 17+ Signal API | CairnJS Equivalent |
+| :--- | :--- |
+| `count = signal(0)` | `count = state(0)` |
+| `count.set(5)` / `count.update(n => n + 1)` | `count.value = 5` / `count.update(n => n + 1)` |
+| `doubled = computed(() => this.count() * 2)` | `doubled = computed(() => count.value * 2)` |
+| `@if (isLoggedIn()) { ... }` | `div(() => isLoggedIn.value ? Profile() : Login())` |
+| `@for (user of users(); track user.id) { ... }` | `div(() => users.map(user => UserCard(user)))` |
 
 ---
 
 ## 6. Migrating from jQuery, Alpine.js & HTMX
 
-### jQuery ➔ Cairn
+### Replacing jQuery DOM Queries with Reactive Signals
 
 ```javascript
-// ❌ Legacy jQuery
-$('#search-input').on('keyup', function() {
-    var val = $(this).val().toLowerCase();
-    $('#user-list li').filter(function() {
-        $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
-    });
+// ❌ jQuery (Imperative DOM querying & mutation)
+$('#btn').on('click', function() {
+    $('#count').text(parseInt($('#count').text()) + 1);
+    $('#box').toggleClass('highlight');
 });
 
-// ✅ Modern Cairn
-import { state, computed, collection, div, input, ul, li, mount } from '@eldrex/cairnjs';
+// ✅ CairnJS (Declarative fine-grained state)
+import { state, div, button, span } from '@eldrex/cairnjs';
 
-const search = state('');
-const users = collection(['Alice', 'Bob', 'Charlie']);
-const filtered = computed(() => users.filter(u => u.toLowerCase().includes(search.value.toLowerCase())));
+const count = state(0);
+const isHighlight = state(false);
 
-mount('#app', div(
-    input({ placeholder: 'Search...', value: search, oninput: e => search.value = e.target.value }),
-    ul(() => filtered.value.map(name => li(name)))
-));
-```
-
-### Alpine.js ➔ Cairn
-
-```html
-<!-- ❌ Alpine.js -->
-<div x-data="{ open: false, count: 0 }">
-    <button @click="open = !open">Toggle</button>
-    <div x-show="open">
-        <button @click="count++">Increment: <span x-text="count"></span></button>
-    </div>
-</div>
-
-<!-- ✅ Cairn (Pure JS, No Custom HTML Attributes) -->
-<script type="module">
-    import { state, div, button, p, mount } from '@eldrex/cairnjs';
-
-    const open = state(false);
-    const count = state(0);
-
-    mount('#app', div(
-        button('Toggle', { onclick: () => open.value = !open.value }),
-        div(() => open.value ? 
-            button(() => `Increment: ${count.value}`, { onclick: () => count.value++ })
-        : null)
-    ));
-</script>
+const App = div(
+    span(() => `Count: ${count.value}`, {
+        class: () => isHighlight.value ? 'highlight' : ''
+    }),
+    button('Increment & Toggle', {
+        onclick: () => {
+            count.value++;
+            isHighlight.value = !isHighlight.value;
+        }
+    })
+);
 ```
 
 ---
 
-## 7. 5-Stage Enterprise Migration Checklist
+## 7. Zero-Downtime Incremental Migration Strategy
 
-Follow this battle-tested 5-stage migration plan to transition production systems cleanly with zero downtime:
+Follow this 5-stage roadmap to safely migrate mission-critical applications to CairnJS:
 
-1. **Stage 1: Audit Shared State & API Models**
-   - Identify global state trees and migrate them to `createStore('name', { state, getters, actions })`.
-2. **Stage 2: Migrate Leaf / Presentation Components First**
-   - Convert standalone cards, buttons, badges, and modals to Cairn element functions (`div()`, `button()`).
-3. **Stage 3: Wrap with Framework Bridges**
-   - Use `cairnToReact`, `cairnToVue`, or `defineCustomElement` to mount new Cairn components inside your existing host app seamlessly.
-4. **Stage 4: Convert Parent Containers & Routers**
-   - Once child components are in Cairn, refactor container layouts and forms to native Cairn signals.
-5. **Stage 5: Eliminate Build Bundler Overhead**
-   - Remove heavy compiler plugins and transition to zero-build native ES Modules or lightweight Vite configurations.
-
----
-
-## 8. What to Explore Next
-
-- 📖 **[Beginner Fundamentals Handbook](./docs/content/guide/fundamentals.md)**: Master the 3 mental models and 10 UI recipes.
-- 📱 **[Mobile Coding & CDN Setup](./docs/content/guide/mobile-coding.md)**: Code on smartphones, tablets, Spck, and Termux.
-- 🎨 **[Styling & Theme Engine](./docs/content/architecture/styling.md)**: Explore glassmorphism, responsive `fluid()`, and themes.
-- ⚡ **[API Reference](./docs/content/reference/api.md)**: Complete type signatures for all 100+ exported APIs.
+1. **Stage 1: Isolate & Test Pure Utility Logic**: Move shared validation schemas, calculations, and data formatting into zero-dependency Cairn helpers (`state`, `computed`, `createForm`).
+2. **Stage 2: Pilot New Sub-Features in Cairn**: Build isolated components (e.g. telemetry charts, modals, command palettes) in CairnJS and embed them into your existing app using `cairnToReact(Component)`, `cairnToVue(Component)`, or `defineCustomElement('cairn-widget', Component)`.
+3. **Stage 3: Replace Widget Leaves**: Systematically convert high-frequency interactive leaf components (data tables, forms, sliders) to CairnJS to reduce VDOM overhead.
+4. **Stage 4: Convert Layout & Routing Shell**: Transition the outer layout shell and router to `cairn.router`.
+5. **Stage 5: Eliminate Bundler Plugins & Compilers**: Remove Babel/JSX plugins and enjoy instant sub-millisecond local development reloads.

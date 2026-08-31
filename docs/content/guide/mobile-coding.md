@@ -220,6 +220,6 @@ Open `http://localhost:5173` in your browser. Changes you make in your code edit
 
 ## 7. Next Steps
 
-- 📖 **[Beginner Fundamentals Handbook](./docs/content/guide/fundamentals.md)**: Explore the 10 ready-to-use UI pattern recipes.
-- 🔄 **[Migration Guide](./docs/content/guide/migration.md)**: Learn how to transition from Vanilla JS, React, Vue, or Svelte.
-- 🎨 **[Styling & Theme Engine](./docs/content/architecture/styling.md)**: Add glassmorphism, responsive `fluid()`, and themes.
+- 📖 **[Beginner Fundamentals Handbook](#/docs/fundamentals)**: Explore the 10 ready-to-use UI pattern recipes.
+- 🔄 **[Migration Guide](#/docs/migration)**: Learn how to transition from Vanilla JS, React, Vue, or Svelte.
+- 🎨 **[Styling & Theme Engine](#/docs/styling)**: Add glassmorphism, responsive `fluid()`, and themes.

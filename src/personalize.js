@@ -54,6 +54,7 @@ export function personalize(schema = {}) {
     userPreferences.value = { ...userPreferences.value, ...initialValues };
 
     const setPref = (key, val) => {
+        userPreferences[key] = val;
         userPreferences.value = { ...userPreferences.value, [key]: val };
         if (typeof localStorage !== 'undefined') {
             try {
@@ -96,7 +97,7 @@ export function personalize(schema = {}) {
     return {
         preferences: userPreferences,
         schema,
-        get: (k) => userPreferences.value ? userPreferences.value[k] : undefined,
+        get: (k) => (userPreferences.value ? userPreferences.value[k] : userPreferences[k]),
         set: setPref,
         reset: () => {
             if (schema.defaults) {

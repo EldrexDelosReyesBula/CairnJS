@@ -8,6 +8,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 
+## [1.4.0] - 2026-09-01
+
+### 🌟 Added
+- **Single-Page Application (SPA) Sandbox & Examples Portal (`examples/index.html`)**:
+  - Full Single-Page Application (SPA) architecture with URL hash routing (`#gallery` and `#demo/:id`).
+  - 36 interactive live sandboxes spanning full applications (Social Feed, E-Commerce Store, Kanban Board, Chat Messaging), 2D & 3D WebGL scenes, kinetic physics simulations, and framework bridges.
+  - Dedicated fullscreen preview embedding (`?embed=1`) dedicating 100% viewport to live running applications with zero editor chrome.
+  - Touch-friendly horizontal swipeable category filter bar on mobile with hidden scrollbar rails.
+  - Live breadcrumb trail and quick Previous/Next demo pager buttons.
+- **Landing Page Ambient Grass GIF Footer (`docs/app.js`, `docs/index.html`, `examples/index.html`)**:
+  - Animated ambient footer with `assets/grass-footer.gif` background, soft linear gradient masking, organized multi-column documentation/ecosystem links, and author support attribution.
+- **Interactive Playground Templates Expansion (`docs/playground.js`)**:
+  - `kanban`: Reactive 3-column task board with native status progression and task insertion.
+  - `command_palette`: Spotlight ⌘K keyboard search overlay with accessible focus trapping.
+  - `audio_visualizer`: Web Audio API spectrum analyser with 60 FPS Canvas 2D equalizer bars.
+  - `wasm_benchmark`: High-throughput particle kinematic loop with environment-safe timestamp tracking.
+
+### ⚡ Improved & Fixed
+- **Unified Navigation Header System**:
+  - Centered navigation links (`Docs`, `Guide`, `Examples`, `Playground`) synchronized across the Landing Page, Examples Hub, and all Framework Bridge pages.
+  - Quick Search pill button with `⌘K` keyboard shortcut that focuses the search bar instantly.
+  - Uncluttered responsive mobile header ($\le 768\text{px}$) with compact square action buttons and matching mobile hamburger drawer.
+- **Cross-Framework Bridge Parity (`examples/with-react`, `with-vue`, `with-svelte`, `with-solid`)**:
+  - Synchronized header tokens, centered menu links, theme switcher, and `Get Started →` CTA.
+  - Verified zero-overhead signal bridging and lifecycle mounting across React, Vue, Svelte, and SolidJS.
+- **Mobile Sandbox Viewport & Blank Paint Prevention (`docs/playground.html`, `docs/playground.js`)**:
+  - Replaced `display: none` unmounting of iframe with hardware-accelerated coordinate transforms on mobile tab switching.
+  - Safe timestamp retrieval using `Date.now()` preventing `TypeError: performance.now is not a function` in sandboxed execution environments.
+
+### 🌟 Added
+- **Ground-Up Custom Error & Diagnostics Engine (`src/error-system.js`)**:
+  - Implemented `CairnDiagnosticError` and `cairnError()` standardizing Cairn's Three-Part Diagnostic Structure: **Context & Validation**, **Location & Root Cause**, and **Actionable Code Fix**.
+  - Built-in diagnostic codes: `state_uninitialized`, `mount_not_found`, `mount_invalid_element`, `component_no_return`, `style_invalid`, `cyclic_dependency`.
+  - Added extensible customization API: `errors.customize(type, fn)`, `errors.setFormatter(fn)`, and `errors.format(type, ctx)` allowing developers to register domain-specific error templates or route diagnostics to custom observability pipelines (e.g. Sentry, Datadog).
+  - Exported `cairnError` and `CairnDiagnosticError` across UMD, Minified, WASM, and ESM builds.
+- **Four New Interactive Live Showcases & Demos (`docs/content/examples/`)**:
+  - **Analytics Dashboard (`analytics-dashboard.md`)**: Real-time KPI cards, time-range filters (`24h`, `7d`, `30d`, `90d`), and live surge traffic simulation.
+  - **Interactive Kanban Board (`kanban-board.md`)**: Multi-column sprint board with native HTML5 drag-and-drop task movement, lane counters, and task insertion.
+  - **Real-Time Chat & Messaging (`chat-app.md`)**: Live conversation feed with active online status, message composer, and automated replies.
+  - **Kinetic Motion Physics Playground (`motion-gallery.md`)**: 60 FPS analytical spring engine with customizable stiffness/damping presets (`Snappy`, `Bouncy`, `Gentle`).
+- **Complete HTML Element Builder System (`src/elements.js`, `src/html-versions.js`)**:
+  - Full suite of 250+ element builders across HTML 1.0, HTML 2.0, HTML 3.2, HTML 4.01, HTML5, Beyond HTML, and 100 Cairn UI Components.
+  - Exported complete element registry (`completeElementRegistry`), `htmlSupport` matrix, and version submodules (`html1`, `html2`, `html3`, `html4`, `html5`, `future`, `enhanced`, `components`).
+- **Complete CSS1–CSS4 Coat System (`src/styling.js`)**:
+  - Complete support for all of CSS1, CSS2, CSS3, CSS4, and future draft specifications in `coat()`, supporting deep `@keyframes`, `@container` queries, `@supports`, `@media`, and nested selectors (`&:hover`, `& > child`, `& + sibling`, `& ~ general`, `&[attr]`, `&::before`, `&::after`).
+  - Exposed comprehensive CSS registries: `cssProperties` (500+ properties), `cssFunctions` (100+ functions), `cssAtRules`, `cssSelectors`, and `cssCompatibility`.
+  - Class composition utilities: `cx()`, `classNames()`, and `class:flag` syntax.
+- **Direct HTML String Content, Markup & Sanitization (`src/dom.js`)**:
+  - Direct HTML string child rendering (`div({}, '<strong>Notice:</strong> Hello etc.')`) and `{ html: '...' }` prop.
+  - Safe HTML sanitization against XSS: `cairn.sanitize(html, options)` and polymorphic `cairn.safe()`.
+  - Content detection and composition helpers: `cairn.smartContent()`, `cairn.rich()`, and `cairn.contentSupport` registry.
+- **Developer Experience & Native Plugin Guidelines (`docs/content/guide/emotional-framework.md`)**:
+  - Comprehensive guide for third-party plugin authors covering 3-part diagnostic conventions, procedural tag builders, signal reactivity, and zero-bloat green code practices.
+
+### ⚡ Improved & Fixed
+- **Fine-Grained Reactivity in State Object Proxies (`src/state.js`, `src/personalize.js`)**:
+  - Fixed proxy `.value` getter to register `activeEffect` in `subscribers` and return wrapped proxy instances, ensuring reactive style and text bindings update when `personalize().set()` is invoked.
+  - Enhanced Playground Personalization template with kinetic active-button rings, scale transformations (`scale(1.15)`), and ambient color glows.
+- **2D Canvas Auto-Start & Delta-Time Physics (`src/canvas2d.js`)**:
+  - `canvas.onDraw()` now automatically initiates the `requestAnimationFrame` render loop without requiring manual `.start()` calls.
+  - Normalized `dt` into milliseconds for fluid 60 FPS rotation physics.
+- **UI Component System & Feed Enhancements (`src/ui/index.js`, `examples/posts.html`)**:
+  - `Navbar`: Automatically transforms string items into interactive `<a>` links with `1.5rem` spacing and hover color highlights.
+  - `Card`: Applied vertical flex column layout (`gap: 0.85rem`) preventing child component squishing.
+  - `Badge`: Added status color variants (`Active/success`, `warning`, `danger`, `info`).
+  - `Alert`: Redesigned with glassmorphic cards, contextual alert icons (`circle-exclamation`, `triangle-exclamation`, `circle-check`), and rounded borders.
+  - `Spinner`: Refactored into a smooth CSS spinning border with continuous rotation.
+  - Social Feed (`examples/posts.html`): Enlarged stories avatars to 64px with animated gradient rings, glassmorphic post cards, and spring like micro-interactions.
+- **Smart Live Runner & Auto-Resizing (`docs/app.js`, `src/docs.js`)**:
+  - Added `cairn-runner-resize` message observer bridge that dynamically sizes preview iframes to eliminate internal scrollbars and container cutoffs.
+  - Cleaned default official docs toolbar to show only `[Playground] [Console] [✕]`.
+  - Added granular `controls` props and markdown flags (`editable`, `expand`, `no-playground`, `no-console`, `no-copy`).
+  - Auto-focus mode switching for console vs live preview snippets.
+
+---
+
 ## [1.3.0] - 2026-08-29
 
 ### 🌟 Added
@@ -149,7 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Gamified River & Balanced Stone Cairns Landing Background**:
   - Time-of-day adaptive nature atmosphere (`Dawn`, `Day`, `Dusk`, `Night`) and real-time Dark/Light theme harmonization.
   - Interactive "Zen Stone Balancing & Flow" game mechanics: click to drop smooth river stones, balance on cairns, splash water ripples, and pop glowing nature fireflies.
-- **VitePress-Style Documentation Portal Overhaul & Dark/Light Mode**:
+- **Documentation Portal Overhaul & Dark/Light Mode**:
   - Hash route persistence (`#/docs/:pageId`) preserving active view across browser refreshes.
   - 3-tier multi-device layout engine (Mobile, Tablet, Laptop, Desktop).
   - Next & Previous document pagination cards (`DocsPagination`).
@@ -255,4 +331,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rust / WASM Zero-Traffic Engine**: `wasmEngine` shared memory buffer allocator and direct DOM pointer reference engine.
 - **Framework Bridges**: Transpilation adapters (`toReact`, `toVue`, `toAngular`, `toSvelte`).
 - **Agentic AI & Figma Pipeline**: AI layout synthesis and Figma JSON node parser (`figmaToCairn`).
-- **Documentation & Web Portal**: VitePress-grade documentation web portal with responsive navigation, top-level TOC filter, and categorized content directories (`docs/content/`).
+- **Documentation & Web Portal**: High-performance documentation web portal with responsive navigation, top-level TOC filter, and categorized content directories (`docs/content/`).

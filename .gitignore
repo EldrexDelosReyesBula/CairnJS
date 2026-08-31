@@ -37,3 +37,4 @@ coverage/
 .devdiff.config.js
 .env
 docs/hello.html
+.codememory

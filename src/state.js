@@ -100,7 +100,12 @@ export function state(initialValue) {
         return new Proxy(obj, {
             get(target, prop, receiver) {
                 if (prop === '_isCairnState') return true;
-                if (prop === 'value') return target;
+                if (prop === 'value') {
+                    if (activeEffect) {
+                        subscribers.add(activeEffect);
+                    }
+                    return proxyInstance || (proxyInstance = createObjectProxy(target));
+                }
                 if (prop === 'peek') return () => target;
                 if (prop === 'subscribe') return (fn, specificProp = null) => stateSignal.subscribe(fn, specificProp);
                 if (prop === 'next') return (val) => stateSignal.next(val);

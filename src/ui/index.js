@@ -620,8 +620,53 @@ export const Form = (props = {}, ...children) => {
     }, ...children);
 };
 
-// --- NAVIGATION COMPONENTS (8) ---
-export const Navbar = (props = {}) => header({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', background: '#1e293b', borderBottom: '1px solid rgba(255,255,255,0.1)' } }, props.brand || div('Brand'), nav(props.items || []), div(props.actions || []));
+export const Navbar = (props = {}) => {
+    const brandNode = typeof props.brand === 'string'
+        ? span(props.brand, { style: { fontWeight: '700', fontSize: '1.1rem', color: '#f8fafc', letterSpacing: '-0.01em' } })
+        : (props.brand || span('Brand', { style: { fontWeight: '700', color: '#f8fafc' } }));
+
+    const rawItems = Array.isArray(props.items) ? props.items : [];
+    const itemNodes = rawItems.map(item => {
+        if (typeof item === 'string') {
+            return a(item, {
+                href: '#',
+                style: {
+                    color: '#cbd5e1',
+                    textDecoration: 'none',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    transition: 'color 0.15s ease',
+                    cursor: 'pointer'
+                },
+                onmouseenter: (e) => { e.currentTarget.style.color = '#38bdf8'; },
+                onmouseleave: (e) => { e.currentTarget.style.color = '#cbd5e1'; }
+            });
+        }
+        return item;
+    });
+
+    const actionsNode = props.actions ? (Array.isArray(props.actions) ? div({ style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } }, ...props.actions) : props.actions) : null;
+
+    return header({
+        style: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0.85rem 1.5rem',
+            background: '#1e293b',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '0.5rem',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            ...(props.style || {})
+        },
+        ...props
+    },
+        brandNode,
+        nav({ style: { display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' } }, ...itemNodes),
+        actionsNode
+    );
+};
 export const Sidebar = (props = {}, ...children) => aside({ style: { width: '250px', height: '100vh', background: '#0f172a', padding: '1.5rem', borderRight: '1px solid rgba(255,255,255,0.1)' } }, ...children);
 export const Menu = (props = {}, ...children) => ul({ role: 'menu', style: { listStyle: 'none', padding: 0, margin: 0 } }, ...children);
 
@@ -1037,9 +1082,57 @@ export const DataTable = (props = {}) => {
 
 export const DataGrid = (props = {}) => DataTable(props);
 export const List = (props = {}, ...children) => ul({ style: { listStyle: 'none', padding: 0 } }, ...children);
-export const Card = (props = {}, ...children) => div({ style: { background: '#1e293b', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', ...props.style } }, ...children);
-export const Badge = (props = {}) => span(props.variant || props.label || 'Badge', { style: { padding: '0.25rem 0.5rem', borderRadius: '9999px', background: '#6366f1', color: 'white', fontSize: '0.75rem', fontWeight: '600', ...props.style } });
-export const Avatar = (props = {}) => img(props.src || 'https://via.placeholder.com/40', { alt: props.alt || 'Avatar', style: { width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', ...props.style } });
+export const Card = (props = {}, ...children) => div({
+    style: {
+        background: '#1e293b',
+        padding: '1.5rem',
+        borderRadius: '0.75rem',
+        border: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.85rem',
+        ...props.style
+    },
+    ...props
+}, ...children);
+
+export const Badge = (props = {}) => {
+    const label = typeof props === 'string' ? props : (props.label || props.variant || props.text || 'Badge');
+    let bg = 'rgba(99, 102, 241, 0.2)';
+    let color = '#a5b4fc';
+    let borderColor = 'rgba(99, 102, 241, 0.4)';
+    const v = String((typeof props === 'object' && props.variant) || label).toLowerCase();
+    if (v === 'active' || v === 'success' || v === 'online') {
+        bg = 'rgba(16, 185, 129, 0.15)'; color = '#34d399'; borderColor = 'rgba(16, 185, 129, 0.3)';
+    } else if (v === 'warning') {
+        bg = 'rgba(245, 158, 11, 0.15)'; color = '#fbbf24'; borderColor = 'rgba(245, 158, 11, 0.3)';
+    } else if (v === 'danger' || v === 'error') {
+        bg = 'rgba(239, 68, 68, 0.15)'; color = '#f87171'; borderColor = 'rgba(239, 68, 68, 0.3)';
+    } else if (v === 'info') {
+        bg = 'rgba(56, 189, 248, 0.15)'; color = '#38bdf8'; borderColor = 'rgba(56, 189, 248, 0.3)';
+    }
+    return span(label, {
+        style: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '0.2rem 0.65rem',
+            borderRadius: '9999px',
+            background: bg,
+            color: color,
+            border: `1px solid ${borderColor}`,
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            width: 'fit-content',
+            ...((typeof props === 'object' && props.style) || {})
+        }
+    });
+};
+
+export const Avatar = (props = {}) => img({
+    src: props.src || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="%236366f1"/><circle cx="20" cy="15" r="7" fill="%23ffffff"/><path d="M8 36 C8 26, 32 26, 32 36" fill="%23ffffff"/></svg>',
+    alt: props.alt || 'Avatar',
+    style: { width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', ...props.style }
+});
 export const Tag = (props = {}) => Badge(props);
 
 /**
@@ -1922,10 +2015,52 @@ export const NotificationCenter = {
     }
 };
 
-export const Alert = (props = {}) => div({
-    role: 'alert',
-    style: { padding: '0.75rem 1rem', borderRadius: '0.375rem', background: '#ef4444', color: 'white', marginBottom: '1rem', ...props.style }
-}, props.message || props.title || 'Alert');
+export const Alert = (props = {}) => {
+    const rawMsg = props.message || props.title || 'Alert';
+    const variant = props.variant || (String(rawMsg).toLowerCase().includes('warning') ? 'warning' : 'danger');
+    let bg = 'rgba(239, 68, 68, 0.15)';
+    let color = '#fca5a5';
+    let border = '1px solid rgba(239, 68, 68, 0.3)';
+    let icon = 'triangle-exclamation';
+
+    if (variant === 'warning') {
+        bg = 'rgba(245, 158, 11, 0.15)';
+        color = '#fde047';
+        border = '1px solid rgba(245, 158, 11, 0.3)';
+        icon = 'circle-exclamation';
+    } else if (variant === 'success') {
+        bg = 'rgba(16, 185, 129, 0.15)';
+        color = '#6ee7b7';
+        border = '1px solid rgba(16, 185, 129, 0.3)';
+        icon = 'circle-check';
+    } else if (variant === 'info') {
+        bg = 'rgba(56, 189, 248, 0.15)';
+        color = '#7dd3fc';
+        border = '1px solid rgba(56, 189, 248, 0.3)';
+        icon = 'circle-info';
+    }
+
+    return div({
+        role: 'alert',
+        style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.85rem 1.25rem',
+            borderRadius: '0.5rem',
+            background: bg,
+            border: border,
+            color: color,
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '1rem',
+            ...props.style
+        }
+    },
+        Icon({ name: icon, size: 16, color: color }),
+        span(rawMsg)
+    );
+};
 
 export const Progress = (props = {}) => div({
     role: 'progressbar',
@@ -1962,7 +2097,25 @@ export const Skeleton = (props = {}) => {
     return div({ style: { ...baseStyle, width: props.width || '100%', height: props.height || '20px', borderRadius: '0.25rem' } });
 };
 
-export const Spinner = (props = {}) => Icon({ name: 'spinner', size: props.size || 20, style: { animation: 'spin 1s linear infinite' } });
+export const Input = InputComponent;
+export const Textarea = TextareaComponent;
+export const Select = SelectComponent;
+export const Spinner = (props = {}) => {
+    const size = props.size || 22;
+    const color = props.color || '#38bdf8';
+    return span({
+        style: {
+            display: 'inline-block',
+            width: `${size}px`,
+            height: `${size}px`,
+            border: `2.5px solid ${color}33`,
+            borderTopColor: color,
+            borderRadius: '50%',
+            animation: 'cairn-spin 0.8s linear infinite',
+            ...props.style
+        }
+    });
+};
 export const EmptyState = (props = {}) => Center({ minHeight: '150px' }, h3(props.title || 'No Data'), p(props.description || ''));
 export const Notification = (props = {}) => Alert(props);
 

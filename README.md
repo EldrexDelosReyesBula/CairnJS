@@ -2,7 +2,7 @@
 
 Build reactive, framework-agnostic web applications and components with zero external dependencies. Use with React, Vue, Svelte, Angular, standard Web Components, or vanilla HTML/JS.
 
-[![npm](https://img.shields.io/badge/npm-1.2.0-black)](https://www.npmjs.com/package/@eldrex/cairnjs)
+[![npm](https://img.shields.io/badge/npm-1.4.0-black)](https://www.npmjs.com/package/@eldrex/cairnjs)
 [![Documentation](https://img.shields.io/badge/Docs-cairnjs.vercel.app-blue)](https://cairnjs.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![LLM Prompt Context](https://img.shields.io/badge/LLM_Context-llms.txt-purple.svg)](./llms.txt)
@@ -16,6 +16,9 @@ Build reactive, framework-agnostic web applications and components with zero ext
 
 CairnJS combines the simplicity of standard DOM functions with the power of a complete modern UI framework:
 - **Fine-Grained Reactivity**: Signals (`state`, `computed`, `effect`) update exact text nodes and style properties with zero Virtual DOM overhead.
+- **250+ HTML & UI Element Builders**: Complete HTML 1.0 to Beyond coverage (150 standard + 100 Cairn UI components).
+- **Complete CSS1–CSS4 Coat System**: Zero-dependency CSS engine supporting nested selectors (`&:hover`, `& > child`), `@keyframes`, `@media`, `@container`, and class utilities (`cx`, `classNames`).
+- **Direct HTML String Content**: Direct HTML string child parsing (`div({}, '<strong>Notice:</strong>...')`), `{ html: '...' }` prop, and safe XSS sanitization (`cairn.sanitize`, `cairn.safe`).
 - **50+ Accessible UI Primitives**: Modals, Drawers, Toast queues, Command Palettes (`Cmd+K`), Context Menus, Steppers, Accordions, and Data Tables.
 - **Declarative Form Validation**: Schema-based validation engine with `validators` and dynamic repeating rows (`useFieldArray`).
 - **Accessible Overlays**: Automatic focus trapping (`createFocusTrap`), z-index layering (`tokens.zIndex`), and escape dismissal.
@@ -24,15 +27,31 @@ CairnJS combines the simplicity of standard DOM functions with the power of a co
 - **Universal Cross-Framework Bridges**: Seamlessly export to React (`toReact`), Vue (`toVue`), Svelte, Angular, or W3C Custom Elements.
 
 ```javascript
-import { state, div, button, p, mount } from '@eldrex/cairnjs';
+import { state, div, button, p, coat, mount } from '@eldrex/cairnjs';
 
 const count = state(0);
 
-const app = div(
+const app = div({
+    coat: {
+        padding: '24px',
+        background: '#0f172a',
+        borderRadius: '16px',
+        color: '#f8fafc',
+        border: '1px solid rgba(255,255,255,0.1)'
+    }
+},
     p(() => `Count: ${count.value}`),
     button('+ Increment', {
         onclick: () => count.value++,
-        style: { padding: '0.5rem 1rem', background: '#38bdf8', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }
+        coat: {
+            padding: '8px 16px',
+            background: '#38bdf8',
+            color: '#0f172a',
+            fontWeight: '600',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            '&:hover': { background: '#0284c7', color: '#fff' }
+        }
     })
 );
 
@@ -60,8 +79,8 @@ npm install @eldrex/cairnjs
 <!-- UMD Global (@latest) -->
 <script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@latest/dist/cairn.min.js"></script>
 
-<!-- Pinned Immutable Release (@1.2.0) -->
-<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.2.0/dist/cairn.min.js"></script>
+<!-- Pinned Immutable Release (@1.4.0) -->
+<script src="https://cdn.jsdelivr.net/npm/@eldrex/cairnjs@1.4.0/dist/cairn.min.js"></script>
 ```
 
 ---

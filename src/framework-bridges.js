@@ -294,6 +294,222 @@ export function cairnToSvelte(CairnComponent) {
     };
 }
 
+// Backend Bridge Adapters
+
+/**
+ * REST API Client Bridge
+ */
+export const rest = {
+    /**
+     * Fetch JSON helper
+     */
+    fetch(url, options = {}) {
+        const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+        return globalThis.fetch(url, { ...options, headers }).then(res => {
+            if (!res.ok) throw new Error(`[Cairn REST Bridge] HTTP ${res.status}: ${res.statusText}`);
+            return res.json();
+        });
+    },
+    get(url, options = {}) {
+        return this.fetch(url, { method: 'GET', ...options });
+    },
+    post(url, data, options = {}) {
+        return this.fetch(url, { method: 'POST', body: JSON.stringify(data), ...options });
+    },
+    put(url, data, options = {}) {
+        return this.fetch(url, { method: 'PUT', body: JSON.stringify(data), ...options });
+    },
+    delete(url, options = {}) {
+        return this.fetch(url, { method: 'DELETE', ...options });
+    },
+    sync(targetState, url, options = {}) {
+        return this.get(url, options).then(data => {
+            if (targetState && 'value' in targetState) {
+                targetState.value = data;
+            }
+            return data;
+        });
+    }
+};
+
+/**
+ * GraphQL API Client Bridge
+ */
+export const graphql = {
+    query(queryStr, variables = {}, endpoint = '/graphql') {
+        return globalThis.fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: queryStr, variables })
+        }).then(res => res.json()).then(result => {
+            if (result.errors && result.errors.length) {
+                throw new Error(`[Cairn GraphQL Bridge] ${result.errors[0].message}`);
+            }
+            return result.data;
+        });
+    },
+    mutation(mutationStr, variables = {}, endpoint = '/graphql') {
+        return this.query(mutationStr, variables, endpoint);
+    },
+    subscription(subscriptionStr, onData, endpoint = 'wss://localhost/graphql') {
+        if (typeof WebSocket === 'undefined') return null;
+        const ws = new WebSocket(endpoint, 'graphql-ws');
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (typeof onData === 'function') onData(data);
+            } catch (_) {}
+        };
+        return ws;
+    }
+};
+
+/**
+ * WebSocket Real-Time Client Bridge
+ */
+export const websocket = {
+    connect(url, protocols) {
+        if (typeof WebSocket === 'undefined') {
+            return {
+                send: () => {},
+                close: () => {},
+                onmessage: null,
+                onerror: null,
+                onclose: null
+            };
+        }
+        return new WebSocket(url, protocols);
+    },
+    onMessage(ws, handler) {
+        if (!ws) return;
+        ws.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                handler(data, e);
+            } catch (_) {
+                handler(e.data, e);
+            }
+        };
+    },
+    send(ws, data) {
+        if (!ws || ws.readyState !== 1) return false;
+        const payload = typeof data === 'object' ? JSON.stringify(data) : String(data);
+        ws.send(payload);
+        return true;
+    }
+};
+
+/**
+ * Server-Sent Events (SSE) Bridge
+ */
+export const sse = {
+    connect(url, options = {}) {
+        if (typeof EventSource === 'undefined') {
+            return {
+                addEventListener: () => {},
+                close: () => {}
+            };
+        }
+        return new EventSource(url, options);
+    },
+    onEvent(source, eventName, handler) {
+        if (!source) return;
+        source.addEventListener(eventName, (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                handler(data, e);
+            } catch (_) {
+                handler(e.data, e);
+            }
+        });
+    }
+};
+
+/**
+ * Universal Environment Bridge
+ * Automatically detects whether running inside React, Vue, Svelte, Angular, or Vanilla DOM.
+ */
+export const universal = {
+    detect() {
+        const isClient = typeof window !== 'undefined';
+        return {
+            react: isClient && !!(window.React || window.__REACT_DEVTOOLS_GLOBAL_HOOK__),
+            vue: isClient && !!(window.Vue || window.__VUE__),
+            svelte: isClient && !!window.__svelte,
+            angular: isClient && !!(window.ng || window.getAllAngularRootElements),
+            vanilla: true
+        };
+    },
+    mount(target, componentFactory, props = {}) {
+        if (!target) return null;
+        const el = typeof target === 'string' && typeof document !== 'undefined' ? document.querySelector(target) : target;
+        if (!el) return null;
+        el.innerHTML = '';
+        const node = typeof componentFactory === 'function' ? componentFactory(props) : componentFactory;
+        return mount(el, node);
+    }
+};
+
+/**
+ * Unified Bridge Namespace
+ */
+const createBridgeFn = (fn, targetObj) => {
+    const wrapped = (options = {}) => fn(options);
+    return Object.assign(wrapped, targetObj);
+};
+
+export const bridge = {
+    react: createBridgeFn((options = {}) => ({
+        toReact: cairnToReact,
+        useCairn,
+        features: { stateSync: true, events: true, styling: true, ...(options.features || {}) },
+        usage: options.usage || 'cairnToReact(CairnComponent)'
+    }), { toReact: cairnToReact, useCairn }),
+    vue: createBridgeFn((options = {}) => ({
+        toVue: cairnToVue,
+        features: { stateSync: true, events: true, styling: true, ...(options.features || {}) },
+        usage: options.usage || 'cairnToVue(CairnComponent)'
+    }), { toVue: cairnToVue }),
+    svelte: createBridgeFn((options = {}) => ({
+        toSvelte: cairnToSvelte,
+        features: { stateSync: true, events: true, styling: true, ...(options.features || {}) },
+        usage: options.usage || 'cairnToSvelte(CairnComponent)'
+    }), { toSvelte: cairnToSvelte }),
+    angular: createBridgeFn((options = {}) => ({
+        toAngular: cairnToAngular,
+        features: { stateSync: true, events: true, styling: true, ...(options.features || {}) },
+        usage: options.usage || 'cairnToAngular(CairnComponent)'
+    }), { toAngular: cairnToAngular }),
+    rest: createBridgeFn((options = {}) => ({
+        ...rest,
+        features: { autoSync: true, optimistic: true, ...(options.features || {}) }
+    }), rest),
+    graphql: createBridgeFn((options = {}) => ({
+        ...graphql,
+        features: { query: true, mutation: true, subscription: true, ...(options.features || {}) }
+    }), graphql),
+    websocket: createBridgeFn((options = {}) => ({
+        ...websocket,
+        features: { autoReconnect: true, ...(options.features || {}) }
+    }), websocket),
+    sse: createBridgeFn((options = {}) => ({
+        ...sse,
+        features: { autoReconnect: true, ...(options.features || {}) }
+    }), sse),
+    universal: createBridgeFn((options = {}) => ({
+        ...universal,
+        autoDetect: universal.detect(),
+        ...(options || {})
+    }), universal),
+    toReact: cairnToReact,
+    toVue: cairnToVue,
+    toSvelte: cairnToSvelte,
+    toAngular: cairnToAngular,
+    toCustomElement: cairnToCustomElement,
+    defineCustomElement,
+    useCairn
+};
+
 export default {
     useCairn,
     cairnToReact,
@@ -301,5 +517,11 @@ export default {
     cairnToAngular,
     cairnToSvelte,
     cairnToCustomElement,
-    defineCustomElement
+    defineCustomElement,
+    rest,
+    graphql,
+    websocket,
+    sse,
+    universal,
+    bridge
 };

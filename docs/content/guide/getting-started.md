@@ -46,14 +46,39 @@ Write standard HTML with reactive `${signal}` and two-way `:bind=${signal}`:
 
 ### 2. Predictive UI Quickstart (Zero-Learning-Curve Helpers)
 ```js
-import { cairn } from '@eldrex/cairnjs';
-const { card, row, btn, badge, title, state, mount } = cairn;
+import { state, div, h2, button, span, mount } from '@eldrex/cairnjs';
 
 const likes = state(42);
 
-const App = card({ title: 'Cairn Widget' },
-    row(badge('Reactive', 'success'), title('Interactive Post', 2)),
-    btn.primary(() => `❤️ Like (${likes.value})`, () => likes.value++)
+const App = div({
+    coat: {
+        padding: '20px',
+        background: '#0f172a',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        maxWidth: '360px'
+    }
+},
+    div({ style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' } },
+        span('Reactive', {
+            coat: { background: '#10b98122', color: '#34d399', padding: '2px 8px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600' }
+        }),
+        h2('Interactive Post', { coat: { fontSize: '1.1rem', margin: 0, color: '#f8fafc' } })
+    ),
+    button(() => `❤️ Like (${likes.value})`, {
+        coat: {
+            background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+            color: '#fff',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            transition: 'transform 0.15s ease',
+            '&:hover': { transform: 'scale(1.05)' }
+        },
+        onclick: () => likes.value++
+    })
 );
 
 mount('#app', App);

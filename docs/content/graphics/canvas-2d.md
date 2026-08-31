@@ -36,7 +36,9 @@ const canvas = createCanvas2D('#cairn-2d-canvas-wrap', { width: 640, height: 320
 
 let angle = 0;
 canvas.onDraw((ctx, dt) => {
-    if (isAnimating.value) angle += dt * 0.0015;
+    if (isAnimating.value) {
+        angle += (dt && dt > 1) ? dt * 0.0018 : 0.03;
+    }
 
     // Draw background gradient
     ctx.gradient('linear', [[0, '#090d16'], [1, '#0f172a']], { x1: 0, y1: 0, x2: 640, y2: 320 })
