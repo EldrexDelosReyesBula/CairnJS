@@ -1571,11 +1571,11 @@ const LandingHero = component(() => {
 
         // Version Badge Pill
         a({
-            href: '#',
+            href: '#/docs/changelog',
             class: 'cairn-version-badge',
             onclick: (e) => {
                 e.preventDefault();
-                navigateTo('getting-started');
+                navigateTo('changelog');
             }
         },
             span({ class: 'cairn-badge-dot' }),
