@@ -1,3 +1,6 @@
+<img width="1025" height="576" alt="CairnJS" src="https://github.com/user-attachments/assets/3068e87a-4913-45fa-bbb0-f5a0be15b545" />
+
+
 # CairnJS — Zero-Dependency Reactive UI Framework & Component Suite
 
 Build reactive, framework-agnostic web applications and components with zero external dependencies. Use with React, Vue, Svelte, Angular, standard Web Components, or vanilla HTML/JS.
