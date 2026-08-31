@@ -46,45 +46,14 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/playground",
-      "destination": "/docs/playground.html"
-    },
-    {
-      "source": "/playground.html",
-      "destination": "/docs/playground.html"
-    },
-    {
-      "source": "/docs/playground",
-      "destination": "/docs/playground.html"
-    },
-    {
-      "source": "/docs/playground.html",
-      "destination": "/docs/playground.html"
-    },
-    {
-      "source": "/docs",
-      "destination": "/docs/index.html"
-    },
-    {
-      "source": "/docs/",
-      "destination": "/docs/index.html"
-    },
-    {
-      "source": "/examples/posts",
-      "destination": "/examples/posts.html"
-    },
-    {
-      "source": "/examples",
-      "destination": "/examples/index.html"
-    },
-    {
-      "source": "/examples/",
-      "destination": "/examples/index.html"
-    },
-    {
-      "source": "/",
-      "destination": "/docs/index.html"
-    }
+    { "source": "/playground",          "destination": "/docs/playground.html" },
+    { "source": "/playground.html",     "destination": "/docs/playground.html" },
+    { "source": "/docs/playground",     "destination": "/docs/playground.html" },
+    { "source": "/docs",                "destination": "/docs/index.html" },
+    { "source": "/docs/",               "destination": "/docs/index.html" },
+    { "source": "/examples/posts",      "destination": "/examples/posts.html" },
+    { "source": "/examples",            "destination": "/examples/index.html" },
+    { "source": "/examples/",           "destination": "/examples/index.html" },
+    { "source": "/",                    "destination": "/docs/index.html" }
   ]
 }
