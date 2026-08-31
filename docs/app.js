@@ -193,7 +193,7 @@ const resolveDocLink = (rawHref) => {
         return { isExternal: false, href: `#/docs/${matched.id}`, pageId: matched.id };
     }
 
-    if (cleanPath.includes('playground')) return { isExternal: false, href: './playground.html', isDirect: true };
+    if (cleanPath.includes('playground')) return { isExternal: false, href: '/docs/playground.html', isDirect: true };
     if (cleanPath.includes('posts.html')) return { isExternal: false, href: '../examples/posts.html', isDirect: true };
     if (cleanPath.includes('examples/index.html') || cleanPath === 'examples') return { isExternal: false, href: '../examples/index.html', isDirect: true };
 
@@ -1107,7 +1107,7 @@ const AppHeader = component(() => {
             }, 'Examples'),
 
             a({
-                href: './playground.html',
+                href: '/docs/playground.html',
                 style: {
                     background: 'transparent',
                     border: 'none',
@@ -1462,7 +1462,7 @@ const MobileNavDrawer = component(() => {
                 }, 'Examples Gallery'),
 
                 a({
-                    href: './playground.html',
+                    href: '/docs/playground.html',
                     style: {
                         textAlign: 'left',
                         padding: '0.55rem 0.85rem',
@@ -1621,7 +1621,7 @@ const LandingHero = component(() => {
                 fa('fa-solid fa-arrow-right')
             ),
             a({
-                href: './playground.html',
+                href: '/docs/playground.html',
                 class: 'cairn-btn cairn-btn-outline'
             },
                 fa('fa-solid fa-code'),
@@ -1709,7 +1709,7 @@ const PlaygroundBanner = component(() => {
             p({ class: 'cairn-cta-desc' }, 'Try signals, 3D WebGL graphics, and spring physics directly in your browser without setting up Node.js or bundlers.'),
             div({ class: 'cairn-cta-actions' },
                 a({
-                    href: './playground.html',
+                    href: '/docs/playground.html',
                     class: 'cairn-btn cairn-btn-primary'
                 },
                     fa('fa-solid fa-play'),
@@ -1764,7 +1764,7 @@ const AppFooter = component(() => {
                 div({ class: 'cairn-footer-col' },
                     h4({ style: { fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text)', marginBottom: '0.75rem', fontWeight: '700' } }, 'Ecosystem'),
                     a({ href: '../examples/index.html' }, 'Examples Gallery (36)'),
-                    a({ href: './playground.html' }, 'Playground Sandbox'),
+                    a({ href: '/docs/playground.html' }, 'Playground Sandbox'),
                     a({ href: 'https://github.com/EldrexDelosReyesBula/CairnJS', target: '_blank', rel: 'noreferrer' }, 'GitHub Repository'),
                     a({ href: 'https://www.paypal.com/paypalme/eldrexbula', target: '_blank', rel: 'noreferrer', style: { color: '#ec4899', fontWeight: '600' } }, 'Support Author ❤️')
                 )
@@ -2211,7 +2211,7 @@ window.cairnOpenInPlayground = function (btn) {
     if (preEl) {
         const code = preEl.innerText.replace(/\u00a0/g, ' ').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
         sessionStorage.setItem('cairn_custom_code', code);
-        window.location.href = 'playground.html?template=custom';
+        window.location.href = '/docs/playground.html?template=custom';
     }
 };
 
